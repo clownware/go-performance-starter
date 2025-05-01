@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	middleware "github.com/yourusername/go-alpine-saas-starter/internal/middleware"
+	"github.com/yourusername/go-alpine-saas-starter/internal/handler"
 	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
 )
 
@@ -24,6 +25,16 @@ func New() *chi.Mux {
 
 	// Static file server with cache control
 	fileServer(r, "/static", http.Dir("./web/static"))
+
+	// API routes
+	r.Route("/api", func(api chi.Router) {
+		api.Get("/", handler.APIPlaceholder)
+		api.Get("/users/{userID}", handler.GetUserProfile)
+		api.Get("/organizations", handler.ListOrganizations)
+	})
+
+	// Health check endpoint (liveness)
+	r.Get("/healthz", handler.HealthHandler)
 
 	// Home page route
 	r.Get("/", homeHandler)
