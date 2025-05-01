@@ -1,27 +1,107 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/yourusername/go-alpine-saas-starter/internal/config"
+	_ "github.com/yourusername/go-alpine-saas-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
 )
 
 func main() {
 	fmt.Println("Starting Go Alpine SaaS Starter...")
 
-	// TODO: Load configuration (Phase 0)
-	// TODO: Set up logger (Phase 0)
-	// TODO: Establish database connection (Phase 1)
-	// TODO: Set up router (Phase 4)
-	// TODO: Define handlers (Phase 4)
-	// TODO: Set up server (Phase 4)
+	// Create context that listens for termination signals
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Set up signal handling
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		log.Println("Shutdown signal received")
+		cancel()
+	}()
+
+	// Load configuration from environment variables
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	// TODO: Set up logger (Phase 0) - for now use standard log
+	log.Println("Configuration loaded successfully")
+	
+	// Connect to the database
+	log.Println("Connecting to database...")
+	db, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+	log.Println("Database connection established successfully")
+
+	// Note: The following line is commented out because sqlc code generation hasn't been run yet
+	// When sqlc is run, it will generate the New() function to create queries
+	// queries := database.New(db)
+	// Repositories will be created here in later phases
+	_ = "queries will be used in Phase 3-4"
+
+	// At this point, we would set up repositories and handlers, but that's for Phase 3-4
+	// We'll just create a simple endpoint to verify our setup
 
 	// Placeholder listener
-	addr := ":4000"
-	log.Printf("Server listening on %s\n", addr)
-	if err := http.ListenAndServe(addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello, World!")
-	})); err != nil {
-		log.Fatalf("Error starting server: %v\n", err)
+	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
+	srv := &http.Server{
+		Addr: addr,
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/health" {
+				// Add a health check endpoint that tests the database connection
+				err := db.Ping(r.Context())
+				if err != nil {
+					w.WriteHeader(http.StatusServiceUnavailable)
+					fmt.Fprintf(w, "Database connection error: %v", err)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+				fmt.Fprintf(w, "Status: OK\nDatabase: Connected")
+				return
+			}
+			
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "Hello from Go Alpine SaaS Starter!")
+			fmt.Fprintln(w, "Phase 1: Database Architecture Implemented")
+			fmt.Fprintln(w, "Visit /health to check database connection")
+		}),
 	}
+
+	// Start the server in a goroutine
+	go func() {
+		log.Printf("Server listening on %s\n", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Error starting server: %v\n", err)
+		}
+	}()
+
+	// Wait for termination signal
+	<-ctx.Done()
+	
+	// Graceful shutdown
+	log.Println("Shutting down server...")
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
+	}
+	
+	log.Println("Server stopped gracefully")
 }

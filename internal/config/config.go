@@ -8,12 +8,13 @@ import (
 )
 
 // Config holds the application configuration.
-// TODO: Populate with actual configuration fields as needed (e.g., DB DSN, Port, JWT Secret).
 type Config struct {
-	Env      string
-	HTTPPort string
-	// Add other configuration fields here
-	// Example: DatabaseURL string
+	Env           string
+	HTTPPort      string
+	DatabaseURL   string
+	SupabaseURL   string
+	SupabaseKey   string
+	SupabaseAdmin string
 }
 
 // Load loads configuration from environment variables.
@@ -30,10 +31,12 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		Env:      getEnv("ENV", "development"),
-		HTTPPort: getEnv("HTTP_PORT", "4000"),
-		// Load other env vars here
-		// Example: DatabaseURL: getEnv("DATABASE_URL", ""),
+		Env:           getEnv("ENV", "development"),
+		HTTPPort:      getEnv("HTTP_PORT", "4000"),
+		DatabaseURL:   getEnv("DATABASE_URL", ""),
+		SupabaseURL:   getEnv("SUPABASE_URL", ""),
+		SupabaseKey:   getEnv("SUPABASE_ANON_KEY", ""),
+		SupabaseAdmin: getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
 	}
 
 	// TODO: Add validation for required fields

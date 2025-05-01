@@ -1,0 +1,142 @@
+# 🏄‍♂️ WindsurfRules - Micro SaaS Starter Kit
+
+*Core principles and conventions for Micro SaaS Starter Kit development*
+
+## Project Context
+The Micro SaaS Starter Kit (MSSK) is an opinionated boilerplate for indie hackers and small teams to bootstrap subscription-based SaaS products. It combines Go (Chi) backend, HTMX + Alpine.js frontend, Tailwind CSS, and Supabase-powered auth/PostgreSQL, deployed to Cloudflare's edge.
+
+## Code Style and Structure
+- Write concise, idiomatic Go code with proper error handling
+- Use functional patterns; avoid unnecessary abstractions
+- Follow standard Go project layout patterns
+- Use descriptive variable names (e.g., isAuthenticated, hasSubscription)
+- Structure repository files as follows:
+  ```
+  /cmd
+    └─ api/main.go        # entrypoint for Go server
+  /internal               # private application code
+    ├─ auth/              # authentication related code
+    ├─ config/            # configuration handling
+    ├─ handler/           # HTTP handlers 
+    ├─ middleware/        # application middleware
+    ├─ model/             # domain models
+    ├─ repository/        # data access
+    └─ server/            # server configuration
+  /migrations             # database migrations
+  /sql                    # sqlc query files
+  /web
+    ├─ templates/         # HTML templates
+    └─ static/            # static assets
+  ```
+
+## Tech Stack
+- Go 1.22+
+- Chi router
+- HTMX 1.x
+- Alpine.js 3.x
+- Tailwind CSS 3.x
+- PostgreSQL 15 (Supabase)
+- Golang-migrate
+- SQLC
+- Cloudflare Pages/Workers
+
+## Naming Conventions
+- Use lowercase with underscores for Go files (e.g., `user_handler.go`)
+- Favor descriptive package names over cute names
+- Use PascalCase for exported functions/types (e.g., `UserHandler`)
+- Use camelCase for unexported functions/variables (e.g., `validateUser()`)
+- Follow `cmd/internal/pkg` convention for package structure
+
+## Go Usage
+- Use Go 1.22+ for all code
+- Leverage standard library when possible
+- Create interfaces only when needed for testing/abstraction
+- Use context for cancellation/timeout/request scoping
+- Handle errors explicitly; avoid panics
+- Use absolute imports for all packages
+- Implement proper error handling with helpful messages
+- Use explicit return types for all functions
+
+## Web Development Specific
+- Use Chi's router groups for feature organization
+- Implement proper middleware stack in correct order
+- Use HTMX for dynamic UI updates
+- Use Alpine.js only when necessary for client-side interactivity
+- Implement progressive enhancement (work without JS)
+- Leverage html/template with proper escaping
+- Follow REST API conventions for endpoints
+
+## State Management
+- Use Supabase for authentication state
+- Implement proper JWT validation
+- Use PostgreSQL for persistent data
+- Implement proper cleanup in HTTP handlers
+
+## Syntax and Formatting
+- Follow `gofmt` standards
+- Use table-driven tests
+- Implement consistent error handling patterns
+- Keep handler functions focused and short
+- Separate business logic from HTTP handling
+
+## UI and Styling
+- Use Tailwind CSS for styling
+- Implement responsive design principles
+- Create reusable HTMX patterns
+- Follow accessibility guidelines
+- Keep UI components minimal and focused
+
+## Error Handling
+- Implement global error middleware
+- Return appropriate HTTP status codes
+- Log errors with relevant context
+- Provide user-friendly error messages
+- Implement proper validation feedback
+
+## Testing
+- Write table-driven tests for utilities and handlers
+- Implement integration tests for critical flows
+- Test database interactions with real PostgreSQL
+- Use mocks only when necessary
+- Test both success and error paths
+
+## Security
+- Implement proper JWT validation
+- Use CSRF protection for state-changing operations
+- Implement rate limiting for sensitive endpoints
+- Configure secure headers
+- Sanitize all user inputs
+- Use Row Level Security in Supabase
+- Follow OWASP security practices
+
+## Git Usage
+Commit Message Prefixes:
+- `fix:` for bug fixes
+- `feat:` for new features
+- `perf:` for performance improvements
+- `docs:` for documentation changes
+- `style:` for formatting changes
+- `refactor:` for code refactoring
+- `test:` for adding missing tests
+- `chore:` for maintenance tasks
+
+Rules:
+- Use lowercase for commit messages
+- Keep the summary line concise
+- Reference issue numbers when applicable
+- Follow conventional commits specification
+
+## Documentation
+- Maintain clear README with setup instructions
+- Document API endpoints and request/response formats
+- Keep migrations well-documented
+- Add comments for complex business logic
+- Document environment variables
+
+## Development Workflow
+- Use Taskfile (or Make) for common operations
+- Follow phase-based development approach
+- Implement proper code review process
+- Test in multiple environments
+- Follow semantic versioning for releases
+- Establish clear exit criteria for each phase

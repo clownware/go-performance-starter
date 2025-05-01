@@ -1,5 +1,7 @@
 version: '3'
 
+dotenv: ['.env']
+
 tasks:
   # Development tasks
   dev:
@@ -50,16 +52,17 @@ tasks:
   db:migrate:up:
     desc: Run database migrations up
     cmds:
-      - echo "TODO: Implement DB migrations (Phase 1)"
-      # Example using golang-migrate: 
-      # - migrate -database "${DATABASE_URL}" -path migrations up
+      - migrate -database "${DATABASE_URL}" -path migrations up
 
   db:migrate:down:
     desc: Revert the last database migration
     cmds:
-      - echo "TODO: Implement DB migrations (Phase 1)"
-      # Example using golang-migrate:
-      # - migrate -database "${DATABASE_URL}" -path migrations down 1
+      - migrate -database "${DATABASE_URL}" -path migrations down 1
+
+  db:migrate:force:
+    desc: Force set the database migration version (use with caution)
+    cmds:
+      - migrate -database "${DATABASE_URL}" -path migrations force {{.VERSION}}
 
   # Test tasks
   test:
@@ -78,6 +81,16 @@ tasks:
     desc: Build Docker image
     cmds:
       - docker build -t go-alpine-saas-starter .
+
+  db:migrate:create:
+    desc: Create a new migration file
+    cmds:
+      - migrate create -ext sql -dir migrations -seq {{.CLI_ARGS}}
+
+  db:generate:
+    desc: Generate Go code from SQL queries using sqlc
+    cmds:
+      - sqlc generate
 
   # Clean tasks
   clean:

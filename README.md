@@ -20,7 +20,7 @@ _Your project description here._
    ```bash
    cp .env.example .env
    ```
-3. Update `.env` with your local settings (especially database connection if not using Docker Compose).
+3. Update `.env` with your settings. **Crucially, set the `DATABASE_URL` to your Supabase project's connection string.**
 4. Start the development database (if using Docker Compose):
    ```bash
    task db:up
@@ -29,11 +29,15 @@ _Your project description here._
    ```bash
    task db:migrate:up
    ```
-6. Install Go dependencies:
+6. Generate Go code from SQL queries:
+   ```bash
+   task db:generate
+   ```
+7. Install Go dependencies:
    ```bash
    go mod tidy
    ```
-7. Start the development server (with live reload):
+8. Start the development server (with live reload):
    ```bash
    task dev
    ```
