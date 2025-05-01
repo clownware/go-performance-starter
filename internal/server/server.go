@@ -54,7 +54,7 @@ func cacheControlWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add cache control headers based on file extension
 		path := r.URL.Path
-		
+
 		// Set Cache-Control headers based on file type
 		switch {
 		// CSS, JS, and images can be cached for longer periods
@@ -67,7 +67,7 @@ func cacheControlWrapper(h http.Handler) http.Handler {
 		default:
 			w.Header().Set("Cache-Control", "public, max-age=3600") // 1 hour
 		}
-		
+
 		h.ServeHTTP(w, r)
 	})
 }

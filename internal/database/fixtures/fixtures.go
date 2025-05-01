@@ -3,7 +3,6 @@ package fixtures
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -128,9 +127,9 @@ func (f *TestFixtures) CreateFullTestAccount(role string) (*database.User, *data
 		role = "owner"
 	}
 	member, err := f.CreateOrganizationMember(database.CreateOrganizationMemberParams{
-		OrganizationID:      org.ID,
-		UserID:              user.ID,
-		Role:                role,
+		OrganizationID:        org.ID,
+		UserID:                user.ID,
+		Role:                  role,
 		IsPrimaryOrganization: pgtype.Bool{Bool: true, Valid: true},
 	})
 	if err != nil {
@@ -154,17 +153,4 @@ func (f *TestFixtures) Cleanup() error {
 	return nil
 }
 
-// Helper function to return a pointer to a string
-func stringPtr(s string) *string {
-	return &s
-}
-
-// Helper function to return a pointer to a time.Time
-func timePtr(t time.Time) *time.Time {
-	return &t
-}
-
-// Helper function to return a pointer to a bool
-func boolPtr(b bool) *bool {
-	return &b
-}
+// End of fixtures package

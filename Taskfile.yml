@@ -31,7 +31,7 @@ tasks:
   lint:
     desc: Run linters
     cmds:
-      - golangci-lint run
+      - golangci-lint run ./...
 
   fmt:
     desc: Format Go code
@@ -74,7 +74,7 @@ tasks:
     desc: Run tests with coverage report
     cmds:
       - go test -coverprofile=coverage.out ./...
-      - go tool cover -html=coverage.out -o coverage.html
+      - go tool cover -html=coverage.out
 
   # Docker tasks
   docker:build:
@@ -103,9 +103,21 @@ tasks:
     cmds:
       - npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css --watch
 
+  # Security tasks
+  scan:vuln:
+    desc: Check for vulnerable dependencies
+    cmds:
+      - govulncheck ./...
+
   # Clean tasks
   clean:
     desc: Remove build artifacts
     cmds:
       - rm -rf ./dist
       - rm -rf ./tmp
+      - rm -f app coverage.out
+
+  # Default task
+  default:
+    desc: Default task
+    deps: [css:build]

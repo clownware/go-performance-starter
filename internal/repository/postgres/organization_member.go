@@ -96,7 +96,7 @@ func (r *OrganizationMemberRepo) SetPrimary(ctx context.Context, userID, orgID u
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx) // Rollback is a no-op if tx has already been committed.
+	defer func() { _ = tx.Rollback(ctx) }() // Rollback is a no-op if tx has already been committed.
 
 	qtx := database.New(tx) // Create a new Querier instance with the transaction
 

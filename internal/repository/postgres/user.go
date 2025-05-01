@@ -15,14 +15,14 @@ import (
 
 // UserRepo implements the repository.UserRepository interface using PostgreSQL.
 type UserRepo struct {
-	db     *pgxpool.Pool
+	db      *pgxpool.Pool
 	querier database.Querier
 }
 
 // NewUserRepo creates a new UserRepo instance.
 func NewUserRepo(db *pgxpool.Pool, querier database.Querier) *UserRepo {
 	return &UserRepo{
-		db:     db,
+		db:      db,
 		querier: querier,
 	}
 }

@@ -40,7 +40,7 @@ func main() {
 
 	// TODO: Set up logger (Phase 0) - for now use standard log
 	log.Println("Configuration loaded successfully")
-	
+
 	// Connect to the database
 	log.Println("Connecting to database...")
 	db, err := pgxpool.New(ctx, cfg.DatabaseURL)
@@ -61,20 +61,20 @@ func main() {
 
 	// Initialize the router with middleware and routes
 	router := server.New()
-	
+
 	// Add health check route
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		// Test the database connection
 		err := db.Ping(r.Context())
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			fmt.Fprintf(w, "Database connection error: %v", err)
+			_, _ = fmt.Fprintf(w, "Database connection error: %v", err)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Status: OK\nDatabase: Connected")
+		_, _ = fmt.Fprintf(w, "Status: OK\nDatabase: Connected")
 	})
-	
+
 	// Set up the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
 	srv := &http.Server{
@@ -92,15 +92,15 @@ func main() {
 
 	// Wait for termination signal
 	<-ctx.Done()
-	
+
 	// Graceful shutdown
 	log.Println("Shutting down server...")
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
-	
+
 	log.Println("Server stopped gracefully")
 }
