@@ -12,3 +12,10 @@ type Organization struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
+
+// Item represents a generic item for list examples.
+type Item struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	IsFavorite bool   `json:"isFavorite"`
+}

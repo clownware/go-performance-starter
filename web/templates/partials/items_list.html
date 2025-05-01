@@ -1,14 +1,15 @@
 {{define "items_list"}}
-<ul class="divide-y divide-gray-200">
+<ul id="item-ul" class="divide-y divide-gray-200">
   {{range .Items}}
-    <li class="py-2">{{.Name}}</li>
+    {{template "item" .}}
   {{end}}
 </ul>
 {{if .NextPage}}
-<div class="mt-4">
-  <button hx-get="/items/list?page={{.NextPage}}" hx-target="#items-list" hx-swap="afterend" class="px-4 py-2 bg-primary-600 text-white rounded">
-    Load More
-  </button>
-</div>
+  <!-- Infinite scroll sentinel: loads next page when revealed -->
+  <div hx-get="/items/list?page={{.NextPage}}" hx-trigger="revealed" hx-target="#item-ul" hx-swap="beforeend" class="py-2 text-center text-gray-500">Loading more...</div>
+  <!-- Fallback Load More button -->
+  <div class="mt-4 text-center">
+    <button hx-get="/items/list?page={{.NextPage}}" hx-target="#item-ul" hx-swap="beforeend" class="px-4 py-2 bg-primary-600 text-white rounded">Load More</button>
+  </div>
 {{end}}
 {{end}}

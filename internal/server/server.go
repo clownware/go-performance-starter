@@ -43,6 +43,8 @@ func New() *chi.Mux {
 	// Items list (HTMX-powered)
 	r.Get("/items", handler.ItemsPage)
 	r.Get("/items/list", handler.ItemsList)
+	// Toggle favorite (optimistic UI)
+	r.Post("/items/{id}/toggle", handler.ItemToggle)
 
 	// Home page route
 	r.Get("/", homeHandler)

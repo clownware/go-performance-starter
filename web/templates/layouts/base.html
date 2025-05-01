@@ -89,6 +89,33 @@
     <!-- App scripts -->
     <script src="/static/js/app.js" defer></script>
     
+    <!-- Global HTMX loading indicator -->
+    <div id="global-loading" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="text-white font-semibold">Loading...</div>
+    </div>
+    <script>
+      document.body.addEventListener('htmx:beforeRequest', function() {
+        document.getElementById('global-loading').classList.remove('hidden');
+      });
+      document.body.addEventListener('htmx:afterRequest', function() {
+        document.getElementById('global-loading').classList.add('hidden');
+      });
+    </script>
+    
+    <!-- Toast notifications -->
+    <div id="global-toast" class="hidden fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg"></div>
+    <script>
+      document.body.addEventListener('htmx:afterRequest', function(evt) {
+        var msg = evt.detail.xhr.getResponseHeader('HX-Trigger');
+        if (msg) {
+          var toast = document.getElementById('global-toast');
+          toast.textContent = msg;
+          toast.classList.remove('hidden');
+          setTimeout(function() { toast.classList.add('hidden'); }, 3000);
+        }
+      });
+    </script>
+    
     <!-- HTMX extensions -->
     {{block "htmx-extensions" .}}{{end}}
     
