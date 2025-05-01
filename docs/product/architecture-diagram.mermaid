@@ -1,0 +1,38 @@
+flowchart TD
+    Browser["Browser/Client"]
+    CFPages["Cloudflare Pages\n(Static Assets)"]
+    CFWorker["Cloudflare Worker\n(API Proxy)"]
+    GoAPI["Go API Service\n(Chi, HTMX)"]
+    SupaDB["Supabase PostgreSQL\n(Data Storage)"]
+    SupaAuth["Supabase Auth\n(Authentication)"]
+    SupaStorage["Supabase Storage\n(Optional: File Storage)"]
+    Stripe["Stripe API\n(Billing Integration)"]
+    
+    Browser -->|"HTML/CSS/JS\nRequests"| CFPages
+    Browser -->|"API Requests\n(/api/...)"| CFWorker
+    CFWorker -->|"Proxied Requests"| GoAPI
+    GoAPI -->|"Data Operations"| SupaDB
+    GoAPI -->|"Auth Verification"| SupaAuth
+    GoAPI -->|"File Operations\n(Optional)"| SupaStorage
+    GoAPI -->|"Billing Operations\n(Optional)"| Stripe
+    
+    subgraph "Edge Deployment (Cloudflare)"
+        CFPages
+        CFWorker
+    end
+    
+    subgraph "Backend Services (Supabase)"
+        SupaDB
+        SupaAuth
+        SupaStorage
+    end
+    
+    classDef client fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef edge fill:#9cf,stroke:#333,stroke-width:2px;
+    classDef backend fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef external fill:#ff9,stroke:#333,stroke-width:2px;
+    
+    class Browser client;
+    class CFPages,CFWorker edge;
+    class GoAPI,SupaDB,SupaAuth,SupaStorage backend;
+    class Stripe external;
