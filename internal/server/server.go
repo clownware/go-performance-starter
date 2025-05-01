@@ -36,6 +36,10 @@ func New() *chi.Mux {
 	// Health check endpoint (liveness)
 	r.Get("/healthz", handler.HealthHandler)
 
+	// Profile page (HTMX-enabled)
+	r.Get("/profile", handler.ProfileView)
+	r.Post("/profile", handler.ProfileUpdate)
+
 	// Home page route
 	r.Get("/", homeHandler)
 
