@@ -1,0 +1,49 @@
+{{define "skip-link"}}
+<a href="{{.Target}}" class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-white focus:z-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
+  {{.Text}}
+</a>
+{{end}}
+
+{{define "aria-live-region"}}
+<div 
+  aria-live="{{if .AriaLive}}{{.AriaLive}}{{else}}polite{{end}}"
+  aria-atomic="{{if .AriaAtomic}}{{.AriaAtomic}}{{else}}true{{end}}"
+  {{if .AriaRelevant}}aria-relevant="{{.AriaRelevant}}"{{end}}
+  class="{{if .Class}}{{.Class}}{{else}}sr-only{{end}}"
+  id="{{.ID}}"
+>
+  {{.Content}}
+</div>
+{{end}}
+
+{{define "loading-indicator"}}
+<div 
+  id="{{.ID}}" 
+  class="{{if .Class}}{{.Class}}{{else}}htmx-indicator flex items-center justify-center p-4{{end}}"
+  aria-busy="true"
+  aria-live="polite"
+>
+  <svg class="animate-spin h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+  <span class="{{if .SrClass}}{{.SrClass}}{{else}}sr-only{{end}}">Loading...</span>
+</div>
+{{end}}
+
+{{define "focusable-element"}}
+<div
+  tabindex="0"
+  role="{{if .Role}}{{.Role}}{{else}}button{{end}}"
+  {{if .AriaLabel}}aria-label="{{.AriaLabel}}"{{end}}
+  {{if .AriaExpanded}}aria-expanded="{{.AriaExpanded}}"{{end}}
+  {{if .AriaControls}}aria-controls="{{.AriaControls}}"{{end}}
+  {{if .AriaHaspopup}}aria-haspopup="{{.AriaHaspopup}}"{{end}}
+  class="{{if .Class}}{{.Class}}{{else}}focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2{{end}}"
+  {{if .KeyboardHandler}}@keydown.enter="{{.KeyboardHandler}}" @keydown.space="{{.KeyboardHandler}}"{{end}}
+  {{if .ClickHandler}}@click="{{.ClickHandler}}"{{end}}
+  {{if .ID}}id="{{.ID}}"{{end}}
+>
+  {{.Content}}
+</div>
+{{end}}

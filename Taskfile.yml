@@ -92,6 +92,17 @@ tasks:
     cmds:
       - sqlc generate
 
+  # CSS tasks
+  css:build:
+    desc: Build CSS files with Tailwind
+    cmds:
+      - npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css
+
+  css:watch:
+    desc: Watch and build CSS files with Tailwind
+    cmds:
+      - npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css --watch
+
   # Clean tasks
   clean:
     desc: Remove build artifacts

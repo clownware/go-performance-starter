@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/yourusername/go-alpine-saas-starter/internal/config"
 	_ "github.com/yourusername/go-alpine-saas-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
+	"github.com/yourusername/go-alpine-saas-starter/internal/server"
 )
 
 func main() {
@@ -58,29 +59,27 @@ func main() {
 	// At this point, we would set up repositories and handlers, but that's for Phase 3-4
 	// We'll just create a simple endpoint to verify our setup
 
-	// Placeholder listener
+	// Initialize the router with middleware and routes
+	router := server.New()
+	
+	// Add health check route
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		// Test the database connection
+		err := db.Ping(r.Context())
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			fmt.Fprintf(w, "Database connection error: %v", err)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "Status: OK\nDatabase: Connected")
+	})
+	
+	// Set up the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
 	srv := &http.Server{
-		Addr: addr,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/health" {
-				// Add a health check endpoint that tests the database connection
-				err := db.Ping(r.Context())
-				if err != nil {
-					w.WriteHeader(http.StatusServiceUnavailable)
-					fmt.Fprintf(w, "Database connection error: %v", err)
-					return
-				}
-				w.WriteHeader(http.StatusOK)
-				fmt.Fprintf(w, "Status: OK\nDatabase: Connected")
-				return
-			}
-			
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, "Hello from Go Alpine SaaS Starter!")
-			fmt.Fprintln(w, "Phase 1: Database Architecture Implemented")
-			fmt.Fprintln(w, "Visit /health to check database connection")
-		}),
+		Addr:    addr,
+		Handler: router,
 	}
 
 	// Start the server in a goroutine

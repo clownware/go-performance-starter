@@ -46,3 +46,9 @@ coverage.*
 
 # Taskfile cache
 .task/
+
+# Node.js dependencies
+node_modules/
+
+# Frontend build artifacts
+web/static/css/app.css

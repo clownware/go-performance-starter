@@ -3,6 +3,7 @@ module github.com/yourusername/go-alpine-saas-starter
 go 1.24.2
 
 require (
+	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1

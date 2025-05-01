@@ -1,0 +1,42 @@
+{{define "input"}}
+<div class="{{if .ContainerClass}}{{.ContainerClass}}{{else}}mb-4{{end}}">
+  {{if .Label}}
+  <label for="{{.ID}}" class="{{if .LabelClass}}{{.LabelClass}}{{else}}block text-sm font-medium text-gray-700 mb-1{{end}}">
+    {{.Label}}{{if .Required}} <span class="text-red-500">*</span>{{end}}
+  </label>
+  {{end}}
+  
+  <input
+    type="{{if .Type}}{{.Type}}{{else}}text{{end}}"
+    id="{{.ID}}"
+    name="{{.Name}}"
+    value="{{.Value}}"
+    placeholder="{{.Placeholder}}"
+    class="{{if .Class}}{{.Class}}{{else}}input{{end}}"
+    {{if .Required}}required{{end}}
+    {{if .Disabled}}disabled{{end}}
+    {{if .Readonly}}readonly{{end}}
+    {{if .Autocomplete}}autocomplete="{{.Autocomplete}}"{{end}}
+    {{if .Min}}min="{{.Min}}"{{end}}
+    {{if .Max}}max="{{.Max}}"{{end}}
+    {{if .Attributes}}{{.Attributes | rawHTML}}{{end}}
+    {{if .HxPost}}hx-post="{{.HxPost}}"{{end}}
+    {{if .HxTrigger}}hx-trigger="{{.HxTrigger}}"{{end}}
+    {{if .HxTarget}}hx-target="{{.HxTarget}}"{{end}}
+    {{if .HxIndicator}}hx-indicator="{{.HxIndicator}}"{{end}}
+    aria-describedby="{{if .HasError}}{{.ID}}-error{{else if .HelperText}}{{.ID}}-description{{end}}"
+  />
+  
+  {{if .HelperText}}
+  <p id="{{.ID}}-description" class="{{if .HelperTextClass}}{{.HelperTextClass}}{{else}}mt-1 text-sm text-gray-500{{end}}">
+    {{.HelperText}}
+  </p>
+  {{end}}
+  
+  {{if .HasError}}
+  <p id="{{.ID}}-error" class="{{if .ErrorClass}}{{.ErrorClass}}{{else}}mt-1 text-sm text-red-600{{end}}">
+    {{.ErrorMessage}}
+  </p>
+  {{end}}
+</div>
+{{end}}

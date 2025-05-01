@@ -1,0 +1,32 @@
+{{template "base" .}}
+
+{{define "title"}}Home Page{{end}}
+
+{{define "content"}}
+<div class="bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-semibold mb-4">Welcome!</h1>
+    <p class="mb-6">This page demonstrates form validation feedback.</p>
+
+    {{/* Example Usage of form-validation component */}}
+    {{/* 
+      - We get the specific error for 'test_field' from the top-level .Errors map 
+      - (which was passed by the Go handler using RenderTemplateWithErrors). 
+      - We pass this specific error string (or an empty string if no error) 
+      - down to the component's context as 'ServerError'.
+    */}}
+    {{ $testFieldError := index .Errors "test_field" }}
+    {{ template "form-validation" (dict 
+        "Label" "Test Field (Server Validation Demo)" 
+        "ID" "test-field" 
+        "Name" "test_field" 
+        "Type" "text" 
+        "Placeholder" "Enter something" 
+        "Required" true
+        "ServerError" $testFieldError
+        "RequiredMessage" "Client: This field is mandatory!"
+    ) }}
+
+    <button type="submit" class="btn btn-primary mt-2">Submit (for client validation)</button>
+
+</div>
+{{end}}

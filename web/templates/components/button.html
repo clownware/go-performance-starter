@@ -1,0 +1,23 @@
+{{define "button"}}
+<button 
+  {{if .Class}}class="{{.Class}}"{{else}}class="btn {{if .Variant}}btn-{{.Variant}}{{else}}btn-primary{{end}}"{{end}}
+  {{if .Type}}type="{{.Type}}"{{else}}type="button"{{end}}
+  {{if .ID}}id="{{.ID}}"{{end}}
+  {{if .Disabled}}disabled{{end}}
+  {{if .Attributes}}{{.Attributes | rawHTML}}{{end}}
+  {{if .HxPost}}hx-post="{{.HxPost}}"{{end}}
+  {{if .HxGet}}hx-get="{{.HxGet}}"{{end}}
+  {{if .HxTarget}}hx-target="{{.HxTarget}}"{{end}}
+  {{if .HxSwap}}hx-swap="{{.HxSwap}}"{{end}}
+  {{if .HxIndicator}}hx-indicator="{{.HxIndicator}}"{{end}}
+  {{if .HxConfirm}}hx-confirm="{{.HxConfirm}}"{{end}}
+  aria-label="{{if .AriaLabel}}{{.AriaLabel}}{{else}}{{.Text}}{{end}}"
+>
+  {{if .Icon}}
+  <span class="{{if .IconClass}}{{.IconClass}}{{else}}mr-2{{end}}">
+    {{template "icon" .Icon}}
+  </span>
+  {{end}}
+  {{.Text}}
+</button>
+{{end}}
