@@ -1,0 +1,15 @@
+{{define "title"}}Items List{{end}}
+
+{{define "content"}}
+<h1 class="text-2xl font-semibold mb-4">Items</h1>
+<div id="items-list"
+     hx-get="/items/list?page=1"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+  {{if .Items}}
+    {{template "items_list" .}}
+  {{else}}
+    <p>Loading items...</p>
+  {{end}}
+</div>
+{{end}}

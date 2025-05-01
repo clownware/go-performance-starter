@@ -40,6 +40,10 @@ func New() *chi.Mux {
 	r.Get("/profile", handler.ProfileView)
 	r.Post("/profile", handler.ProfileUpdate)
 
+	// Items list (HTMX-powered)
+	r.Get("/items", handler.ItemsPage)
+	r.Get("/items/list", handler.ItemsList)
+
 	// Home page route
 	r.Get("/", homeHandler)
 

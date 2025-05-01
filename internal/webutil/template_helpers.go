@@ -26,6 +26,8 @@ var functions = template.FuncMap{
 	"safeHTML": func(s string) template.HTML {
 		return template.HTML(s)
 	},
+	// Arithmetic helper for templates
+	"add": func(a, b int) int { return a + b },
 }
 
 // RenderTemplate renders the specified template(s) with the provided data.

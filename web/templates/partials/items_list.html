@@ -1,0 +1,14 @@
+{{define "items_list"}}
+<ul class="divide-y divide-gray-200">
+  {{range .Items}}
+    <li class="py-2">{{.Name}}</li>
+  {{end}}
+</ul>
+{{if .NextPage}}
+<div class="mt-4">
+  <button hx-get="/items/list?page={{.NextPage}}" hx-target="#items-list" hx-swap="afterend" class="px-4 py-2 bg-primary-600 text-white rounded">
+    Load More
+  </button>
+</div>
+{{end}}
+{{end}}
