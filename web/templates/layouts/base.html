@@ -8,7 +8,8 @@
     <title>{{block "title" .}}Micro SaaS Starter Kit{{end}}</title>
     
     <!-- CSS -->
-    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/output.css">
+    <link rel="stylesheet" href="/static/css/semantic-colors.css">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/img/favicon.png">
@@ -20,14 +21,30 @@
     <script src="/static/js/alpine.min.js" defer></script>
 </head>
 
-<body class="min-h-screen bg-gray-50 flex flex-col">
+<body x-data="{ dark: localStorage.getItem('dark') === 'true' || window.matchMedia('(prefers-color-scheme: dark)').matches }" 
+      x-init="
+        if (dark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        $watch('dark', val => { 
+          if (val) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          localStorage.setItem('dark', val ? 'true' : 'false');
+        });
+      " 
+      class="min-h-screen flex flex-col bg-background dark:bg-background-dark text-text dark:text-text-dark">
     <!-- Skip to content link for accessibility -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-white focus:z-50">
         Skip to content
     </a>
 
     <!-- Header -->
-    <header class="bg-white shadow">
+    <header class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-4">
@@ -36,24 +53,35 @@
                     </a>
                     {{block "nav" .}}
                     <nav class="hidden md:flex space-x-4">
-                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-100">Home</a>
-                        <a href="/dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-100">Dashboard</a>
+                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Home</a>
+                        <a href="/dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Dashboard</a>
                     </nav>
                     {{end}}
                 </div>
                 
                 <div class="flex items-center space-x-4">
+                    <div class="flex items-center gap-6">
+                    <!-- Dark mode toggle button -->
+                    <button @click="dark = !dark" 
+                            :aria-pressed="dark" 
+                            :class="dark ? 'bg-primary text-white' : 'bg-surface text-primary'" 
+                            class="rounded-full p-2 border-2 border-primary focus:outline-none focus:ring-2 focus:ring-primary transition-colors shadow-sm" 
+                            title="Toggle dark mode">
+                        <img x-show="!dark" x-cloak src="/static/img/emblem-black.svg" alt="Enable dark mode" class="h-5 w-5" />
+                        <img x-show="dark" x-cloak src="/static/img/emblem-white.svg" alt="Enable light mode" class="h-5 w-5" />
+                    </button>
+                    <!-- User menu -->
                     {{block "user-menu" .}}
                     <div x-data="{ open: false }" class="relative">
                       <button @click="open = !open" class="flex items-center focus:outline-none">
-                        <span class="mr-2">John Doe</span>
+                        <span class="mr-2 text-text dark:text-text-dark">John Doe</span>
                         <svg class="w-4 h-4 transform transition-transform" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                      <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md py-2 z-50">
-                        <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</a>
-                        <a href="/auth/logout" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</a>
+                      <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow-lg rounded-md py-2 z-50">
+                        <a href="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
+                        <a href="/auth/logout" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">Logout</a>
                       </div>
                     </div>
                     {{end}}
@@ -72,15 +100,15 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200">
+    <footer class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark border-t border-gray-200 dark:border-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-500 text-sm">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">
                     &copy; {{.CurrentYear}} Micro SaaS Starter Kit. All rights reserved.
                 </p>
                 <div class="flex space-x-4 mt-4 md:mt-0">
-                    <a href="/terms" class="text-sm text-gray-500 hover:text-gray-900">Terms</a>
-                    <a href="/privacy" class="text-sm text-gray-500 hover:text-gray-900">Privacy</a>
+                    <a href="/terms" class="text-sm text-gray-500 hover:text-text dark:text-gray-400 dark:hover:text-text-dark">Terms</a>
+                    <a href="/privacy" class="text-sm text-gray-500 hover:text-text dark:text-gray-400 dark:hover:text-text-dark">Privacy</a>
                 </div>
             </div>
         </div>

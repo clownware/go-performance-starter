@@ -2,10 +2,12 @@ package webutil
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -19,6 +21,21 @@ const templateBaseDir = "web/templates"
 
 // Default template functions
 var functions = template.FuncMap{
+	"default": func(def, val interface{}) interface{} {
+		// If val is the zero value, return def; otherwise return val
+		switch v := val.(type) {
+		case string:
+			if v == "" {
+				return def
+			}
+		case nil:
+			return def
+		}
+		return val
+	},
+	"rawHTML": func(s string) template.HTML {
+		return template.HTML(s)
+	},
 	"currentYear": func() int {
 		return time.Now().Year()
 	},
@@ -28,6 +45,20 @@ var functions = template.FuncMap{
 	},
 	// Arithmetic helper for templates
 	"add": func(a, b int) int { return a + b },
+	"dict": func(values ...interface{}) (map[string]interface{}, error) {
+		if len(values)%2 != 0 {
+			return nil, fmt.Errorf("dict helper: key/value pairs required")
+		}
+		m := make(map[string]interface{}, len(values)/2)
+		for i := 0; i < len(values); i += 2 {
+			key, ok := values[i].(string)
+			if !ok {
+				return nil, fmt.Errorf("dict helper: keys must be strings")
+			}
+			m[key] = values[i+1]
+		}
+		return m, nil
+	},
 }
 
 // RenderTemplate renders the specified template(s) with the provided data.
@@ -75,16 +106,20 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, status int, page str
 	if err != nil {
 		log.Printf("ERROR: Parsing template files failed: %v", err)
 		log.Printf("Files attempted: %v", files)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// Show error in browser for dev/debug
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("<pre style='color: red; background: #fff0f0; padding: 1em; border: 1px solid #f00;'>Template Parse Error:\n" + err.Error() + "\nFiles attempted:\n" + template.HTMLEscapeString(strings.Join(files, "\n")) + "</pre>"))
 		return
-	}
+	} 
 
 	// Use a buffer to capture the output and handle execution errors
 	buf := new(bytes.Buffer)
 	err = ts.ExecuteTemplate(buf, filepath.Base(baseTemplate), data)
 	if err != nil {
 		log.Printf("ERROR: Executing template failed: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// Show error in browser for dev/debug
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("<pre style='color: red; background: #fff0f0; padding: 1em; border: 1px solid #f00;'>Template Execution Error:\n" + err.Error() + "</pre>"))
 		return
 	}
 

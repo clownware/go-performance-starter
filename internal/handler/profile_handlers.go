@@ -44,6 +44,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	// Stub update successful
 	data["Success"] = true
 	if webutil.IsHTMXRequest(r) {
+		// Trigger global toast event
+		webutil.SetHXTrigger(w, "Profile updated successfully!")
+	}
+	if webutil.IsHTMXRequest(r) {
 		// Return updated form fragment with success message
 		webutil.RenderTemplate(w, r, http.StatusOK, "partials/profile_form.html", data)
 	} else {

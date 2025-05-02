@@ -1,8 +1,10 @@
 {{define "title"}}Profile{{end}}
 
 {{define "content"}}
-<h1 class="text-2xl font-semibold mb-4">Profile</h1>
-<form id="profile-form" hx-post="/profile" hx-target="#profile-form" hx-swap="innerHTML">
-    {{template "profile_form" .}}
-</form>
+<div class="max-w-2xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6">
+    <h1 class="text-2xl font-semibold mb-4">Profile</h1>
+    <form id="profile-form" hx-post="/profile" hx-target="#profile-form" hx-swap="innerHTML">
+        {{template "profile_form" .}}
+    </form>
+</div>
 {{end}}

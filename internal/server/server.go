@@ -1,55 +1,52 @@
 package server
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	middleware "github.com/yourusername/go-alpine-saas-starter/internal/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/yourusername/go-alpine-saas-starter/internal/auth"
+	"github.com/yourusername/go-alpine-saas-starter/internal/config"
 	"github.com/yourusername/go-alpine-saas-starter/internal/handler"
+	mw "github.com/yourusername/go-alpine-saas-starter/internal/middleware"
 	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
 )
 
-// New creates and configures a new Chi router with middleware and routes
-func New() *chi.Mux {
+// Server represents the main application server.
+type Server struct {
+	router     chi.Router
+	db         *pgxpool.Pool
+	authClient *auth.AuthClient
+	// Add other dependencies like database connections here as needed
+}
+
+// New creates a new Server instance.
+func New(cfg *config.Config, db *pgxpool.Pool) (*Server, error) {
+	// Initialize Supabase Auth Client
+	authClient, err := auth.NewAuthClient(cfg.SupabaseURL, cfg.SupabaseAnonKey)
+	if err != nil {
+		slog.Error("Failed to create Supabase auth client", "error", err)
+		return nil, fmt.Errorf("failed to create auth client: %w", err)
+	}
+	slog.Info("Supabase auth client initialized")
+
 	r := chi.NewRouter()
 
-	// Basic middleware
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	s := &Server{
+		router:     r,
+		db:         db,
+		authClient: authClient,
+	}
 
-	// Static file server with cache control
-	fileServer(r, "/static", http.Dir("./web/static"))
+	s.setupMiddleware()
+	s.setupRoutes()
 
-	// API routes
-	r.Route("/api", func(api chi.Router) {
-		api.Get("/", handler.APIPlaceholder)
-		api.Get("/users/{userID}", handler.GetUserProfile)
-		api.Get("/organizations", handler.ListOrganizations)
-	})
-
-	// Health check endpoint (liveness)
-	r.Get("/healthz", handler.HealthHandler)
-
-	// Profile page (HTMX-enabled)
-	r.Get("/profile", handler.ProfileView)
-	r.Post("/profile", handler.ProfileUpdate)
-
-	// Items list (HTMX-powered)
-	r.Get("/items", handler.ItemsPage)
-	r.Get("/items/list", handler.ItemsList)
-	// Toggle favorite (optimistic UI)
-	r.Post("/items/{id}/toggle", handler.ItemToggle)
-
-	// Home page route
-	r.Get("/", homeHandler)
-
-	return r
+	return s, nil
 }
 
 // fileServer conveniently sets up a http.FileServer handler to serve static files
@@ -104,7 +101,69 @@ func isFileType(filePath string, extensions ...string) bool {
 	return false
 }
 
-// homeHandler renders the home page using the base layout template
+func (s *Server) setupMiddleware() {
+	// Basic middleware
+	s.router.Use(mw.RequestID)
+	s.router.Use(mw.RealIP)
+	s.router.Use(mw.Logger)
+	s.router.Use(mw.Recoverer)
+	s.router.Use(mw.Timeout(30 * time.Second))
+
+	// Static file server with cache control
+	fileServer(s.router, "/static", http.Dir("./web/static"))
+}
+
+func (s *Server) setupRoutes() {
+	r := s.router // Use the router from the Server struct
+
+	// Static & Informational Pages
+	r.Get("/dashboard", handler.DashboardPage)
+	r.Get("/terms", handler.TermsPage)
+	r.Get("/privacy", handler.PrivacyPage)
+
+	// Logout GET route for UX (renders confirm form)
+	r.Get("/auth/logout", handler.LogoutPage)
+
+	// API routes
+	s.router.Route("/api", func(api chi.Router) {
+		api.Get("/", handler.APIPlaceholder)
+		api.Get("/users/{userID}", handler.GetUserProfile)
+		api.Get("/organizations", handler.ListOrganizations)
+	})
+
+	// Health check endpoint (liveness)
+	s.router.Get("/healthz", handler.HealthHandler)
+
+	// Profile page (HTMX-enabled)
+	r.Group(func(protectedRouter chi.Router) {
+		protectedRouter.Use(mw.AuthMiddleware(s.authClient))
+		protectedRouter.Get("/profile", handler.ProfileView)
+		protectedRouter.Post("/profile", handler.ProfileUpdate)
+	})
+
+	// Items list (HTMX-powered)
+	s.router.Get("/items", handler.ItemsPage)
+	s.router.Get("/items/list", handler.ItemsList)
+	// Toggle favorite (optimistic UI)
+	s.router.Post("/items/{id}/toggle", handler.ItemToggle)
+
+	// --- Authentication Routes --- 
+	r.Route("/auth", func(authRouter chi.Router) {
+		authRouter.Get("/page", handler.AuthPage) // Show login/signup form
+		authRouter.Post("/login", handler.AuthLoginPost(s.authClient)) // Handle login
+		authRouter.Post("/signup", handler.AuthSignupPost(s.authClient)) // Handle signup
+		authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient)) // Handle logout
+	})
+
+	// Home page route
+	r.Get("/", homeHandler) // Use the router variable 'r'
+}
+
+// ServeHTTP implements the http.Handler interface, making Server usable with http.ListenAndServe.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// Simulate a server-side validation error for demonstration
 	errors := webutil.FormErrors{

@@ -3,7 +3,7 @@
 {{define "title"}}Home Page{{end}}
 
 {{define "content"}}
-<div class="bg-white p-8 rounded-lg shadow-md">
+<div class="max-w-3xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6">
     <h1 class="text-2xl font-semibold mb-4">Welcome!</h1>
     <p class="mb-6">This page demonstrates form validation feedback.</p>
 
@@ -26,7 +26,7 @@
         "RequiredMessage" "Client: This field is mandatory!"
     ) }}
 
-    <button type="submit" class="btn btn-primary mt-2">Submit (for client validation)</button>
+    <button type="submit" class="bg-primary text-white dark:bg-primary-dark dark:text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:opacity-90 dark:hover:opacity-90 mt-2">Submit (for client validation)</button>
 
 </div>
 {{end}}

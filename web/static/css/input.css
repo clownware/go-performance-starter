@@ -1,3 +1,51 @@
+/* Sanity check rule */
+.cascade-test {
+  color: purple;
+}
+
+/* Define semantic color CSS variables */
+:root {
+  --color-background: #ffffff;
+  --color-background-dark: #121212;
+  --color-surface: #f5f5f5;
+  --color-surface-dark: #1e1e1e;
+  --color-text: #333333;
+  --color-text-dark: #ffffff;
+  --color-primary: #468189;
+  --color-primary-dark: #3a6b6f;
+}
+
+/* Explicitly force utility generation */
+.bg-background {
+  background-color: var(--color-background);
+}
+.bg-background-dark {
+  background-color: var(--color-background-dark);
+}
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.bg-surface-dark {
+  background-color: var(--color-surface-dark);
+}
+.text-text {
+  color: var(--color-text);
+}
+.text-text-dark {
+  color: var(--color-text-dark);
+}
+
+/* Dark mode overrides using class selector */
+.dark .bg-background {
+  background-color: var(--color-background-dark);
+}
+.dark .text-text {
+  color: var(--color-text-dark);
+}
+.dark .bg-surface {
+  background-color: var(--color-surface-dark);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,4 +80,19 @@
   .text-shadow {
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
+  
+  /* Explicitly define test classes */
+  .bg-test-base {
+    background-color: theme('colors.test-base');
+  }
+  .dark .bg-test-dark {
+    background-color: theme('colors.test-dark');
+  }
+
+  /* Temporary class to force generation - REMOVED */
+  /*
+  .force-bg-gen {
+    @apply bg-semantic-background;
+  }
+  */
 }

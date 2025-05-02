@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
+	"github.com/joho/godotenv"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +18,29 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting Go Alpine SaaS Starter...")
+	slog.Info("Starting Go Alpine SaaS Starter...")
+
+	// Set global log level to Debug to see diagnostic messages
+	logLevel := new(slog.LevelVar)
+	logLevel.Set(slog.LevelDebug)
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
+
+	// Manually load .env and set environment variables
+	envMap, err := godotenv.Read() // Read .env into a map
+	if err != nil {
+		slog.Warn("Error reading .env file, relying on existing environment variables", "error", err)
+	} else {
+		for key, value := range envMap {
+			if os.Getenv(key) == "" { // Only set if not already set in the OS environment
+				err := os.Setenv(key, value)
+				if err != nil {
+					// Log setting error, but continue
+					slog.Warn("Error setting env variable from .env", "key", key, "error", err)
+				}
+			}
+		}
+		slog.Info(".env file processed successfully")
+	}
 
 	// Create context that listens for termination signals
 	ctx, cancel := context.WithCancel(context.Background())
@@ -28,27 +51,29 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigChan
-		log.Println("Shutdown signal received")
+		slog.Info("Shutdown signal received")
 		cancel()
 	}()
 
 	// Load configuration from environment variables
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		slog.Error("Failed to load configuration", "error", err)
+		os.Exit(1)
 	}
 
 	// TODO: Set up logger (Phase 0) - for now use standard log
-	log.Println("Configuration loaded successfully")
+	slog.Info("Configuration loaded successfully")
 
 	// Connect to the database
-	log.Println("Connecting to database...")
+	slog.Info("Connecting to database...")
 	db, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("Failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
-	log.Println("Database connection established successfully")
+	slog.Info("Database connection established successfully")
 
 	// Note: The following line is commented out because sqlc code generation hasn't been run yet
 	// When sqlc is run, it will generate the New() function to create queries
@@ -60,33 +85,25 @@ func main() {
 	// We'll just create a simple endpoint to verify our setup
 
 	// Initialize the router with middleware and routes
-	router := server.New()
-
-	// Add health check route
-	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		// Test the database connection
-		err := db.Ping(r.Context())
-		if err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			_, _ = fmt.Fprintf(w, "Database connection error: %v", err)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprintf(w, "Status: OK\nDatabase: Connected")
-	})
+	srv, err := server.New(cfg, db) // Pass db connection to server
+	if err != nil {
+		slog.Error("Failed to create server", "error", err)
+		os.Exit(1)
+	}
 
 	// Set up the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
-	srv := &http.Server{
+	httpServer := &http.Server{
 		Addr:    addr,
-		Handler: router,
+		Handler: srv,
 	}
 
 	// Start the server in a goroutine
 	go func() {
-		log.Printf("Server listening on %s\n", addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Error starting server: %v\n", err)
+		slog.Info("Server listening on " + addr)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("Error starting server", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -94,13 +111,14 @@ func main() {
 	<-ctx.Done()
 
 	// Graceful shutdown
-	log.Println("Shutting down server...")
+	slog.Info("Shutting down server...")
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		slog.Error("Server shutdown failed", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server stopped gracefully")
+	slog.Info("Server stopped gracefully")
 }
