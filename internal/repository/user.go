@@ -10,6 +10,8 @@ import (
 
 // UserRepository defines the interface for user data access operations.
 type UserRepository interface {
+	// UpdateFirstRunComplete sets the onboarding completion flag for a user
+	UpdateFirstRunComplete(ctx context.Context, id uuid.UUID, complete bool) error
 	// Get retrieves a user by ID
 	Get(ctx context.Context, id uuid.UUID) (*database.User, error)
 

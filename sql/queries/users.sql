@@ -1,17 +1,21 @@
 -- name: GetUser :one
-SELECT * FROM users
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+FROM users
 WHERE id = $1 LIMIT 1;
 
 -- name: GetUserByEmail :one
-SELECT * FROM users
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+FROM users
 WHERE email = $1 LIMIT 1;
 
 -- name: GetUserByAuthID :one
-SELECT * FROM users
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+FROM users
 WHERE auth_id = $1 LIMIT 1;
 
 -- name: ListUsers :many
-SELECT * FROM users
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+FROM users
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
@@ -20,11 +24,12 @@ INSERT INTO users (
     email,
     name,
     avatar_url,
-    auth_id
+    auth_id,
+    first_run_complete
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
-RETURNING *;
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete;
 
 -- name: UpdateUser :one
 UPDATE users
@@ -37,7 +42,7 @@ SET
     last_login_at = COALESCE($7, last_login_at),
     updated_at = NOW()
 WHERE id = $1
-RETURNING *;
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete;
 
 -- name: DeleteUser :exec
 UPDATE users

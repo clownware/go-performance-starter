@@ -2,5 +2,62 @@
 <div class="max-w-3xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6 mt-12">
   <h1 class="text-3xl font-bold">Dashboard</h1>
   <p>Welcome to your dashboard. This page is ready for your custom SaaS widgets and stats.</p>
+
+  <!-- Empty State: Render when there is no user data (e.g., no projects) -->
+  {{/*
+    To show the empty state, ensure .HasProjects or equivalent is false in your handler data.
+    Example:
+      data := map[string]interface{}{
+        "HasProjects": len(projects) > 0,
+      }
+  */}}
+  {{ if not .HasProjects }}
+    {{ template "partials/empty_state.html" . }}
+  {{ end }}
+
+  <!-- Skeleton loader and table area (shown if there are projects) -->
+  {{ if .HasProjects }}
+  <div 
+    x-data="{ loading: true }" 
+    @htmx:beforeSwap.window="loading = false"
+    class="mt-10"
+  >
+    <!-- Skeleton Loader -->
+    <div 
+      x-show="loading" 
+      x-transition.opacity.duration.500ms 
+      class="space-y-2" 
+      aria-hidden="true"
+    >
+      <div class="animate-pulse flex space-x-4">
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+      </div>
+      <div class="animate-pulse flex space-x-4">
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+      </div>
+      <div class="animate-pulse flex space-x-4">
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+        <div class="rounded bg-muted-dark h-6 w-1/4"></div>
+      </div>
+    </div>
+    <!-- Real Table Data (to be swapped in by HTMX) -->
+    <div 
+      x-show="!loading" 
+      x-transition.opacity.duration.500ms 
+      id="dashboard-table"
+      hx-get="/dashboard/data"
+      hx-trigger="load"
+      hx-target="#dashboard-table"
+      hx-swap="outerHTML"
+    >
+      <!-- Table will be swapped in by HTMX -->
+    </div>
+  </div>
+  {{ end }}
 </div>
 {{ end }}

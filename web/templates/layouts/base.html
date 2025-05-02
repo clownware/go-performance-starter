@@ -52,8 +52,8 @@
                         Micro SaaS Starter
                     </a>
                     {{block "nav" .}}
-                    <nav class="hidden md:flex space-x-4">
-                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Home</a>
+                    <nav class="hidden md:flex space-x-4" role="navigation">
+                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800" aria-current="page">Home</a>
                         <a href="/dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Dashboard</a>
                     </nav>
                     {{end}}
@@ -73,15 +73,15 @@
                     <!-- User menu -->
                     {{block "user-menu" .}}
                     <div x-data="{ open: false }" class="relative">
-                      <button @click="open = !open" class="flex items-center focus:outline-none">
+                      <button @click="open = !open" class="flex items-center focus:outline-none focus:ring-2 focus:ring-primary" aria-haspopup="true" :aria-expanded="open.toString()" aria-controls="user-menu-dropdown">
                         <span class="mr-2 text-text dark:text-text-dark">John Doe</span>
                         <svg class="w-4 h-4 transform transition-transform" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                      <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow-lg rounded-md py-2 z-50">
-                        <a href="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">Profile</a>
-                        <a href="/auth/logout" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">Logout</a>
+                      <div x-show="open" @keydown.escape.window="open = false" @keydown.arrow-down.prevent="focusNextMenuItem()" @keydown.arrow-up.prevent="focusPrevMenuItem()" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow-lg rounded-md py-2 z-50" role="menu" id="user-menu-dropdown" tabindex="-1">
+                        <a href="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem" tabindex="-1">Profile</a>
+                        <a href="/auth/logout" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem" tabindex="-1">Logout</a>
                       </div>
                     </div>
                     {{end}}
@@ -131,18 +131,65 @@
     </script>
     
     <!-- Toast notifications -->
-    <div id="global-toast" class="hidden fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg"></div>
-    <script>
-      document.body.addEventListener('htmx:afterRequest', function(evt) {
-        var msg = evt.detail.xhr.getResponseHeader('HX-Trigger');
-        if (msg) {
-          var toast = document.getElementById('global-toast');
-          toast.textContent = msg;
-          toast.classList.remove('hidden');
-          setTimeout(function() { toast.classList.add('hidden'); }, 3000);
+    <div 
+      x-data="{
+        toasts: [],
+        add(type, msg) {
+          if (this.toasts.length >= 3) this.toasts.shift();
+          this.toasts.push({ type, msg, id: Date.now() + Math.random() });
+          setTimeout(() => this.toasts.shift(), 4000);
         }
-      });
-    </script>
+      }"
+      x-init="
+        window.addEventListener('toast', e => $data.add(e.detail.type, e.detail.msg));
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+          var msg = evt.detail.xhr.getResponseHeader('HX-Trigger');
+          var type = evt.detail.xhr.getResponseHeader('HX-Toast-Type') || 'success';
+          if (msg) window.dispatchEvent(new CustomEvent('toast', { detail: { type, msg } }));
+        });
+      "
+      class="fixed bottom-4 right-4 z-50 flex flex-col space-y-3 items-end"
+      aria-live="polite" aria-atomic="true"
+    >
+      <template x-for="toast in toasts" :key="toast.id">
+        <div
+          x-show="true"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="opacity-0 translate-y-4"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-in duration-200"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          :class="{
+            'bg-green-600 text-white': toast.type === 'success',
+            'bg-red-600 text-white': toast.type === 'error',
+            'bg-yellow-500 text-black': toast.type === 'warning'
+          }"
+          class="shadow-lg rounded px-4 py-2 min-w-[200px] flex items-center gap-2 animate-fade"
+          role="status"
+        >
+          <template x-if="toast.type === 'success'">
+            <span aria-hidden="true">✓</span>
+          </template>
+          <template x-if="toast.type === 'error'">
+            <span aria-hidden="true">!</span>
+          </template>
+          <template x-if="toast.type === 'warning'">
+            <span aria-hidden="true">⚠️</span>
+          </template>
+          <span x-text="toast.msg"></span>
+        </div>
+      </template>
+    </div>
+    <style>
+      @keyframes fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .animate-fade {
+        animation: fade 0.5s;
+      }
+    </style>
     
     <!-- HTMX extensions -->
     {{block "htmx-extensions" .}}{{end}}
@@ -151,6 +198,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             // Alpine.js data and components can be registered here
+// To support a11y: add focusNextMenuItem and focusPrevMenuItem JS helpers for menu keyboard navigation.
         });
     </script>
 </body>

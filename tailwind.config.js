@@ -37,13 +37,13 @@ module.exports = {
         background: '#f0ffce', // nyanza
         'background-dark': '#0c0c0c', // night
         surface: '#ffffff',
-        'surface-dark': '#1a1a1a',
+        'surface-dark': '#181818', // slightly darker for more contrast
         text: '#0c0c0c', // night
         'text-dark': '#f0ffce', // nyanza
         accent: '#d2cca1', // sage
-        'accent-dark': '#d2cca1',
+        'accent-dark': '#fffad1', // lighter accent for links, etc.
         muted: '#d2cca1', // sage
-        'muted-dark': '#468189' // teal
+        'muted-dark': '#e6e6b3', // lighter for better contrast
       }
     }
   },

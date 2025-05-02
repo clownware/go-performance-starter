@@ -14,6 +14,7 @@ import (
 	"github.com/yourusername/go-alpine-saas-starter/internal/config"
 	"github.com/yourusername/go-alpine-saas-starter/internal/handler"
 	mw "github.com/yourusername/go-alpine-saas-starter/internal/middleware"
+	"github.com/yourusername/go-alpine-saas-starter/internal/repository"
 	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
 )
 
@@ -109,6 +110,9 @@ func (s *Server) setupMiddleware() {
 	s.router.Use(mw.Recoverer)
 	s.router.Use(mw.Timeout(30 * time.Second))
 
+	// Inject UserRepository into context for all routes
+	s.router.Use(mw.UserRepoMiddleware(repository.NewUserRepository(s.db)))
+
 	// Static file server with cache control
 	fileServer(s.router, "/static", http.Dir("./web/static"))
 }
@@ -123,6 +127,9 @@ func (s *Server) setupRoutes() {
 
 	// Logout GET route for UX (renders confirm form)
 	r.Get("/auth/logout", handler.LogoutPage)
+
+	// First-run onboarding (after signup)
+	handler.FirstRunHandlers(r)
 
 	// API routes
 	s.router.Route("/api", func(api chi.Router) {
