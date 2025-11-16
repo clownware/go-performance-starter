@@ -7,11 +7,11 @@ Define immutable decisions first; changing these later is painful.
 | Step | Task | Why It Matters |
 |------|------|----------------|
 | 0.01 | Choose Go version & module path | Go 1.22+ enables improved handler signatures |
-| 0.02 | Select web framework | Chi/Echo align better with standard library |
+| 0.02 | Select web framework | Chi aligns better with standard library |
 | 0.03 | Decide development workflow | Consistent reloading and automation saves time |
 | 0.04 | Initialize project structure | Structure affects maintainability |
 | 0.05 | Setup git hooks & CI | Early quality gates prevent issues |
-| 0.06 | Choose structured logger | Pick one consistent approach (zerolog OR zap) |
+| 0.06 | Choose structured logger | This starter uses zerolog for performance |
 | 0.07 | Create Architecture Decision Record | Document foundational choices |
 | 0.08 | Pick base linting tool | Select golangci-lint for code quality |
 | 0.09 | Define secret management strategy | Never use .env files in production |
@@ -56,18 +56,28 @@ This documentation will be referenced in the Deployment phase (Phase 10).
 
 ## Recommended Directory Structure
 
+This starter kit uses the following structure:
+
 ```
-my-app/
-├── cmd/web/         # Application entry points
-├── internal/        # Private code
+starter-alpine-go-performance/
+├── cmd/
+│   └── api/         # Application entry point (main.go)
+├── internal/        # Private application code
+│   ├── auth/        # Authentication related code
 │   ├── config/      # Configuration handling
+│   ├── database/    # Database connection and models
 │   ├── handler/     # HTTP handlers
+│   ├── middleware/  # Application middleware
 │   ├── model/       # Domain models
-│   ├── repository/  # Data access
+│   ├── repository/  # Data access layer
 │   └── server/      # Server configuration
 ├── migrations/      # Database migrations
-├── templates/       # HTML templates
-├── static/          # Static assets
+├── sql/             # SQLC query files
+│   ├── queries/     # SQL queries for SQLC
+│   └── schema/      # Database schema
+├── web/             # Web assets
+│   ├── templates/   # HTML templates
+│   └── static/      # Static assets (css, js, images)
 ├── .air.toml        # Hot reload config
 ├── .golangci.yml    # Linting rules
 ├── Taskfile.yml     # Task automation

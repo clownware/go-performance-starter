@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/yourusername/go-alpine-saas-starter/internal/auth"
 	"github.com/yourusername/go-alpine-saas-starter/internal/config"
 	"github.com/yourusername/go-alpine-saas-starter/internal/handler"
@@ -103,12 +104,13 @@ func isFileType(filePath string, extensions ...string) bool {
 }
 
 func (s *Server) setupMiddleware() {
-	// Basic middleware
-	s.router.Use(mw.RequestID)
-	s.router.Use(mw.RealIP)
-	s.router.Use(mw.Logger)
-	s.router.Use(mw.Recoverer)
-	s.router.Use(mw.Timeout(30 * time.Second))
+	// Basic middleware (order matters!)
+	s.router.Use(mw.RequestID)      // Generate request ID first
+	s.router.Use(mw.RealIP)         // Extract real IP
+	s.router.Use(mw.Metrics)        // Track metrics (uses RequestID)
+	s.router.Use(mw.RequestLogger)  // Log requests with context
+	s.router.Use(mw.Recoverer)      // Panic recovery
+	s.router.Use(mw.Timeout(30 * time.Second)) // Request timeout
 
 	// Inject UserRepository into context for all routes
 	s.router.Use(mw.UserRepoMiddleware(repository.NewUserRepository(s.db)))
@@ -140,6 +142,9 @@ func (s *Server) setupRoutes() {
 
 	// Health check endpoint (liveness)
 	s.router.Get("/healthz", handler.HealthHandler)
+	
+	// Metrics endpoint for Prometheus
+	s.router.Handle("/metrics", promhttp.Handler())
 
 	// Profile page (HTMX-enabled)
 	r.Group(func(protectedRouter chi.Router) {

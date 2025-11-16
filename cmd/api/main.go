@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/yourusername/go-alpine-saas-starter/internal/config"
 	_ "github.com/yourusername/go-alpine-saas-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
+	"github.com/yourusername/go-alpine-saas-starter/internal/middleware"
 	"github.com/yourusername/go-alpine-saas-starter/internal/server"
 )
 
@@ -90,6 +91,10 @@ func main() {
 		slog.Error("Failed to create server", "error", err)
 		os.Exit(1)
 	}
+	
+	// Start memory metrics collector (updates every 30 seconds)
+	middleware.StartMemoryMetricsCollector(30 * time.Second)
+	slog.Info("Memory metrics collector started")
 
 	// Set up the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)

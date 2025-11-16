@@ -10,7 +10,7 @@ For a simple CRUD dashboard or personal project, follow this streamlined approac
 
 - **Focus on Phases 0-6**: Core foundations, data, UI, routing, and authentication
 - **Simplify Background Jobs**: Use goroutines or scheduled tasks instead of Redis+Asynq
-- **Minimize Testing**: Implement basic testing only, add more when needed
+- **Focus Testing on Critical Paths**: Prioritize tests for core flows (auth, main CRUD, key business logic)
 - **Defer Performance Optimization**: Start with basic indexes, add caching when necessary
 - **Simplify Deployment**: Single region deployment, basic logging
 
@@ -68,7 +68,7 @@ For cross-reference and search purposes, simplified steps use the S.xx prefix:
 6. Configure Supabase Auth for authentication
 7. Set up basic deployment pipeline
 8. Implement simple logging and monitoring
-9. Add tests for critical paths
+9. Implement tests for critical paths (authentication, core CRUD operations, security-sensitive flows)
 
 ## Supabase-Specific Guidance
 
@@ -77,6 +77,14 @@ For cross-reference and search purposes, simplified steps use the S.xx prefix:
 - Configure Row Level Security (RLS) for data protection
 - Use Supabase Storage for file uploads when needed
 - Leverage PostgREST features for optimized queries
+
+## Testing Strategy for Simplified Apps
+
+- **Critical flows first**: Auth, CRUD operations, data validation
+- **Table-driven tests**: Efficient test coverage for handlers
+- **Security tests**: Validate RLS policies and JWT handling
+- **Minimal scope, solid coverage**: Fewer components, but well-tested
+- **Expand as needed**: Add integration/performance tests when complexity grows
 
 ## Example Starter Application
 
@@ -94,6 +102,4 @@ A minimal starter application example would include the project structure and ba
 - Implement the simplest solution that works
 - Document decisions and architecture as you go
 - Add advanced features only when you feel the pain
-
-
-
+- Test critical paths even in simplified apps

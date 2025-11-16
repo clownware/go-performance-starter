@@ -7,7 +7,7 @@ This document outlines the technology stack and methodology for building high-pe
 | Component | Technology | Key Benefit |
 |-----------|------------|-------------|
 | **Language** | Go 1.22+ | Improved handler signatures, generics |
-| **Web Framework** | Echo or Chi | Standard lib alignment |
+| **Web Framework** | Chi | Standard lib alignment |
 | **Frontend** | HTMX + Alpine.js | Minimal JavaScript approach |
 | **HTML Generation** | html/template | Standard library integration |
 | **Development Tools** | air, taskfile | Fast reloading, automation |
@@ -23,6 +23,7 @@ This document outlines the technology stack and methodology for building high-pe
 - Use Supabase for both database and authentication
 - Implement goroutines for simple background tasks
 - Deploy to a single region with Cloudflare
+- **Note**: For alternative lightweight setups, SQLite can be considered, but this starter kit is built around Supabase
 
 ### For Enterprise Projects
 - Implement the complete methodology
@@ -33,13 +34,14 @@ This document outlines the technology stack and methodology for building high-pe
 
 ## Key Technology Decisions
 
-- **Echo/Chi over Fiber**: Better standard library alignment and HTTP/2 support
+- **Chi over Fiber**: Better standard library alignment and HTTP/2 support
 - **html/template over custom solutions**: Wider developer familiarity
 - **Supabase for backend services**: Provides PostgreSQL database, authentication, and storage
 - **Goroutines for simple tasks**: No dependencies for basic background jobs
 - **Asynq + Redis** for complex background processing (when needed)
 - **Cloudflare Pages/Workers**: Edge distribution with global distribution
   - **Note**: Workers Classic has a 1MB size limit for WASM binaries; plan deployment accordingly
+- **Logging choice**: This starter kit uses zerolog for performance; zap is a viable alternative
 
 ## Common Pitfalls & Prevention
 
@@ -128,55 +130,3 @@ A streamlined implementation for smaller projects that focuses on the core essen
 By following these phases, you can create applications that are fast, maintainable, and provide excellent user experiences with minimal JavaScript. The methodology is designed to be adaptable - simple applications can focus on the core phases and defer or simplify the more advanced features, while complex applications can implement the full methodology as needed.
 
 Remember that the goal is to deliver a working, maintainable application - avoid over-engineering features that aren't required by your actual business needs.
-# Go Web Application Implementation Guide: Overview
-
-This document outlines the technology stack and methodology for building high-performance Go web applications with minimal JavaScript.
-
-## Technology Stack
-
-| Component | Technology | Key Benefit |
-|-----------|------------|-------------|
-| **Language** | Go 1.22+ | Improved handler signatures, generics |
-| **Web Framework** | Echo or Chi | Standard lib alignment |
-| **Frontend** | HTMX + Alpine.js | Minimal JavaScript approach |
-| **HTML Generation** | html/template | Standard library integration |
-| **Development Tools** | air, taskfile | Fast reloading, automation |
-| **Database & Auth** | Supabase | Integrated solution |
-| **Background Jobs** | Goroutines/Asynq | Simple or advanced processing |
-| **Deployment** | Cloudflare Pages/Workers | Edge distribution |
-| **Observability** | Structured logging | Base monitoring |
-
-## Adapting the Methodology
-
-### For Smaller Projects
-- Focus on Phases 0-6, simplify others
-- Use SQLite for development and production
-- Implement goroutines for simple background tasks
-- Deploy to a single region
-
-### For Enterprise Projects
-- Implement the complete methodology
-- Add comprehensive observability
-- Configure multi-region deployments
-- Scale database with connection pooling
-
-## Key Technology Decisions
-
-- **Echo/Chi over Fiber**: Better standard library alignment and HTTP/2 support
-- **html/template over custom solutions**: Wider developer familiarity
-- **Supabase for backend services**: Reduces service complexity
-- **Goroutines for simple tasks**: No dependencies for basic background jobs
-- **Logging choice**: Pick either zerolog (performance) or zap (flexibility)
-
-## Common Pitfalls & Prevention
-
-| Potential Issue | Prevention Strategy |
-|-----------------|---------------------|
-| N+1 query problems | Use optimized query patterns |
-| Memory leaks | Proper context cancellation |
-| Race conditions | Mutex locking and atomic operations |
-| CSRF vulnerabilities | Token validation for forms |
-| Connection exhaustion | Appropriate connection pooling |
-| HTMX race conditions | Implement proper swap strategies |
-| Over-engineering | Match complexity to project needs |
-| JWT token security | Short expiration times and validation |

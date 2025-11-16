@@ -22,7 +22,7 @@ Implement secure user authentication and permission control using Supabase Auth.
 - Implement proper JWT validation with appropriate audience and expiration checks
 - Create role-based authorization middleware based on JWT claims
 - Set up Row Level Security (RLS) in Supabase for data access control
-- Implement CSRF protection for state-changing operations using token approach from Phase 5
+- Implement CSRF protection for state-changing operations (see "CSRF Protection with HTMX" in Phase 5)
 - Add rate limiting to prevent authentication abuse
 - Add audit logging for security-relevant events
 
@@ -30,7 +30,7 @@ Implement secure user authentication and permission control using Supabase Auth.
 
 - **JWT validation**: Verify signature, audience, and expiration
 - **Token management**: Implement refresh token rotation for secure sessions
-- **CSRF protection**: Add token validation for non-GET operations as shown in Phase 5
+- **CSRF protection**: Add token validation for non-GET operations (see Phase 5 for client-side implementation)
 - **Row Level Security**: Enforce RLS policies designed in Phase 1
 - **Error messages**: Return generic errors for auth failures
 - **Rate limiting**: Prevent brute force attacks with middleware like ulule/limiter
@@ -38,11 +38,11 @@ Implement secure user authentication and permission control using Supabase Auth.
 
 ## CSRF Integration with HTMX
 
-Follow the pattern established in Phase 5 for CSRF protection:
+Implement the CSRF protection pattern described in Phase 5 ("CSRF Protection with HTMX" section):
 - Generate tokens server-side for each session
-- Include token in meta tag or hidden form field
-- Send token with all state-changing HTMX requests
-- Validate token on server for all non-GET operations
+- Include token in meta tag or hidden form field (see Phase 5 for template examples)
+- Send token with all state-changing HTMX requests (configure using hx-headers)
+- Validate token on server for all non-GET operations (middleware shown below)
 - Ensure token rotation on login/logout events
 
 ```go
@@ -138,6 +138,3 @@ authGroup.Use(rateLimiterMiddleware.Handler)
 - Account management features complete
 - Audit logging tracks security events
 - Account recovery flow implemented and tested
-
-
-

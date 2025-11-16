@@ -75,3 +75,47 @@ jobs:
 
     - name: Build
       run: go build -v ./cmd/api
+
+  performance:
+    name: Performance Budget Check
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+        cache: true
+
+    - name: Install Task
+      run: |
+        sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
+    - name: Run performance budget tests
+      run: task test:performance
+
+    - name: Check binary size
+      run: |
+        mkdir -p ./dist
+        go build -ldflags="-s -w" -o ./dist/app ./cmd/api
+        go run scripts/check-binary-size.go ./dist/app
+
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const stats = fs.statSync('./dist/app');
+          const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+          const budgetMB = 20;
+          const emoji = stats.size <= budgetMB * 1024 * 1024 ? '✅' : '❌';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Performance Budget Check ${emoji}\n\n**Binary Size:** ${sizeMB} MB / ${budgetMB} MB`
+          });

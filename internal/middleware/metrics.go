@@ -1,0 +1,233 @@
+package middleware
+
+import (
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/rs/zerolog/log"
+
+	"github.com/yourusername/go-alpine-saas-starter/internal/performance"
+)
+
+var (
+	// HTTP metrics
+	httpRequestsTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests",
+		},
+		[]string{"method", "path", "status"},
+	)
+
+	httpRequestDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_seconds",
+			Help:    "HTTP request duration in seconds",
+			Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+		},
+		[]string{"method", "path", "status"},
+	)
+
+	httpRequestSize = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_size_bytes",
+			Help:    "HTTP request size in bytes",
+			Buckets: prometheus.ExponentialBuckets(100, 10, 8),
+		},
+		[]string{"method", "path"},
+	)
+
+	httpResponseSize = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_response_size_bytes",
+			Help:    "HTTP response size in bytes",
+			Buckets: prometheus.ExponentialBuckets(100, 10, 8),
+		},
+		[]string{"method", "path"},
+	)
+
+	// Performance budget violations
+	budgetViolations = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "performance_budget_violations_total",
+			Help: "Total number of performance budget violations",
+		},
+		[]string{"budget_type", "path"},
+	)
+
+	// Active connections
+	activeConnections = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "http_active_connections",
+			Help: "Number of active HTTP connections",
+		},
+	)
+
+	// Memory metrics
+	memoryUsage = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "go_memory_usage_bytes",
+			Help: "Memory usage by type",
+		},
+		[]string{"type"},
+	)
+)
+
+// responseWriter wraps http.ResponseWriter to capture status code and bytes written
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode   int
+	bytesWritten int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	n, err := rw.ResponseWriter.Write(b)
+	rw.bytesWritten += n
+	return n, err
+}
+
+// Metrics middleware tracks HTTP metrics using Prometheus
+func Metrics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		activeConnections.Inc()
+		defer activeConnections.Dec()
+
+		// Wrap response writer
+		ww := &responseWriter{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+
+		// Get route pattern (e.g., /api/posts/{id})
+		routePattern := getRoutePattern(r)
+
+		// Track request size
+		if r.ContentLength > 0 {
+			httpRequestSize.WithLabelValues(r.Method, routePattern).Observe(float64(r.ContentLength))
+		}
+
+		// Process request
+		next.ServeHTTP(ww, r)
+
+		// Calculate duration
+		duration := time.Since(start)
+		durationSeconds := duration.Seconds()
+		status := strconv.Itoa(ww.statusCode)
+
+		// Record metrics
+		httpRequestsTotal.WithLabelValues(r.Method, routePattern, status).Inc()
+		httpRequestDuration.WithLabelValues(r.Method, routePattern, status).Observe(durationSeconds)
+		httpResponseSize.WithLabelValues(r.Method, routePattern).Observe(float64(ww.bytesWritten))
+
+		// Check performance budgets
+		checkPerformanceBudget(duration, routePattern, r.Method)
+
+		// Log slow requests
+		if duration > performance.MaxP95ResponseTime {
+			log.Warn().
+				Str("method", r.Method).
+				Str("path", r.URL.Path).
+				Str("route", routePattern).
+				Dur("duration", duration).
+				Dur("budget", performance.MaxP95ResponseTime).
+				Int("status", ww.statusCode).
+				Msg("slow request detected")
+		}
+	})
+}
+
+// checkPerformanceBudget verifies response time against performance budgets
+func checkPerformanceBudget(duration time.Duration, path, method string) {
+	if duration > performance.MaxP50ResponseTime {
+		budgetViolations.WithLabelValues("p50_response_time", path).Inc()
+	}
+	if duration > performance.MaxP95ResponseTime {
+		budgetViolations.WithLabelValues("p95_response_time", path).Inc()
+	}
+	if duration > performance.MaxP99ResponseTime {
+		budgetViolations.WithLabelValues("p99_response_time", path).Inc()
+	}
+}
+
+// getRoutePattern extracts the route pattern from the request
+// e.g., /api/posts/123 -> /api/posts/{id}
+func getRoutePattern(r *http.Request) string {
+	rctx := chi.RouteContext(r.Context())
+	if rctx != nil && rctx.RoutePattern() != "" {
+		return rctx.RoutePattern()
+	}
+	return r.URL.Path
+}
+
+// UpdateMemoryMetrics updates memory usage metrics
+func UpdateMemoryMetrics() {
+	stats := performance.GetMemoryStats()
+	
+	if allocMB, ok := stats["alloc_mb"].(float64); ok {
+		memoryUsage.WithLabelValues("alloc").Set(allocMB * 1024 * 1024)
+	}
+	if sysMB, ok := stats["sys_mb"].(float64); ok {
+		memoryUsage.WithLabelValues("sys").Set(sysMB * 1024 * 1024)
+	}
+	if stackMB, ok := stats["stack_in_use_mb"].(float64); ok {
+		memoryUsage.WithLabelValues("stack").Set(stackMB * 1024 * 1024)
+	}
+}
+
+// StartMemoryMetricsCollector starts a goroutine to periodically update memory metrics
+func StartMemoryMetricsCollector(interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			UpdateMemoryMetrics()
+		}
+	}()
+}
+
+// RequestLogger is a custom logger middleware that integrates with our metrics
+func RequestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		
+		// Wrap response writer to capture status
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		
+		// Add request ID to context if available
+		requestID := middleware.GetReqID(r.Context())
+		
+		logger := log.With().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Str("remote_addr", r.RemoteAddr).
+			Str("request_id", requestID).
+			Logger()
+		
+		// Add logger to context
+		ctx := logger.WithContext(r.Context())
+		
+		// Process request
+		next.ServeHTTP(ww, r.WithContext(ctx))
+		
+		duration := time.Since(start)
+		
+		// Log request
+		logger.Info().
+			Int("status", ww.Status()).
+			Int("bytes", ww.BytesWritten()).
+			Dur("duration", duration).
+			Msg("request completed")
+	})
+}

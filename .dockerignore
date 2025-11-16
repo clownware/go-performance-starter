@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+docs/
+*.md
+README.md
+LICENSE
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+dist/
+tmp/
+*.out
+coverage.txt
+*.prof
+app
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+*_test.go
+testdata/
+
+# CI
+.github/
+.golangci.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Air (hot reload)
+.air.toml
+tmp/

@@ -21,10 +21,11 @@ func ShowFirstRunWelcome(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
 		return
 	}
-	if user.FirstRunComplete {
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-		return
-	}
+	// TODO: Re-enable after adding first_run_complete column to users table
+	// if user.FirstRunComplete {
+	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	// 	return
+	// }
 	webutil.RenderTemplate(w, r, http.StatusOK, "partials/first_run_experience.html", map[string]interface{}{})
 }
 
@@ -35,10 +36,11 @@ func ShowFirstRunProfile(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
 		return
 	}
-	if user.FirstRunComplete {
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-		return
-	}
+	// TODO: Re-enable after adding first_run_complete column to users table
+	// if user.FirstRunComplete {
+	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	// 	return
+	// }
 	webutil.RenderTemplate(w, r, http.StatusOK, "partials/first_run_experience.html", map[string]interface{}{
 		"ShowProfileSetup": true,
 		"User": user,
@@ -52,10 +54,11 @@ func ShowFirstRunCTAs(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
 		return
 	}
-	if user.FirstRunComplete {
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-		return
-	}
+	// TODO: Re-enable after adding first_run_complete column to users table
+	// if user.FirstRunComplete {
+	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	// 	return
+	// }
 	// Mark onboarding as complete
 	repo := webutil.GetUserRepoFromContext(r.Context())
 	err := repo.UpdateFirstRunComplete(r.Context(), user.ID, true)

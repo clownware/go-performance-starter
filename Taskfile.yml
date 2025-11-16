@@ -76,6 +76,24 @@ tasks:
       - go test -coverprofile=coverage.out ./...
       - go tool cover -html=coverage.out
 
+  test:performance:
+    desc: Run performance budget tests
+    cmds:
+      - go test -v ./internal/performance/...
+      - task: test:binary-size
+
+  test:binary-size:
+    desc: Check binary size against budget
+    cmds:
+      - go build -ldflags="-s -w" -o ./dist/app ./cmd/api
+      - go run scripts/check-binary-size.go ./dist/app
+
+  test:memory-profile:
+    desc: Run memory profiling tests
+    cmds:
+      - go test -memprofile=mem.prof -run=^$ -bench=. ./internal/performance/...
+      - go tool pprof -text mem.prof
+
   # Docker tasks
   docker:build:
     desc: Build Docker image
