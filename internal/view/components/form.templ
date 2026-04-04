@@ -1,0 +1,178 @@
+package components
+
+import "fmt"
+
+// formMethod returns the method attribute, defaulting to "post".
+func formMethod(props FormProps) string {
+	if props.Method != "" {
+		return props.Method
+	}
+	return "post"
+}
+
+// formClass returns the CSS class for the form element.
+func formClass(props FormProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	return "space-y-6"
+}
+
+templ Form(props FormProps) {
+	<form
+		if props.ID != "" {
+			id={ props.ID }
+		}
+		if props.Action != "" {
+			action={ templ.SafeURL(props.Action) }
+		}
+		method={ formMethod(props) }
+		class={ formClass(props) }
+		{ props.Attrs... }
+	>
+		{ children... }
+	</form>
+}
+
+// ---------------------------------------------------------------------------
+// FormValidation — Alpine.js client + server validation input
+// ---------------------------------------------------------------------------
+
+// formValidationType returns the input type, defaulting to "text".
+func formValidationType(props FormValidationProps) string {
+	if props.Type != "" {
+		return props.Type
+	}
+	return "text"
+}
+
+// formValidationClass returns the wrapper class, defaulting to "mb-4".
+func formValidationClass(props FormValidationProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	return "mb-4"
+}
+
+// formValidationRequiredMsg returns the required validation message.
+func formValidationRequiredMsg(props FormValidationProps) string {
+	if props.RequiredMessage != "" {
+		return props.RequiredMessage
+	}
+	return "This field is required"
+}
+
+// formValidationPatternMsg returns the pattern validation message.
+func formValidationPatternMsg(props FormValidationProps) string {
+	if props.PatternMessage != "" {
+		return props.PatternMessage
+	}
+	return "Please enter a valid value"
+}
+
+// formValidationXData returns the Alpine.js x-data expression for form validation.
+// Security note: serverError is currently used for demo strings.
+// When this becomes user-supplied, escape quotes and backslashes.
+func formValidationXData(props FormValidationProps) string {
+	patternJS := "null"
+	if props.Pattern != "" {
+		patternJS = fmt.Sprintf("'%s'", props.Pattern)
+	}
+
+	maxLen := 999999
+	if props.MaxLength > 0 {
+		maxLen = props.MaxLength
+	}
+
+	return fmt.Sprintf(`{
+		value: '%s',
+		touched: false,
+		required: %t,
+		pattern: %s,
+		minLength: %d,
+		maxLength: %d,
+		serverError: '%s',
+		get isValid() {
+			if (this.serverError) return false;
+			if (this.required && !this.value) return false;
+			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return false;
+			if (this.minLength > 0 && this.value.length < this.minLength) return false;
+			if (this.maxLength > 0 && this.value.length > this.maxLength) return false;
+			return true;
+		},
+		get displayMessage() {
+			if (this.serverError) return this.serverError;
+			if (this.required && !this.value) return '%s';
+			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return '%s';
+			if (this.minLength > 0 && this.value.length < this.minLength) return 'Must be at least ' + this.minLength + ' characters';
+			if (this.maxLength > 0 && this.value.length > this.maxLength) return 'Must be at most ' + this.maxLength + ' characters';
+			return '';
+		}
+	}`,
+		props.Value,
+		props.Required,
+		patternJS,
+		props.MinLength,
+		maxLen,
+		props.ServerError,
+		formValidationRequiredMsg(props),
+		formValidationPatternMsg(props),
+	)
+}
+
+templ FormValidation(props FormValidationProps) {
+	<div
+		x-data={ formValidationXData(props) }
+		class={ formValidationClass(props) }
+	>
+		if props.Label != "" {
+			<label
+				for={ props.ID }
+				class="block text-sm font-medium text-gray-700 mb-1"
+			>
+				{ props.Label }
+				if props.Required {
+					<span class="text-red-500">*</span>
+				}
+			</label>
+		}
+		<input
+			id={ props.ID }
+			name={ props.Name }
+			type={ formValidationType(props) }
+			placeholder={ props.Placeholder }
+			class="input focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+			x-model="value"
+			@blur="touched = true"
+			:class="{ 'border-red-300': serverError || (!isValid && touched) }"
+			if props.Required {
+				required
+			}
+			if props.Pattern != "" {
+				pattern={ props.Pattern }
+			}
+			if props.MinLength > 0 {
+				minlength={ fmt.Sprintf("%d", props.MinLength) }
+			}
+			if props.MaxLength > 0 {
+				maxlength={ fmt.Sprintf("%d", props.MaxLength) }
+			}
+			aria-describedby={ props.ID + "-error" }
+			{ props.Attrs... }
+		/>
+		<div
+			x-show="serverError || (!isValid && touched)"
+			x-cloak
+			class="mt-1 text-sm text-red-600"
+			id={ props.ID + "-error" }
+			role="alert"
+		>
+			<span x-text="displayMessage"></span>
+		</div>
+		if props.HelperText != "" {
+			<p class="mt-1 text-xs text-gray-500">
+				{ props.HelperText }
+			</p>
+		}
+	</div>
+}

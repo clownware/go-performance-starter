@@ -1,8 +1,8 @@
 package pages
 
 import (
-	"fmt"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/components"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
 )
 
@@ -12,78 +12,23 @@ type HomePageProps struct {
 	TestFieldError string
 }
 
-// formValidationXData returns the Alpine.js x-data expression for the form validation field.
-// Security note: serverError is currently a hardcoded demo string.
-// When this becomes user-supplied in later phases, escape quotes and backslashes.
-func formValidationXData(serverError string) string {
-	return fmt.Sprintf(`{
-		value: '',
-		touched: false,
-		required: true,
-		pattern: null,
-		minLength: 0,
-		maxLength: 999999,
-		serverError: '%s',
-		get isValid() {
-			if (this.serverError) return false;
-			if (this.required && !this.value) return false;
-			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return false;
-			if (this.minLength > 0 && this.value.length < this.minLength) return false;
-			if (this.maxLength > 0 && this.value.length > this.maxLength) return false;
-			return true;
-		},
-		get displayMessage() {
-			if (this.serverError) return this.serverError;
-			if (this.required && !this.value) return 'Client: This field is mandatory!';
-			return '';
-		}
-	}`, serverError)
-}
-
 templ HomePage(props HomePageProps) {
 	@layouts.Base(props.BaseProps) {
 		<div class="max-w-3xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6">
 			<h1 class="text-2xl font-semibold mb-4">Welcome!</h1>
 			<p class="mb-6">This page demonstrates form validation feedback.</p>
-			@formValidationField(props.TestFieldError)
+			@components.FormValidation(components.FormValidationProps{
+				ID:              "test-field",
+				Name:            "test_field",
+				Label:           "Test Field (Server Validation Demo)",
+				Placeholder:     "Enter something",
+				Required:        true,
+				ServerError:     props.TestFieldError,
+				RequiredMessage: "Client: This field is mandatory!",
+			})
 			<button type="submit" class="bg-primary text-white dark:bg-primary-dark dark:text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:opacity-90 dark:hover:opacity-90 mt-2">
 				Submit (for client validation)
 			</button>
 		</div>
 	}
-}
-
-templ formValidationField(serverError string) {
-	<div
-		x-data={ formValidationXData(serverError) }
-		class="mb-4"
-	>
-		<label
-			for="test-field"
-			class="block text-sm font-medium text-gray-700 mb-1"
-		>
-			Test Field (Server Validation Demo) <span class="text-red-500">*</span>
-		</label>
-		<input
-			id="test-field"
-			name="test_field"
-			type="text"
-			placeholder="Enter something"
-			class="input focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-			x-model="value"
-			@blur="touched = true"
-			:class="{ 'border-red-300': serverError || (!isValid && touched) }"
-			required
-			aria-describedby="test-field-error"
-		/>
-		<div
-			x-show="serverError || (!isValid && touched)"
-			x-cloak
-			class="mt-1 text-sm text-red-600"
-			id="test-field-error"
-			role="alert"
-		>
-			<span x-text="displayMessage"></span>
-		</div>
-	</div>
 }

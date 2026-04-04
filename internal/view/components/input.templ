@@ -1,0 +1,72 @@
+package components
+
+// inputType returns the type attribute, defaulting to "text".
+func inputType(props InputProps) string {
+	if props.Type != "" {
+		return props.Type
+	}
+	return "text"
+}
+
+// inputClass returns the CSS class for the input element.
+func inputClass(props InputProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	return "input"
+}
+
+// inputAriaDescribedBy returns the appropriate aria-describedby value.
+func inputAriaDescribedBy(props InputProps) string {
+	if props.HasError {
+		return props.ID + "-error"
+	}
+	if props.HelperText != "" {
+		return props.ID + "-description"
+	}
+	return ""
+}
+
+templ Input(props InputProps) {
+	<div class="mb-4">
+		if props.Label != "" {
+			<label for={ props.ID } class="block text-sm font-medium text-gray-700 mb-1">
+				{ props.Label }
+				if props.Required {
+					<span class="text-red-500">*</span>
+				}
+			</label>
+		}
+		<input
+			type={ inputType(props) }
+			id={ props.ID }
+			name={ props.Name }
+			value={ props.Value }
+			placeholder={ props.Placeholder }
+			class={ inputClass(props) }
+			if props.Required {
+				required
+			}
+			if props.Disabled {
+				disabled
+			}
+			if props.Readonly {
+				readonly
+			}
+			if inputAriaDescribedBy(props) != "" {
+				aria-describedby={ inputAriaDescribedBy(props) }
+			}
+			{ props.Attrs... }
+		/>
+		if props.HelperText != "" {
+			<p id={ props.ID + "-description" } class="mt-1 text-sm text-gray-500">
+				{ props.HelperText }
+			</p>
+		}
+		if props.HasError {
+			<p id={ props.ID + "-error" } class="mt-1 text-sm text-red-600" role="alert">
+				{ props.ErrorMessage }
+			</p>
+		}
+	</div>
+}

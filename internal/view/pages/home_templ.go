@@ -9,8 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"fmt"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/components"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
 )
 
@@ -18,34 +18,6 @@ import (
 type HomePageProps struct {
 	view.BaseProps
 	TestFieldError string
-}
-
-// formValidationXData returns the Alpine.js x-data expression for the form validation field.
-// Security note: serverError is currently a hardcoded demo string.
-// When this becomes user-supplied in later phases, escape quotes and backslashes.
-func formValidationXData(serverError string) string {
-	return fmt.Sprintf(`{
-		value: '',
-		touched: false,
-		required: true,
-		pattern: null,
-		minLength: 0,
-		maxLength: 999999,
-		serverError: '%s',
-		get isValid() {
-			if (this.serverError) return false;
-			if (this.required && !this.value) return false;
-			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return false;
-			if (this.minLength > 0 && this.value.length < this.minLength) return false;
-			if (this.maxLength > 0 && this.value.length > this.maxLength) return false;
-			return true;
-		},
-		get displayMessage() {
-			if (this.serverError) return this.serverError;
-			if (this.required && !this.value) return 'Client: This field is mandatory!';
-			return '';
-		}
-	}`, serverError)
 }
 
 func HomePage(props HomePageProps) templ.Component {
@@ -85,7 +57,15 @@ func HomePage(props HomePageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = formValidationField(props.TestFieldError).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.FormValidation(components.FormValidationProps{
+				ID:              "test-field",
+				Name:            "test_field",
+				Label:           "Test Field (Server Validation Demo)",
+				Placeholder:     "Enter something",
+				Required:        true,
+				ServerError:     props.TestFieldError,
+				RequiredMessage: "Client: This field is mandatory!",
+			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -96,48 +76,6 @@ func HomePage(props HomePageProps) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = layouts.Base(props.BaseProps).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-func formValidationField(serverError string) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div x-data=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(formValidationXData(serverError))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 58, Col: 43}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"mb-4\"><label for=\"test-field\" class=\"block text-sm font-medium text-gray-700 mb-1\">Test Field (Server Validation Demo) <span class=\"text-red-500\">*</span></label> <input id=\"test-field\" name=\"test_field\" type=\"text\" placeholder=\"Enter something\" class=\"input focus:outline-none focus:ring-primary-500 focus:border-primary-500\" x-model=\"value\" @blur=\"touched = true\" :class=\"{ 'border-red-300': serverError || (!isValid && touched) }\" required aria-describedby=\"test-field-error\"><div x-show=\"serverError || (!isValid && touched)\" x-cloak class=\"mt-1 text-sm text-red-600\" id=\"test-field-error\" role=\"alert\"><span x-text=\"displayMessage\"></span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
