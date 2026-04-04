@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog/log"
 
-	"github.com/yourusername/go-alpine-saas-starter/internal/performance"
+	"github.com/clownware/alpine-go-performance-starter/internal/performance"
 )
 
 var (

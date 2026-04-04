@@ -9,7 +9,7 @@ import (
 // Config holds the application configuration.
 type Config struct {
 	Env           string `env:"ENV" default:"development"`
-	HTTPPort      string `env:"HTTP_PORT" default:"4000"`
+	HTTPPort      string `env:"HTTP_PORT" default:"8080"`
 	DatabaseURL   string `env:"DATABASE_URL"` // Keep optional for now
 	SupabaseURL   string // Manually assigned
 	SupabaseAnonKey string // Manually assigned

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // DashboardPage renders the dashboard page.

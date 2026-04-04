@@ -6,7 +6,7 @@ import (
     "net/http"
 
     "github.com/go-chi/chi/v5"
-    "github.com/yourusername/go-alpine-saas-starter/internal/view"
+    "github.com/clownware/alpine-go-performance-starter/internal/view"
 )
 
 // APIPlaceholder returns a simple JSON message

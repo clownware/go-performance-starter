@@ -20,7 +20,7 @@ COPY postcss.config.js ./
 RUN npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css --minify
 
 # Stage 2: Build Go application
-FROM golang:1.22-alpine AS go-builder
+FROM golang:1.24-alpine AS go-builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -48,7 +48,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     ./cmd/api
 
 # Stage 3: Create minimal runtime image
-FROM alpine:3.19
+FROM alpine:3.21
 
 # Install runtime dependencies only
 RUN apk add --no-cache \

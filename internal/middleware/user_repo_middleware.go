@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/yourusername/go-alpine-saas-starter/internal/repository"
-	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // UserRepoMiddleware injects the user repository into the request context for downstream handlers.

@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourusername/go-alpine-saas-starter/internal/database"
-	"github.com/yourusername/go-alpine-saas-starter/internal/repository"
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository"
 )
 
 // OrganizationMemberRepo implements the repository.OrganizationMemberRepository interface using PostgreSQL.

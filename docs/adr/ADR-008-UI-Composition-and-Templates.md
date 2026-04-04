@@ -5,7 +5,7 @@ Accepted
 
 ## Context
 
-The Micro SaaS Starter Kit (MSSK) aims for a modern, maintainable, and accessible UI with minimal JS. The team needs a clear architectural approach for composing UI, structuring templates, and rendering dynamic content.
+The Alpine Go Performance Starter aims for a modern, maintainable, and accessible UI with minimal JS. The team needs a clear architectural approach for composing UI, structuring templates, and rendering dynamic content.
 
 ## Decision
 

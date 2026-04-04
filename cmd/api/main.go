@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourusername/go-alpine-saas-starter/internal/config"
-	_ "github.com/yourusername/go-alpine-saas-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
-	"github.com/yourusername/go-alpine-saas-starter/internal/middleware"
-	"github.com/yourusername/go-alpine-saas-starter/internal/server"
+	"github.com/clownware/alpine-go-performance-starter/internal/config"
+	_ "github.com/clownware/alpine-go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
+	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
+	"github.com/clownware/alpine-go-performance-starter/internal/server"
 )
 
 func main() {
-	slog.Info("Starting Go Alpine SaaS Starter...")
+	slog.Info("Starting Alpine Go Performance Starter...")
 
 	// Set global log level to Debug to see diagnostic messages
 	logLevel := new(slog.LevelVar)

@@ -16,7 +16,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mssk_test
+          POSTGRES_DB: alpine_saas_test
         ports:
           - 5432:5432
         options: >-
@@ -26,12 +26,12 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.22'
+        go-version: '1.24'
         cache: true
 
     - name: Install dependencies
@@ -39,23 +39,23 @@ jobs:
 
     - name: Run migrations
       run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
-        ./migrate -path=./migrations -database "postgres://postgres:postgres@localhost:5432/mssk_test?sslmode=disable" up
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
+        ./migrate -path=./migrations -database "postgres://postgres:postgres@localhost:5432/alpine_saas_test?sslmode=disable" up
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v6
       with:
         version: latest
 
     - name: Test
       run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/mssk_test?sslmode=disable
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/alpine_saas_test?sslmode=disable
         JWT_SECRET: test-secret-key-for-ci-only
         ENV: test
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage.txt
         fail_ci_if_error: false
@@ -65,12 +65,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.22'
+        go-version: '1.24'
         cache: true
 
     - name: Build
@@ -81,12 +81,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.22'
+        go-version: '1.24'
         cache: true
 
     - name: Install Task
@@ -104,7 +104,7 @@ jobs:
 
     - name: Comment PR with results
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');

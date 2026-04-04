@@ -31,3 +31,7 @@ These two `sqlc`-generated query functions are executed sequentially within a si
 *   **Application-Level Transaction:** Requires transaction management logic (begin, defer rollback, commit) within the Go application code, slightly increasing complexity there compared to a purely SQL-based atomic operation.
 *   **Less SQL Elegance:** From a pure SQL perspective, the two-step approach is less elegant than the (non-functional with sqlc) single-statement CTE approach.
 *   **Multiple Round Trips:** Involves two separate database calls within the transaction, although this impact is likely negligible for this operation.
+
+## 2026-04 Review Note
+
+Investigated whether modern sqlc versions have resolved the CTE parsing limitation. As of sqlc v1.29+, multiple related issues remain open (GitHub sqlc-dev/sqlc#3861 — ambiguous column reference in nested CTE chains). The database-backed analyzer may help with some patterns, but the specific multi-UPDATE CTE structure this ADR addresses is not confirmed fixed. The two-step transactional approach remains the correct solution and performs well within ADR-000 budget constraints (< 10ms total for both queries on indexed unique constraints).
