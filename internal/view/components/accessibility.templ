@@ -1,0 +1,123 @@
+package components
+
+// skipLinkTarget returns the target, defaulting to "#main-content".
+func skipLinkTarget(props SkipLinkProps) string {
+	if props.Target != "" {
+		return props.Target
+	}
+	return "#main-content"
+}
+
+// skipLinkText returns the link text, defaulting to "Skip to content".
+func skipLinkText(props SkipLinkProps) string {
+	if props.Text != "" {
+		return props.Text
+	}
+	return "Skip to content"
+}
+
+templ SkipLink(props SkipLinkProps) {
+	<a
+		href={ templ.SafeURL(skipLinkTarget(props)) }
+		class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-white focus:z-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+	>
+		{ skipLinkText(props) }
+	</a>
+}
+
+// ariaLiveValue returns the aria-live attribute, defaulting to "polite".
+func ariaLiveValue(props AriaLiveRegionProps) string {
+	if props.AriaLive != "" {
+		return props.AriaLive
+	}
+	return "polite"
+}
+
+// ariaAtomicValue returns the aria-atomic attribute, defaulting to "true".
+func ariaAtomicValue(props AriaLiveRegionProps) string {
+	if props.AriaAtomic != "" {
+		return props.AriaAtomic
+	}
+	return "true"
+}
+
+// ariaLiveClass returns the CSS class, defaulting to "sr-only".
+func ariaLiveClass(props AriaLiveRegionProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	return "sr-only"
+}
+
+templ AriaLiveRegion(props AriaLiveRegionProps) {
+	<div
+		aria-live={ ariaLiveValue(props) }
+		aria-atomic={ ariaAtomicValue(props) }
+		class={ ariaLiveClass(props) }
+		id={ props.ID }
+	>
+		{ children... }
+	</div>
+}
+
+// loadingIndicatorClass returns the CSS class for the loading indicator.
+func loadingIndicatorClass(props LoadingIndicatorProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	return "htmx-indicator flex items-center justify-center p-4"
+}
+
+templ LoadingIndicator(props LoadingIndicatorProps) {
+	<div
+		id={ props.ID }
+		class={ loadingIndicatorClass(props) }
+		aria-busy="true"
+		aria-live="polite"
+	>
+		<svg class="animate-spin h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+			<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+			<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+		</svg>
+		<span class="sr-only">Loading...</span>
+	</div>
+}
+
+// focusableRole returns the role attribute, defaulting to "button".
+func focusableRole(props FocusableElementProps) string {
+	if props.Role != "" {
+		return props.Role
+	}
+	return "button"
+}
+
+// focusableClass returns the CSS class for the focusable element.
+func focusableClass(props FocusableElementProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	return "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+}
+
+templ FocusableElement(props FocusableElementProps) {
+	<div
+		tabindex="0"
+		role={ focusableRole(props) }
+		if props.AriaLabel != "" {
+			aria-label={ props.AriaLabel }
+		}
+		if props.AriaExpanded != "" {
+			aria-expanded={ props.AriaExpanded }
+		}
+		if props.AriaControls != "" {
+			aria-controls={ props.AriaControls }
+		}
+		if props.ID != "" {
+			id={ props.ID }
+		}
+		class={ focusableClass(props) }
+		{ props.Attrs... }
+	>
+		{ children... }
+	</div>
+}

@@ -1,0 +1,52 @@
+package components
+
+// buttonClass returns the CSS class for a button based on its variant,
+// or the override class if provided.
+func buttonClass(props ButtonProps) string {
+	if props.Class != "" {
+		return props.Class
+	}
+	switch props.Variant {
+	case ButtonSecondary:
+		return "btn btn-secondary"
+	case ButtonDanger:
+		return "btn btn-danger"
+	default:
+		return "btn btn-primary"
+	}
+}
+
+// buttonType returns the type attribute, defaulting to "button".
+func buttonType(props ButtonProps) string {
+	if props.Type != "" {
+		return props.Type
+	}
+	return "button"
+}
+
+// buttonAriaLabel returns an aria-label, falling back to the button text.
+func buttonAriaLabel(props ButtonProps) string {
+	if label, ok := props.Attrs["aria-label"]; ok {
+		if s, ok := label.(string); ok && s != "" {
+			return s
+		}
+	}
+	return props.Text
+}
+
+templ Button(props ButtonProps) {
+	<button
+		type={ buttonType(props) }
+		class={ buttonClass(props) }
+		if props.ID != "" {
+			id={ props.ID }
+		}
+		if props.Disabled {
+			disabled
+		}
+		aria-label={ buttonAriaLabel(props) }
+		{ props.Attrs... }
+	>
+		{ props.Text }
+	</button>
+}
