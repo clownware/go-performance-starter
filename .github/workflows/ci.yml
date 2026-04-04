@@ -37,6 +37,12 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
+    - name: Install templ
+      run: go install github.com/a-h/templ/cmd/templ@v0.3.906
+
+    - name: Generate templ
+      run: templ generate
+
     - name: Run migrations
       run: |
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
@@ -73,6 +79,12 @@ jobs:
         go-version: '1.24'
         cache: true
 
+    - name: Install templ
+      run: go install github.com/a-h/templ/cmd/templ@v0.3.906
+
+    - name: Generate templ
+      run: templ generate
+
     - name: Build
       run: go build -v ./cmd/api
 
@@ -88,6 +100,12 @@ jobs:
       with:
         go-version: '1.24'
         cache: true
+
+    - name: Install templ
+      run: go install github.com/a-h/templ/cmd/templ@v0.3.906
+
+    - name: Generate templ
+      run: templ generate
 
     - name: Install Task
       run: |

@@ -6,10 +6,10 @@ tmp_dir = "tmp"
 
 [build]
 # Just a note, the binary will be in ./tmp/app
-cmd = "go build -o ./tmp/app ./cmd/api"
+cmd = "templ generate && go build -o ./tmp/app ./cmd/api"
 bin = "tmp/app"
 full_bin = "./tmp/app"
-include_ext = ["go", "tpl", "tmpl", "html"]
+include_ext = ["go", "tpl", "tmpl", "html", "templ"]
 exclude_dir = ["assets", "tmp", "vendor", ".git", "node_modules"]
 exclude_file = ["web/static/css/app.css"]
 delay = 1000 # ms

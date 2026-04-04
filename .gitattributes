@@ -1,0 +1,2 @@
+# Mark templ-generated Go files as generated (collapse in PR diffs)
+*_templ.go linguist-generated=true
