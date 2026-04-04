@@ -37,6 +37,10 @@ COPY . .
 # Copy built CSS from frontend stage
 COPY --from=frontend-builder /build/web/static/css/app.css ./web/static/css/app.css
 
+# Install templ CLI and generate Go code from .templ files
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.906
+RUN templ generate
+
 # Build the application with optimization flags
 # -s: strip symbol table
 # -w: strip DWARF debug info
