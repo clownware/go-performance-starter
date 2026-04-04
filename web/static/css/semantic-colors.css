@@ -1,4 +1,5 @@
 /* Semantic Colors CSS - Based on Alpine SaaS Palette */
+/* These CSS variables enable runtime dark mode switching via the .dark class */
 
 :root {
   /* Color Palette */
@@ -7,7 +8,7 @@
   --night: #0c0c0c;
   --nyanza: #f0ffce;
   --sage: #d2cca1;
-  
+
   /* Light mode semantic mappings */
   --color-primary: var(--teal);
   --color-danger: var(--bittersweet);
@@ -27,67 +28,4 @@
   --color-danger: var(--bittersweet);
   --color-accent: var(--sage);
   --color-muted: var(--teal);
-}
-
-/* Background colors */
-.bg-background {
-  background-color: var(--color-background) !important;
-}
-
-.bg-surface {
-  background-color: var(--color-surface) !important;
-}
-
-.bg-primary {
-  background-color: var(--color-primary) !important;
-}
-
-.bg-danger {
-  background-color: var(--color-danger) !important;
-}
-
-.bg-accent {
-  background-color: var(--color-accent) !important;
-}
-
-.bg-muted {
-  background-color: var(--color-muted) !important;
-}
-
-/* Text colors */
-.text-text {
-  color: var(--color-text) !important;
-}
-
-.text-primary {
-  color: var(--color-primary) !important;
-}
-
-.text-danger {
-  color: var(--color-danger) !important;
-}
-
-.text-accent {
-  color: var(--color-accent) !important;
-}
-
-.text-muted {
-  color: var(--color-muted) !important;
-}
-
-/* Border colors */
-.border-primary {
-  border-color: var(--color-primary) !important;
-}
-
-.border-danger {
-  border-color: var(--color-danger) !important;
-}
-
-.border-accent {
-  border-color: var(--color-accent) !important;
-}
-
-.border-muted {
-  border-color: var(--color-muted) !important;
 }

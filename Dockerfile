@@ -11,16 +11,15 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --only=production
 
-# Copy frontend source
+# Copy frontend source and templ files (needed for @source directive)
 COPY web ./web
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
+COPY internal/view ./internal/view
 
 # Build CSS with Tailwind
-RUN npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css --minify
+RUN npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css --minify
 
 # Stage 2: Build Go application
-FROM golang:1.24-alpine AS go-builder
+FROM golang:1.25-alpine AS go-builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -38,7 +37,7 @@ COPY . .
 COPY --from=frontend-builder /build/web/static/css/app.css ./web/static/css/app.css
 
 # Install templ CLI and generate Go code from .templ files
-RUN go install github.com/a-h/templ/cmd/templ@v0.3.906
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.1001
 RUN templ generate
 
 # Build the application with optimization flags

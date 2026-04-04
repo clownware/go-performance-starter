@@ -19,7 +19,7 @@ func skipLinkText(props SkipLinkProps) string {
 templ SkipLink(props SkipLinkProps) {
 	<a
 		href={ templ.SafeURL(skipLinkTarget(props)) }
-		class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-white focus:z-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+		class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-white focus:z-50 focus:outline-hidden focus:ring-2 focus:ring-primary-500"
 	>
 		{ skipLinkText(props) }
 	</a>
@@ -96,7 +96,7 @@ func focusableClass(props FocusableElementProps) string {
 	if props.Class != "" {
 		return props.Class
 	}
-	return "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+	return "focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
 }
 
 templ FocusableElement(props FocusableElementProps) {
