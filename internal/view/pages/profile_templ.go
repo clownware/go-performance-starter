@@ -14,6 +14,7 @@ import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 )
 
+// ProfilePageProps holds data for the profile page.
 type ProfilePageProps struct {
 	view.BaseProps
 	Name    string

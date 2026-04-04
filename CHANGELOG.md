@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Complete templ migration** — all pages and partials converted from `html/template`
+  to [templ](https://templ.guide) type-safe templates (ADR-017)
+  - Pages: home, dashboard, terms, privacy, logout, auth (login/signup), profile, items
+  - Partials: profile_form, items_list, item (optimistic UI), first_run onboarding
+  - All template data is now typed props structs instead of `map[string]interface{}`
+  - HTMX partial responses render fragments directly (no layout wrapper)
+
+### Removed
+- `web/templates/` directory — all old `.html` template files
+- `webutil.RenderTemplate` and `RenderTemplateWithErrors` functions
+- `webutil.FormErrors` type and `view.TemplateFuncs()` — no longer needed with templ
+- Unused component templates (button, input, form, card, alert, accessibility) that
+  were defined but never invoked
+
 ## [0.1.0] - 2025-04-04
 
 ### Added

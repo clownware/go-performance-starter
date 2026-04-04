@@ -1,23 +1,26 @@
 package partials
 
-// FirstRunProps holds data for the first-run onboarding wizard.
-// Step controls which phase is displayed: 1=welcome, 2=profile setup, 3=CTAs.
+// FirstRunProps holds data for the first-run onboarding experience.
 type FirstRunProps struct {
-	Step     int
-	UserName string // for pre-filling profile form in step 2
-	Error    string
+	ShowProfileSetup bool
+	ShowCTAs         bool
+	Name             string
+	Errors           map[string]string
+	Error            string
 }
 
-templ FirstRun(props FirstRunProps) {
+// FirstRunExperience renders the 3-step first-run onboarding flow.
+// Each step is an HTMX partial that swaps into #first-run-steps.
+templ FirstRunExperience(props FirstRunProps) {
 	<div id="first-run-steps" class="space-y-8">
-		if props.Step == 1 {
+		if !props.ShowProfileSetup && !props.ShowCTAs {
 			@firstRunWelcome()
 		}
-		if props.Step == 2 {
-			@firstRunProfileSetup(props.UserName)
+		if props.ShowProfileSetup {
+			@firstRunProfile(props)
 		}
-		if props.Step == 3 {
-			@firstRunCTAs()
+		if props.ShowCTAs {
+			@firstRunCTAs(props.Error)
 		}
 	</div>
 }
@@ -40,12 +43,15 @@ templ firstRunWelcome() {
 	</div>
 }
 
-templ firstRunProfileSetup(userName string) {
+templ firstRunProfile(props FirstRunProps) {
 	<!-- Step 2: Profile Setup Prompt -->
 	<div id="profile-setup" class="rounded bg-surface border border-gray-200 dark:bg-surface-dark dark:border-gray-800 p-6">
 		<h3 class="text-lg font-semibold mb-2">Set up your profile</h3>
 		<p class="mb-4 text-gray-700 dark:text-gray-300">For your security, please add a display name and confirm your email address. Never share your password with anyone.</p>
-		@ProfileForm(ProfileFormProps{Name: userName})
+		@ProfileForm(ProfileFormProps{
+			Name:   props.Name,
+			Errors: props.Errors,
+		})
 		<div class="flex justify-end mt-4">
 			<button
 				hx-get="/first-run/ctas"
@@ -59,11 +65,14 @@ templ firstRunProfileSetup(userName string) {
 	</div>
 }
 
-templ firstRunCTAs() {
+templ firstRunCTAs(errorMsg string) {
 	<!-- Step 3: CTAs -->
 	<div id="first-run-ctas" class="rounded bg-green-50 border border-green-200 p-6">
-		<h3 class="text-lg font-semibold mb-2 text-green-700">You&#39;re all set!</h3>
+		<h3 class="text-lg font-semibold mb-2 text-green-700">You're all set!</h3>
 		<p class="mb-4 text-green-900">Protect your account by enabling two-factor authentication and reviewing your security settings.</p>
+		if errorMsg != "" {
+			<p class="text-red-600 text-sm mb-4">{ errorMsg }</p>
+		}
 		<div class="flex flex-col sm:flex-row gap-3">
 			<a href="/settings/security" class="px-4 py-2 rounded bg-green-600 text-white font-medium shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 text-center">Set Up 2FA</a>
 			<a href="/dashboard" class="px-4 py-2 rounded bg-surface text-green-700 border border-green-600 font-medium shadow hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-600 text-center">Go to Dashboard</a>

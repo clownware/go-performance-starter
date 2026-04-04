@@ -3,17 +3,12 @@ package pages
 import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 )
 
+// DashboardPageProps holds data for the dashboard page.
 type DashboardPageProps struct {
 	view.BaseProps
 	HasProjects bool
-}
-
-// dashboardSkeletonData returns the Alpine.js x-data expression for the skeleton loader.
-func dashboardSkeletonData() string {
-	return "{ loading: true }"
 }
 
 templ DashboardPage(props DashboardPageProps) {
@@ -22,50 +17,70 @@ templ DashboardPage(props DashboardPageProps) {
 			<h1 class="text-3xl font-bold">Dashboard</h1>
 			<p>Welcome to your dashboard. This page is ready for your custom SaaS widgets and stats.</p>
 			if !props.HasProjects {
-				@partials.EmptyState(partials.EmptyStateProps{})
+				@emptyState()
 			}
 			if props.HasProjects {
-				<div
-					x-data={ dashboardSkeletonData() }
-					@htmx:beforeSwap.window="loading = false"
-					class="mt-10"
-				>
-					<!-- Skeleton Loader -->
-					<div
-						x-show="loading"
-						x-transition.opacity.duration.500ms
-						class="space-y-2"
-						aria-hidden="true"
-					>
-						<div class="animate-pulse flex space-x-4">
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-						</div>
-						<div class="animate-pulse flex space-x-4">
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-						</div>
-						<div class="animate-pulse flex space-x-4">
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-							<div class="rounded bg-muted-dark h-6 w-1/4"></div>
-						</div>
-					</div>
-					<!-- Real Table Data (to be swapped in by HTMX) -->
-					<div
-						x-show="!loading"
-						x-transition.opacity.duration.500ms
-						id="dashboard-table"
-						hx-get="/dashboard/data"
-						hx-trigger="load"
-						hx-target="#dashboard-table"
-						hx-swap="outerHTML"
-					>
-					</div>
-				</div>
+				@skeletonTable()
 			}
 		</div>
 	}
+}
+
+templ emptyState() {
+	<section class="flex flex-col items-center justify-center py-20 text-center">
+		<div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+			<svg class="h-8 w-8 text-blue-500 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+				<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m4-4H8"></path>
+			</svg>
+		</div>
+		<h2 class="mb-2 text-2xl font-semibold text-gray-900 dark:text-white">Welcome to Your Dashboard!</h2>
+		<p class="mb-6 max-w-md text-base text-gray-600 dark:text-gray-300">You haven't added any projects yet. Get started by creating your first project and unlock the full power of your SaaS workspace.</p>
+		<a href="/projects/new" class="inline-block rounded bg-blue-600 px-5 py-2 text-white font-medium shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition">
+			Create Project
+		</a>
+	</section>
+}
+
+templ skeletonTable() {
+	<div
+		x-data="{ loading: true }"
+		class="mt-10"
+	>
+		<!-- Skeleton Loader -->
+		<div
+			x-show="loading"
+			x-transition.opacity.duration.500ms
+			class="space-y-2"
+			aria-hidden="true"
+		>
+			<div class="animate-pulse flex space-x-4">
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+			</div>
+			<div class="animate-pulse flex space-x-4">
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+			</div>
+			<div class="animate-pulse flex space-x-4">
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+				<div class="rounded bg-muted-dark h-6 w-1/4"></div>
+			</div>
+		</div>
+		<!-- Real Table Data (to be swapped in by HTMX) -->
+		<div
+			x-show="!loading"
+			x-transition.opacity.duration.500ms
+			id="dashboard-table"
+			hx-get="/dashboard/data"
+			hx-trigger="load"
+			hx-target="#dashboard-table"
+			hx-swap="outerHTML"
+		>
+			<!-- Table will be swapped in by HTMX -->
+		</div>
+	</div>
 }

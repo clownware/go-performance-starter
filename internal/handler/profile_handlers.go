@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,9 @@ func ProfileView(w http.ResponseWriter, r *http.Request) {
 		BaseProps: view.NewBaseProps("Profile"),
 		Name:     "John Doe",
 	}
-	view.Render(w, r, http.StatusOK, pages.ProfilePage(props))
+	if err := view.Render(w, r, http.StatusOK, pages.ProfilePage(props)); err != nil {
+		slog.Error("Failed to render profile page", "error", err)
+	}
 }
 
 // ProfileUpdate processes the profile form submission with HTMX support.
@@ -26,32 +29,44 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	name := r.FormValue("name")
-	errors := map[string]string{}
+	errors := make(map[string]string)
 	if strings.TrimSpace(name) == "" {
 		errors["name"] = "Name cannot be empty"
 	}
 
 	// Validation errors
 	if len(errors) > 0 {
-		formProps := partials.ProfileFormProps{Name: name, Errors: errors}
-		if webutil.IsHTMXRequest(r) {
-			view.Render(w, r, http.StatusUnprocessableEntity, partials.ProfileForm(formProps))
+		formProps := partials.ProfileFormProps{
+			Name:   name,
+			Errors: errors,
+		}
+		if view.IsHTMXRequest(r) {
+			if err := view.Render(w, r, http.StatusUnprocessableEntity, partials.ProfileForm(formProps)); err != nil {
+				slog.Error("Failed to render profile form partial", "error", err)
+			}
 		} else {
 			pageProps := pages.ProfilePageProps{
 				BaseProps: view.NewBaseProps("Profile"),
 				Name:     name,
 				Errors:   errors,
 			}
-			view.Render(w, r, http.StatusUnprocessableEntity, pages.ProfilePage(pageProps))
+			if err := view.Render(w, r, http.StatusUnprocessableEntity, pages.ProfilePage(pageProps)); err != nil {
+				slog.Error("Failed to render profile page", "error", err)
+			}
 		}
 		return
 	}
 
 	// Stub update successful
-	if webutil.IsHTMXRequest(r) {
+	if view.IsHTMXRequest(r) {
 		webutil.SetHXTrigger(w, "Profile updated successfully!")
-		formProps := partials.ProfileFormProps{Name: name, Success: true}
-		view.Render(w, r, http.StatusOK, partials.ProfileForm(formProps))
+		formProps := partials.ProfileFormProps{
+			Name:    name,
+			Success: true,
+		}
+		if err := view.Render(w, r, http.StatusOK, partials.ProfileForm(formProps)); err != nil {
+			slog.Error("Failed to render profile form partial", "error", err)
+		}
 	} else {
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 	}
