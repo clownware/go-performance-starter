@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"github.com/joho/godotenv"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,14 +11,18 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/clownware/alpine-go-performance-starter/internal/config"
 	_ "github.com/clownware/alpine-go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
 	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
 	"github.com/clownware/alpine-go-performance-starter/internal/server"
 )
 
+// version is set at build time via -ldflags "-X main.version=..."
+var version = "dev"
+
 func main() {
-	slog.Info("Starting Alpine Go Performance Starter...")
+	slog.Info("Starting Alpine Go Performance Starter", "version", version)
 
 	// Set global log level to Debug to see diagnostic messages
 	logLevel := new(slog.LevelVar)

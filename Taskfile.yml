@@ -12,7 +12,7 @@ tasks:
   build:
     desc: Build the application
     cmds:
-      - go build -o ./dist/app ./cmd/api
+      - go build -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o ./dist/app ./cmd/api
     generates:
       - ./dist/app
 
@@ -85,7 +85,7 @@ tasks:
   test:binary-size:
     desc: Check binary size against budget
     cmds:
-      - go build -ldflags="-s -w" -o ./dist/app ./cmd/api
+      - go build -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o ./dist/app ./cmd/api
       - go run scripts/check-binary-size.go ./dist/app
 
   test:memory-profile:
