@@ -8,15 +8,18 @@ package partials
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// FirstRunProps holds data for the first-run onboarding wizard.
-// Step controls which phase is displayed: 1=welcome, 2=profile setup, 3=CTAs.
+// FirstRunProps holds data for the first-run onboarding experience.
 type FirstRunProps struct {
-	Step     int
-	UserName string // for pre-filling profile form in step 2
-	Error    string
+	ShowProfileSetup bool
+	ShowCTAs         bool
+	Name             string
+	Errors           map[string]string
+	Error            string
 }
 
-func FirstRun(props FirstRunProps) templ.Component {
+// FirstRunExperience renders the 3-step first-run onboarding flow.
+// Each step is an HTMX partial that swaps into #first-run-steps.
+func FirstRunExperience(props FirstRunProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,20 +44,20 @@ func FirstRun(props FirstRunProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if props.Step == 1 {
+		if !props.ShowProfileSetup && !props.ShowCTAs {
 			templ_7745c5c3_Err = firstRunWelcome().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if props.Step == 2 {
-			templ_7745c5c3_Err = firstRunProfileSetup(props.UserName).Render(ctx, templ_7745c5c3_Buffer)
+		if props.ShowProfileSetup {
+			templ_7745c5c3_Err = firstRunProfile(props).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		if props.Step == 3 {
-			templ_7745c5c3_Err = firstRunCTAs().Render(ctx, templ_7745c5c3_Buffer)
+		if props.ShowCTAs {
+			templ_7745c5c3_Err = firstRunCTAs(props.Error).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -96,7 +99,7 @@ func firstRunWelcome() templ.Component {
 	})
 }
 
-func firstRunProfileSetup(userName string) templ.Component {
+func firstRunProfile(props FirstRunProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -121,7 +124,10 @@ func firstRunProfileSetup(userName string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ProfileForm(ProfileFormProps{Name: userName}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ProfileForm(ProfileFormProps{
+			Name:   props.Name,
+			Errors: props.Errors,
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,7 +139,7 @@ func firstRunProfileSetup(userName string) templ.Component {
 	})
 }
 
-func firstRunCTAs() templ.Component {
+func firstRunCTAs(errorMsg string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -154,7 +160,30 @@ func firstRunCTAs() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<!-- Step 3: CTAs --><div id=\"first-run-ctas\" class=\"rounded bg-green-50 border border-green-200 p-6\"><h3 class=\"text-lg font-semibold mb-2 text-green-700\">You&#39;re all set!</h3><p class=\"mb-4 text-green-900\">Protect your account by enabling two-factor authentication and reviewing your security settings.</p><div class=\"flex flex-col sm:flex-row gap-3\"><a href=\"/settings/security\" class=\"px-4 py-2 rounded bg-green-600 text-white font-medium shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 text-center\">Set Up 2FA</a> <a href=\"/dashboard\" class=\"px-4 py-2 rounded bg-surface text-green-700 border border-green-600 font-medium shadow hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-600 text-center\">Go to Dashboard</a></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<!-- Step 3: CTAs --><div id=\"first-run-ctas\" class=\"rounded bg-green-50 border border-green-200 p-6\"><h3 class=\"text-lg font-semibold mb-2 text-green-700\">You're all set!</h3><p class=\"mb-4 text-green-900\">Protect your account by enabling two-factor authentication and reviewing your security settings.</p>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errorMsg != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-red-600 text-sm mb-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var5 string
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/first_run.templ`, Line: 74, Col: 50}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"flex flex-col sm:flex-row gap-3\"><a href=\"/settings/security\" class=\"px-4 py-2 rounded bg-green-600 text-white font-medium shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 text-center\">Set Up 2FA</a> <a href=\"/dashboard\" class=\"px-4 py-2 rounded bg-surface text-green-700 border border-green-600 font-medium shadow hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-600 text-center\">Go to Dashboard</a></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

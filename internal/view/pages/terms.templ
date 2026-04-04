@@ -5,12 +5,8 @@ import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
 )
 
-type TermsPageProps struct {
-	view.BaseProps
-}
-
-templ TermsPage(props TermsPageProps) {
-	@layouts.Base(props.BaseProps) {
+templ TermsPage(props view.BaseProps) {
+	@layouts.Base(props) {
 		<div class="max-w-3xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6 mt-12">
 			<h1 class="text-2xl font-bold">Terms of Service</h1>
 			<p>This is a placeholder for your SaaS Terms of Service. Please update this content.</p>

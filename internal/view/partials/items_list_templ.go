@@ -13,17 +13,14 @@ import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 )
 
-// ItemsListProps holds data for the items list fragment.
+// ItemsListProps holds data for the items list partial.
 type ItemsListProps struct {
 	Items    []view.Item
 	NextPage int
 }
 
-// itemsNextPageURL returns the HTMX URL for loading the next page.
-func itemsNextPageURL(page int) string {
-	return fmt.Sprintf("/items/list?page=%d", page)
-}
-
+// ItemsList renders the list of items with infinite scroll support.
+// Rendered as a standalone fragment for HTMX swaps.
 func ItemsList(props ItemsListProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -50,7 +47,7 @@ func ItemsList(props ItemsListProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, item := range props.Items {
-			templ_7745c5c3_Err = Item(ItemProps{Item: item}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ItemCard(item).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -65,9 +62,9 @@ func ItemsList(props ItemsListProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(itemsNextPageURL(props.NextPage))
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/items/list?page=%d", props.NextPage))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/items_list.templ`, Line: 28, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/items_list.templ`, Line: 25, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -78,9 +75,9 @@ func ItemsList(props ItemsListProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(itemsNextPageURL(props.NextPage))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/items/list?page=%d", props.NextPage))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/items_list.templ`, Line: 39, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/items_list.templ`, Line: 36, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {

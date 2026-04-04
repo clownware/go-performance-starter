@@ -11,17 +11,12 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 )
 
+// DashboardPageProps holds data for the dashboard page.
 type DashboardPageProps struct {
 	view.BaseProps
 	HasProjects bool
-}
-
-// dashboardSkeletonData returns the Alpine.js x-data expression for the skeleton loader.
-func dashboardSkeletonData() string {
-	return "{ loading: true }"
 }
 
 func DashboardPage(props DashboardPageProps) templ.Component {
@@ -62,37 +57,82 @@ func DashboardPage(props DashboardPageProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if !props.HasProjects {
-				templ_7745c5c3_Err = partials.EmptyState(partials.EmptyStateProps{}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = emptyState().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if props.HasProjects {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(dashboardSkeletonData())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/dashboard.templ`, Line: 29, Col: 37}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" @htmx:beforeSwap.window=\"loading = false\" class=\"mt-10\"><!-- Skeleton Loader --><div x-show=\"loading\" x-transition.opacity.duration.500ms class=\"space-y-2\" aria-hidden=\"true\"><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div></div><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div></div><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div></div></div><!-- Real Table Data (to be swapped in by HTMX) --><div x-show=\"!loading\" x-transition.opacity.duration.500ms id=\"dashboard-table\" hx-get=\"/dashboard/data\" hx-trigger=\"load\" hx-target=\"#dashboard-table\" hx-swap=\"outerHTML\"></div></div>")
+				templ_7745c5c3_Err = skeletonTable().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
 		templ_7745c5c3_Err = layouts.Base(props.BaseProps).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func emptyState() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"flex flex-col items-center justify-center py-20 text-center\"><div class=\"mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900\"><svg class=\"h-8 w-8 text-blue-500 dark:text-blue-300\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\" stroke=\"currentColor\" stroke-width=\"2\"></circle> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8v8m4-4H8\"></path></svg></div><h2 class=\"mb-2 text-2xl font-semibold text-gray-900 dark:text-white\">Welcome to Your Dashboard!</h2><p class=\"mb-6 max-w-md text-base text-gray-600 dark:text-gray-300\">You haven't added any projects yet. Get started by creating your first project and unlock the full power of your SaaS workspace.</p><a href=\"/projects/new\" class=\"inline-block rounded bg-blue-600 px-5 py-2 text-white font-medium shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition\">Create Project</a></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func skeletonTable() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"{ loading: true }\" class=\"mt-10\"><!-- Skeleton Loader --><div x-show=\"loading\" x-transition.opacity.duration.500ms class=\"space-y-2\" aria-hidden=\"true\"><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div></div><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div></div><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div><div class=\"rounded bg-muted-dark h-6 w-1/4\"></div></div></div><!-- Real Table Data (to be swapped in by HTMX) --><div x-show=\"!loading\" x-transition.opacity.duration.500ms id=\"dashboard-table\" hx-get=\"/dashboard/data\" hx-trigger=\"load\" hx-target=\"#dashboard-table\" hx-swap=\"outerHTML\"><!-- Table will be swapped in by HTMX --></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

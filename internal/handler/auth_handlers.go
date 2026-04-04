@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/supabase-community/gotrue-go/types"
@@ -13,8 +14,12 @@ import (
 
 // AuthPage renders the combined login/signup page.
 func AuthPage(w http.ResponseWriter, r *http.Request) {
-	props := pages.AuthPageProps{BaseProps: view.NewBaseProps("Login or Sign Up")}
-	view.Render(w, r, http.StatusOK, pages.AuthPage(props))
+	props := pages.AuthPageProps{
+		BaseProps: view.NewBaseProps("Login or Sign Up"),
+	}
+	if err := view.Render(w, r, http.StatusOK, pages.AuthPage(props)); err != nil {
+		slog.Error("Failed to render auth page", "error", err)
+	}
 }
 
 // AuthLoginPost handles the login form submission.

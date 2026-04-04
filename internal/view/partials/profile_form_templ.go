@@ -8,23 +8,14 @@ package partials
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// ProfileFormProps holds data for the profile form fragment.
+// ProfileFormProps holds data for the profile form partial.
 type ProfileFormProps struct {
 	Name    string
 	Errors  map[string]string
 	Success bool
 }
 
-// successAutoDismiss returns the Alpine.js x-data for the auto-dismissing success message.
-func successAutoDismiss() string {
-	return "{show: true}"
-}
-
-// successAutoDismissInit returns the Alpine.js x-init for the auto-dismissing success message.
-func successAutoDismissInit() string {
-	return "setTimeout(() => show = false, 3000)"
-}
-
+// ProfileForm renders the profile form as a standalone fragment (for HTMX swaps).
 func ProfileForm(props ProfileFormProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -50,15 +41,15 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if nameErr, ok := props.Errors["name"]; ok {
+		if errMsg, ok := props.Errors["name"]; ok {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-red-600 text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(nameErr)
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 23, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 14, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -70,51 +61,25 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 			}
 		}
 		if props.Success {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(successAutoDismiss())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 26, Col: 37}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" x-show=\"show\" x-init=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(successAutoDismissInit())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 26, Col: 87}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded\">Profile updated successfully!</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"{ show: true }\" x-show=\"show\" x-init=\"setTimeout(() => show = false, 3000)\" class=\"bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded\">Profile updated successfully!</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<label for=\"name\" class=\"block text-sm font-medium text-gray-700\">Name</label> <input type=\"text\" name=\"name\" id=\"name\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label for=\"name\" class=\"block text-sm font-medium text-gray-700\">Name</label> <input type=\"text\" name=\"name\" id=\"name\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.Name)
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 31, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 31, Col: 21}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"mt-1 block w-full border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500\"><div class=\"mt-2\"><button type=\"submit\" class=\"px-4 py-2 bg-primary-600 text-white rounded\" hx-indicator=\".indicator\">Save</button> <span class=\"indicator hidden text-gray-500 ml-2\">Saving...</span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"mt-1 block w-full border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500\"><div class=\"mt-2\"><button type=\"submit\" class=\"px-4 py-2 bg-primary-600 text-white rounded\" hx-indicator=\".indicator\">Save</button> <span class=\"indicator hidden text-gray-500 ml-2\">Saving...</span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

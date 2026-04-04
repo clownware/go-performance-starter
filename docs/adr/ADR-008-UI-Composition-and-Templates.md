@@ -1,7 +1,7 @@
 # ADR-008: UI Composition and Template Structure
 
 ## Status
-Accepted
+Superseded by ADR-017
 
 ## Context
 

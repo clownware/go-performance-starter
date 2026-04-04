@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -23,12 +24,10 @@ func ShowFirstRunWelcome(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
 		return
 	}
-	// TODO: Re-enable after adding first_run_complete column to users table
-	// if user.FirstRunComplete {
-	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-	// 	return
-	// }
-	view.Render(w, r, http.StatusOK, partials.FirstRun(partials.FirstRunProps{Step: 1}))
+	props := partials.FirstRunProps{}
+	if err := view.Render(w, r, http.StatusOK, partials.FirstRunExperience(props)); err != nil {
+		slog.Error("Failed to render first-run welcome", "error", err)
+	}
 }
 
 // ShowFirstRunProfile serves the profile setup prompt (step 2).
@@ -38,16 +37,12 @@ func ShowFirstRunProfile(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
 		return
 	}
-	// TODO: Re-enable after adding first_run_complete column to users table
-	// if user.FirstRunComplete {
-	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-	// 	return
-	// }
-	userName := ""
-	if user.Name.Valid {
-		userName = user.Name.String
+	props := partials.FirstRunProps{
+		ShowProfileSetup: true,
 	}
-	view.Render(w, r, http.StatusOK, partials.FirstRun(partials.FirstRunProps{Step: 2, UserName: userName}))
+	if err := view.Render(w, r, http.StatusOK, partials.FirstRunExperience(props)); err != nil {
+		slog.Error("Failed to render first-run profile", "error", err)
+	}
 }
 
 // ShowFirstRunCTAs serves the final CTAs (step 3).
@@ -57,22 +52,18 @@ func ShowFirstRunCTAs(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
 		return
 	}
-	// TODO: Re-enable after adding first_run_complete column to users table
-	// if user.FirstRunComplete {
-	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-	// 	return
-	// }
 	// Mark onboarding as complete
 	repo := webutil.GetUserRepoFromContext(r.Context())
 	err := repo.UpdateFirstRunComplete(r.Context(), user.ID, true)
 	if err != nil {
-		view.Render(w, r, http.StatusInternalServerError, partials.FirstRun(partials.FirstRunProps{
-			Step:  3,
-			Error: "Could not complete onboarding. Please try again.",
-		}))
+		props := partials.FirstRunProps{
+			ShowCTAs: true,
+			Error:    "Could not complete onboarding. Please try again.",
+		}
+		if renderErr := view.Render(w, r, http.StatusInternalServerError, partials.FirstRunExperience(props)); renderErr != nil {
+			slog.Error("Failed to render first-run CTAs", "error", renderErr)
+		}
 		return
 	}
-	// Optionally update user in session/context
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
-
