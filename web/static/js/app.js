@@ -29,5 +29,5 @@ document.addEventListener('htmx:afterSwap', (event) => {
 
 // Log when the app is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Micro SaaS Starter Kit loaded');
+  console.log('Alpine Go Performance Starter loaded');
 });

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // ProfileView renders the profile page (full page or fragment fallback).

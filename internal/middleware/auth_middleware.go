@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/supabase-community/gotrue-go/types"
-	"github.com/yourusername/go-alpine-saas-starter/internal/auth"
-	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
+	"github.com/clownware/alpine-go-performance-starter/internal/auth"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // UserContextKey is the key used to store user information in the request context.

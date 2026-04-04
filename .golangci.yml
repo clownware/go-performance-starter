@@ -1,6 +1,6 @@
 run:
   timeout: 5m
-  go: '1.22'
+  go: '1.24'
   modules-download-mode: readonly
 
 linters:
@@ -28,7 +28,7 @@ linters:
 
 linters-settings:
   goimports:
-    local-prefixes: github.com/chrispezza/saas-starter-go-alpine
+    local-prefixes: github.com/clownware/alpine-go-performance-starter
 
 issues:
   exclude-rules:

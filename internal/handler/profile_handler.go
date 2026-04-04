@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/yourusername/go-alpine-saas-starter/internal/middleware"
+	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
 )
 
 // ProfilePage displays the user's profile information.

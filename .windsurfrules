@@ -1,9 +1,9 @@
-# 🏄‍♂️ WindsurfRules - Micro SaaS Starter Kit
+# 🏄‍♂️ WindsurfRules - Alpine Go Performance Starter
 
-*Core principles and conventions for Micro SaaS Starter Kit development*
+*Core principles and conventions for Alpine Go Performance Starter development*
 
 ## Project Context
-The Micro SaaS Starter Kit (MSSK) is an opinionated boilerplate for indie hackers and small teams to bootstrap subscription-based SaaS products. It combines Go (Chi) backend, HTMX + Alpine.js frontend, Tailwind CSS, and Supabase-powered auth/PostgreSQL, deployed to Cloudflare's edge.
+The Alpine Go Performance Starter (AGPS) is an opinionated boilerplate for indie hackers and small teams to bootstrap subscription-based SaaS products. It combines Go (Chi) backend, HTMX + Alpine.js frontend, Tailwind CSS, and Supabase-powered auth/PostgreSQL, deployed to Cloudflare's edge.
 
 ## Code Style and Structure
 - Write concise, idiomatic Go code with proper error handling

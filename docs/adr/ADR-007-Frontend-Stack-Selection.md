@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The Go Alpine SaaS Starter Kit requires a frontend architecture that complements its Go backend. The goals are to provide a modern user experience, enable rapid development, minimize client-side complexity, and maintain good performance. Traditional Single Page Applications (SPAs) often introduce significant build tooling complexity and state management overhead separate from the backend.
+The Alpine Go Performance Starter requires a frontend architecture that complements its Go backend. The goals are to provide a modern user experience, enable rapid development, minimize client-side complexity, and maintain good performance. Traditional Single Page Applications (SPAs) often introduce significant build tooling complexity and state management overhead separate from the backend.
 
 We need a stack that integrates well with server-rendered Go templates while allowing for dynamic UI updates and modern styling without requiring a heavy JavaScript framework.
 

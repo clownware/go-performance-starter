@@ -171,13 +171,15 @@ We establish the following **hard performance budgets** that MUST be enforced in
 
 ## Review Cadence
 
-**Review Date**: 2026-02-15
+**Review Date**: 2026-07-01
 
 This ADR should be reviewed quarterly to ensure budgets remain aligned with:
 - Application complexity growth
 - User expectations
 - Infrastructure capabilities
 - Industry benchmarks
+
+**2026-04 Note**: Budgets have not yet been validated against real production measurements. Binary size and Docker image budgets are enforced in CI. Response time and memory budgets are tracked via Prometheus metrics middleware but lack baseline data from production load.
 
 ---
 

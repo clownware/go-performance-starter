@@ -3,8 +3,8 @@ package webutil
 import (
 	"context"
 
-	"github.com/yourusername/go-alpine-saas-starter/internal/database"
-	"github.com/yourusername/go-alpine-saas-starter/internal/repository"
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository"
 )
 
 // context keys (unexported)

@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The Go Alpine SaaS Starter Kit requires several foundational architectural decisions that are difficult to change later. These decisions establish the development environment, framework choices, and operational approach that will shape the entire project. Making these decisions early creates a consistent foundation that improves maintainability and developer experience.
+The Alpine Go Performance Starter requires several foundational architectural decisions that are difficult to change later. These decisions establish the development environment, framework choices, and operational approach that will shape the entire project. Making these decisions early creates a consistent foundation that improves maintainability and developer experience.
 
 This ADR documents these critical choices to ensure alignment and provide rationale for future reference, following the principle that architectural decisions should be documented with clear reasoning.
 
@@ -14,7 +14,7 @@ This ADR documents these critical choices to ensure alignment and provide ration
 
 ### 1. Go Version & Module Path
 
-We will use **Go 1.22+** with the module path `github.com/yourusername/go-alpine-saas-starter`.
+We will use **Go 1.24+** with the module path `github.com/clownware/alpine-go-performance-starter`.
 
 Rationale:
 - Go 1.22+ includes improved handler signatures that simplify HTTP request handling

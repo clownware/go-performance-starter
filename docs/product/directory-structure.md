@@ -1,6 +1,6 @@
 # Project Structure
 
-This document outlines the recommended project structure for the Micro SaaS Starter Kit, following the Go Web Application Implementation Guide.
+This document outlines the recommended project structure for the Alpine Go Performance Starter, following the Go Web Application Implementation Guide.
 
 > **Note:** In the Go Web Application Implementation Guide, file indices are zero-based (e.g., 01_Foundation_Kickoff.md corresponds to Phase 0), while phase numbers are one-based.
 

@@ -11,12 +11,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/yourusername/go-alpine-saas-starter/internal/auth"
-	"github.com/yourusername/go-alpine-saas-starter/internal/config"
-	"github.com/yourusername/go-alpine-saas-starter/internal/handler"
-	mw "github.com/yourusername/go-alpine-saas-starter/internal/middleware"
-	"github.com/yourusername/go-alpine-saas-starter/internal/repository"
-	"github.com/yourusername/go-alpine-saas-starter/internal/webutil"
+	"github.com/clownware/alpine-go-performance-starter/internal/auth"
+	"github.com/clownware/alpine-go-performance-starter/internal/config"
+	"github.com/clownware/alpine-go-performance-starter/internal/handler"
+	mw "github.com/clownware/alpine-go-performance-starter/internal/middleware"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // Server represents the main application server.
@@ -44,6 +44,9 @@ func New(cfg *config.Config, db *pgxpool.Pool) (*Server, error) {
 		db:         db,
 		authClient: authClient,
 	}
+
+	// Initialize health check with DB pool for connectivity checks
+	handler.InitHealth(db)
 
 	s.setupMiddleware()
 	s.setupRoutes()
@@ -105,11 +108,13 @@ func isFileType(filePath string, extensions ...string) bool {
 
 func (s *Server) setupMiddleware() {
 	// Basic middleware (order matters!)
-	s.router.Use(mw.RequestID)      // Generate request ID first
-	s.router.Use(mw.RealIP)         // Extract real IP
-	s.router.Use(mw.Metrics)        // Track metrics (uses RequestID)
-	s.router.Use(mw.RequestLogger)  // Log requests with context
-	s.router.Use(mw.Recoverer)      // Panic recovery
+	s.router.Use(mw.SecurityHeaders) // Security headers first (ADR-014)
+	s.router.Use(mw.RequestID)       // Generate request ID
+	s.router.Use(mw.RealIP)          // Extract real IP (before rate limiter)
+	s.router.Use(mw.RateLimiter(50, 10)) // Global rate limit (ADR-014)
+	s.router.Use(mw.Metrics)         // Track metrics (uses RequestID)
+	s.router.Use(mw.RequestLogger)   // Log requests with context
+	s.router.Use(mw.Recoverer)       // Panic recovery
 	s.router.Use(mw.Timeout(30 * time.Second)) // Request timeout
 
 	// Inject UserRepository into context for all routes
@@ -140,9 +145,10 @@ func (s *Server) setupRoutes() {
 		api.Get("/organizations", handler.ListOrganizations)
 	})
 
-	// Health check endpoint (liveness)
-	s.router.Get("/healthz", handler.HealthHandler)
-	
+	// Health check endpoints (ADR-013)
+	s.router.Get("/healthz", handler.HealthHandler)       // Liveness probe (Dockerfile HEALTHCHECK)
+	s.router.Get("/health", handler.HealthDetailHandler)   // Detailed readiness check
+
 	// Metrics endpoint for Prometheus
 	s.router.Handle("/metrics", promhttp.Handler())
 

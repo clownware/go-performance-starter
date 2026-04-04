@@ -1,6 +1,6 @@
 # Security Overview
 
-This document outlines the security practices implemented in the Micro SaaS Starter Kit.
+This document outlines the security practices implemented in the Alpine Go Performance Starter.
 
 ## Authentication
 

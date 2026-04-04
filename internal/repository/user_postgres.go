@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourusername/go-alpine-saas-starter/internal/database"
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
 )
 
 type userRepository struct {
