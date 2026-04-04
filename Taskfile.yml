@@ -126,12 +126,12 @@ tasks:
   css:build:
     desc: Build CSS files with Tailwind
     cmds:
-      - npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css
+      - npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css
 
   css:watch:
     desc: Watch and build CSS files with Tailwind
     cmds:
-      - npx tailwindcss -c ./tailwind.config.js -i ./web/static/css/input.css -o ./web/static/css/app.css --watch
+      - npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css --watch
 
   # Security tasks
   scan:vuln:

@@ -1,60 +1,62 @@
-/* Sanity check rule */
-.cascade-test {
-  color: purple;
-}
+@import "tailwindcss";
 
-/* Define semantic color CSS variables */
-:root {
-  --color-background: #ffffff;
-  --color-background-dark: #121212;
-  --color-surface: #f5f5f5;
-  --color-surface-dark: #1e1e1e;
-  --color-text: #333333;
-  --color-text-dark: #ffffff;
+/* Plugins */
+@plugin "@tailwindcss/forms";
+
+/* Dark mode via class strategy */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Content sources for templ files (HTML/JS auto-detected) */
+@source "../../../internal/view/**/*.templ";
+
+/* Theme: color palette from Alpine SaaS design */
+@theme {
+  /* Palette */
+  --color-teal: #468189;
+  --color-bittersweet: #bf4342;
+  --color-night: #0c0c0c;
+  --color-nyanza: #f0ffce;
+  --color-sage: #d2cca1;
+
+  /* Component colors */
   --color-primary: #468189;
+  --color-primary-500: #468189;
+  --color-primary-600: #468189;
+  --color-primary-700: #3a6b6f;
   --color-primary-dark: #3a6b6f;
+  --color-danger: #bf4342;
+  --color-danger-dark: #bf4342;
+
+  /* Semantic colors for light/dark themes */
+  --color-background: #f0ffce;
+  --color-background-dark: #0c0c0c;
+  --color-surface: #ffffff;
+  --color-surface-dark: #181818;
+  --color-text: #0c0c0c;
+  --color-text-dark: #f0ffce;
+  --color-accent: #d2cca1;
+  --color-accent-dark: #fffad1;
+  --color-muted: #d2cca1;
+  --color-muted-dark: #e6e6b3;
 }
 
-/* Explicitly force utility generation */
-.bg-background {
-  background-color: var(--color-background);
-}
-.bg-background-dark {
-  background-color: var(--color-background-dark);
-}
-.bg-surface {
-  background-color: var(--color-surface);
-}
-.bg-surface-dark {
-  background-color: var(--color-surface-dark);
-}
-.text-text {
-  color: var(--color-text);
-}
-.text-text-dark {
-  color: var(--color-text-dark);
+/* Semantic color CSS variables (dark mode switching) */
+@import "./semantic-colors.css";
+
+/* Restore v3 default border color behavior */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
 }
 
-/* Dark mode overrides using class selector */
-.dark .bg-background {
-  background-color: var(--color-background-dark);
-}
-.dark .text-text {
-  color: var(--color-text-dark);
-}
-.dark .bg-surface {
-  background-color: var(--color-surface-dark);
-}
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Custom component styles can be added below */
+/* Custom component styles */
 @layer components {
-  /* Example custom component styles */
   .btn {
-    /* @apply px-4 py-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2; */
     padding-left: 1rem;
     padding-right: 1rem;
     padding-top: 0.5rem;
@@ -75,24 +77,7 @@
   }
 }
 
-/* Add custom utility classes */
-@layer utilities {
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  /* Explicitly define test classes */
-  .bg-test-base {
-    background-color: theme('colors.test-base');
-  }
-  .dark .bg-test-dark {
-    background-color: theme('colors.test-dark');
-  }
-
-  /* Temporary class to force generation - REMOVED */
-  /*
-  .force-bg-gen {
-    @apply bg-semantic-background;
-  }
-  */
+/* Custom utilities */
+@utility text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

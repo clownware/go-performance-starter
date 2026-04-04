@@ -141,7 +141,7 @@ templ FormValidation(props FormValidationProps) {
 			name={ props.Name }
 			type={ formValidationType(props) }
 			placeholder={ props.Placeholder }
-			class="input focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+			class="input focus:outline-hidden focus:ring-primary-500 focus:border-primary-500"
 			x-model="value"
 			@blur="touched = true"
 			:class="{ 'border-red-300': serverError || (!isValid && touched) }"
