@@ -4,15 +4,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // ProfileView renders the profile page (full page or fragment fallback).
 func ProfileView(w http.ResponseWriter, r *http.Request) {
-	data := map[string]interface{}{
-		"Name": "John Doe",
+	props := pages.ProfilePageProps{
+		BaseProps: view.NewBaseProps("Profile"),
+		Name:     "John Doe",
 	}
-	webutil.RenderTemplate(w, r, http.StatusOK, "pages/profile.html", data)
+	view.Render(w, r, http.StatusOK, pages.ProfilePage(props))
 }
 
 // ProfileUpdate processes the profile form submission with HTMX support.
@@ -22,34 +26,32 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	name := r.FormValue("name")
-	errors := webutil.FormErrors{}
+	errors := map[string]string{}
 	if strings.TrimSpace(name) == "" {
 		errors["name"] = "Name cannot be empty"
 	}
-	data := map[string]interface{}{
-		"Name": name,
-	}
+
 	// Validation errors
 	if len(errors) > 0 {
+		formProps := partials.ProfileFormProps{Name: name, Errors: errors}
 		if webutil.IsHTMXRequest(r) {
-			webutil.RenderTemplate(w, r, http.StatusUnprocessableEntity, "partials/profile_form.html", map[string]interface{}{ // fragment
-				"Name":   name,
-				"Errors": errors,
-			})
+			view.Render(w, r, http.StatusUnprocessableEntity, partials.ProfileForm(formProps))
 		} else {
-			webutil.RenderTemplateWithErrors(w, r, http.StatusUnprocessableEntity, "pages/profile.html", data, errors)
+			pageProps := pages.ProfilePageProps{
+				BaseProps: view.NewBaseProps("Profile"),
+				Name:     name,
+				Errors:   errors,
+			}
+			view.Render(w, r, http.StatusUnprocessableEntity, pages.ProfilePage(pageProps))
 		}
 		return
 	}
+
 	// Stub update successful
-	data["Success"] = true
 	if webutil.IsHTMXRequest(r) {
-		// Trigger global toast event
 		webutil.SetHXTrigger(w, "Profile updated successfully!")
-	}
-	if webutil.IsHTMXRequest(r) {
-		// Return updated form fragment with success message
-		webutil.RenderTemplate(w, r, http.StatusOK, "partials/profile_form.html", data)
+		formProps := partials.ProfileFormProps{Name: name, Success: true}
+		view.Render(w, r, http.StatusOK, partials.ProfileForm(formProps))
 	} else {
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 	}

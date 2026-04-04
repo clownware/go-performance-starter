@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
@@ -26,7 +28,7 @@ func ShowFirstRunWelcome(w http.ResponseWriter, r *http.Request) {
 	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	// 	return
 	// }
-	webutil.RenderTemplate(w, r, http.StatusOK, "partials/first_run_experience.html", map[string]interface{}{})
+	view.Render(w, r, http.StatusOK, partials.FirstRun(partials.FirstRunProps{Step: 1}))
 }
 
 // ShowFirstRunProfile serves the profile setup prompt (step 2).
@@ -41,10 +43,11 @@ func ShowFirstRunProfile(w http.ResponseWriter, r *http.Request) {
 	// 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	// 	return
 	// }
-	webutil.RenderTemplate(w, r, http.StatusOK, "partials/first_run_experience.html", map[string]interface{}{
-		"ShowProfileSetup": true,
-		"User": user,
-	})
+	userName := ""
+	if user.Name.Valid {
+		userName = user.Name.String
+	}
+	view.Render(w, r, http.StatusOK, partials.FirstRun(partials.FirstRunProps{Step: 2, UserName: userName}))
 }
 
 // ShowFirstRunCTAs serves the final CTAs (step 3).
@@ -63,10 +66,10 @@ func ShowFirstRunCTAs(w http.ResponseWriter, r *http.Request) {
 	repo := webutil.GetUserRepoFromContext(r.Context())
 	err := repo.UpdateFirstRunComplete(r.Context(), user.ID, true)
 	if err != nil {
-		webutil.RenderTemplate(w, r, http.StatusInternalServerError, "partials/first_run_experience.html", map[string]interface{}{
-			"ShowCTAs": true,
-			"Error": "Could not complete onboarding. Please try again.",
-		})
+		view.Render(w, r, http.StatusInternalServerError, partials.FirstRun(partials.FirstRunProps{
+			Step:  3,
+			Error: "Could not complete onboarding. Please try again.",
+		}))
 		return
 	}
 	// Optionally update user in session/context

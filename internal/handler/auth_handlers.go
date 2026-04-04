@@ -6,13 +6,15 @@ import (
 
 	"github.com/supabase-community/gotrue-go/types"
 	"github.com/clownware/alpine-go-performance-starter/internal/auth"
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
 	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // AuthPage renders the combined login/signup page.
 func AuthPage(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement template rendering
-	webutil.RenderTemplate(w, r, http.StatusOK, "auth/login_signup.html", nil)
+	props := pages.AuthPageProps{BaseProps: view.NewBaseProps("Login or Sign Up")}
+	view.Render(w, r, http.StatusOK, pages.AuthPage(props))
 }
 
 // AuthLoginPost handles the login form submission.

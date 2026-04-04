@@ -1,0 +1,48 @@
+package partials
+
+import (
+	"fmt"
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
+)
+
+// ItemsListProps holds data for the items list fragment.
+type ItemsListProps struct {
+	Items    []view.Item
+	NextPage int
+}
+
+// itemsNextPageURL returns the HTMX URL for loading the next page.
+func itemsNextPageURL(page int) string {
+	return fmt.Sprintf("/items/list?page=%d", page)
+}
+
+templ ItemsList(props ItemsListProps) {
+	<ul id="item-ul" class="divide-y divide-gray-200">
+		for _, item := range props.Items {
+			@Item(ItemProps{Item: item})
+		}
+	</ul>
+	if props.NextPage > 0 {
+		<!-- Infinite scroll sentinel: loads next page when revealed -->
+		<div
+			hx-get={ itemsNextPageURL(props.NextPage) }
+			hx-trigger="revealed"
+			hx-target="#item-ul"
+			hx-swap="beforeend"
+			class="py-2 text-center text-gray-500"
+		>
+			Loading more...
+		</div>
+		<!-- Fallback Load More button -->
+		<div class="mt-4 text-center">
+			<button
+				hx-get={ itemsNextPageURL(props.NextPage) }
+				hx-target="#item-ul"
+				hx-swap="beforeend"
+				class="px-4 py-2 bg-primary-600 text-white rounded"
+			>
+				Load More
+			</button>
+		</div>
+	}
+}
