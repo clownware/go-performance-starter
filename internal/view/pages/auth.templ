@@ -1,0 +1,61 @@
+package pages
+
+import (
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
+)
+
+type AuthPageProps struct {
+	view.BaseProps
+}
+
+templ AuthPage(props AuthPageProps) {
+	@layouts.Base(props.BaseProps) {
+		<div class="min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-background dark:bg-background-dark text-text dark:text-text-dark">
+			<h1 class="text-2xl font-bold mb-8 text-center">Welcome!</h1>
+			<div class="w-full max-w-md lg:max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-10">
+				<!-- Login Card -->
+				<div class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark p-6 rounded shadow-md">
+					<h2 class="text-2xl font-semibold mb-6">Login</h2>
+					<form hx-post="/auth/login" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-6">
+						<div class="mb-4">
+							<label for="login-email" class="block text-text text-sm font-bold mb-2">Your Email Address</label>
+							<input type="email" id="login-email" name="email" required autocomplete="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-none focus:shadow-outline"/>
+						</div>
+						<div class="mb-2">
+							<label for="login-password" class="block text-text text-sm font-bold mb-2">Your Password</label>
+							<input type="password" id="login-password" name="password" required autocomplete="current-password" class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark mb-1 leading-tight focus:outline-none focus:shadow-outline"/>
+						</div>
+						<div class="mb-4 text-right">
+							<a href="#" class="text-sm text-primary hover:underline dark:text-primary-dark">Reset password</a>
+						</div>
+						<button type="submit" class="w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6">
+							Sign in to your account
+						</button>
+					</form>
+				</div>
+				<!-- Sign Up Card -->
+				<div class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark p-6 rounded shadow-md mt-10 lg:mt-0">
+					<h2 class="text-2xl font-semibold mb-6">Sign Up</h2>
+					<form hx-post="/auth/signup" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-6">
+						<div class="mb-4">
+							<label for="signup-email" class="block text-text text-sm font-bold mb-2">Your Email Address</label>
+							<input type="email" id="signup-email" name="email" required autocomplete="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-none focus:shadow-outline"/>
+						</div>
+						<div class="mb-4">
+							<label for="signup-password" class="block text-text text-sm font-bold mb-2">Create a Password</label>
+							<input type="password" id="signup-password" name="password" required autocomplete="new-password" class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-none focus:shadow-outline"/>
+						</div>
+						<div class="mb-6">
+							<label for="signup-password-confirm" class="block text-text text-sm font-bold mb-2">Confirm Password</label>
+							<input type="password" id="signup-password-confirm" name="password_confirm" required autocomplete="new-password" class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-none focus:shadow-outline"/>
+						</div>
+						<button type="submit" class="w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6">
+							Create your account
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	}
+}

@@ -1,0 +1,29 @@
+package pages
+
+import (
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
+)
+
+type ProfilePageProps struct {
+	view.BaseProps
+	Name    string
+	Errors  map[string]string
+	Success bool
+}
+
+templ ProfilePage(props ProfilePageProps) {
+	@layouts.Base(props.BaseProps) {
+		<div class="max-w-2xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6">
+			<h1 class="text-2xl font-semibold mb-4">Profile</h1>
+			<form id="profile-form" hx-post="/profile" hx-target="#profile-form" hx-swap="innerHTML">
+				@partials.ProfileForm(partials.ProfileFormProps{
+					Name:    props.Name,
+					Errors:  props.Errors,
+					Success: props.Success,
+				})
+			</form>
+		</div>
+	}
+}

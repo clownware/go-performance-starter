@@ -8,6 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
@@ -27,11 +29,15 @@ func ItemsPage(w http.ResponseWriter, r *http.Request) {
 		items = append(items, view.Item{
 			ID:         strconv.Itoa(id),
 			Name:       fmt.Sprintf("Item %d", id),
-			IsFavorite: itemStore[strconv.Itoa(id)], // Check store
+			IsFavorite: itemStore[strconv.Itoa(id)],
 		})
 	}
-	data := map[string]interface{}{ "Items": items, "NextPage": page + 1 }
-	webutil.RenderTemplate(w, r, http.StatusOK, "pages/items.html", data)
+	props := pages.ItemsPageProps{
+		BaseProps: view.NewBaseProps("Items List"),
+		Items:    items,
+		NextPage: page + 1,
+	}
+	view.Render(w, r, http.StatusOK, pages.ItemsPage(props))
 }
 
 // ItemsList returns a fragment of items for HTMX requests
@@ -39,7 +45,6 @@ func ItemsList(w http.ResponseWriter, r *http.Request) {
 	// Typeahead search support
 	query := r.URL.Query().Get("query")
 	if strings.TrimSpace(query) != "" {
-		// Generate stub items up to 50 and filter
 		var results []view.Item
 		for id := 1; id <= 50; id++ {
 			name := fmt.Sprintf("Item %d", id)
@@ -47,12 +52,12 @@ func ItemsList(w http.ResponseWriter, r *http.Request) {
 				results = append(results, view.Item{
 					ID:         strconv.Itoa(id),
 					Name:       name,
-					IsFavorite: itemStore[strconv.Itoa(id)], // Check store
+					IsFavorite: itemStore[strconv.Itoa(id)],
 				})
 			}
 		}
-		listData := map[string]interface{}{"Items": results}
-		webutil.RenderTemplate(w, r, http.StatusOK, "partials/items_list.html", listData)
+		listProps := partials.ItemsListProps{Items: results}
+		view.Render(w, r, http.StatusOK, partials.ItemsList(listProps))
 		return
 	}
 
@@ -70,20 +75,22 @@ func ItemsList(w http.ResponseWriter, r *http.Request) {
 		items = append(items, view.Item{
 			ID:         strconv.Itoa(id),
 			Name:       fmt.Sprintf("Item %d", id),
-			IsFavorite: itemStore[strconv.Itoa(id)], // Check store
+			IsFavorite: itemStore[strconv.Itoa(id)],
 		})
 	}
 
-	data := map[string]interface{}{
-		"Items":    items,
-		"NextPage": page + 1,
-	}
+	listProps := partials.ItemsListProps{Items: items, NextPage: page + 1}
 
 	// Render fragment or full page depending on HTMX
 	if webutil.IsHTMXRequest(r) {
-		webutil.RenderTemplate(w, r, http.StatusOK, "partials/items_list.html", data)
+		view.Render(w, r, http.StatusOK, partials.ItemsList(listProps))
 	} else {
-		webutil.RenderTemplate(w, r, http.StatusOK, "pages/items.html", data)
+		pageProps := pages.ItemsPageProps{
+			BaseProps: view.NewBaseProps("Items List"),
+			Items:    items,
+			NextPage: page + 1,
+		}
+		view.Render(w, r, http.StatusOK, pages.ItemsPage(pageProps))
 	}
 }
 
@@ -100,16 +107,13 @@ func ItemToggle(w http.ResponseWriter, r *http.Request) {
 	itemStore[itemID] = !itemStore[itemID]
 	isFavorite := itemStore[itemID]
 
-	// Prepare data for the partial template
-	// In a real app, you'd fetch the full item details here
-	itemName := fmt.Sprintf("Item %s", itemID) // Stub name
-	data := view.Item{
-		ID:         itemID,
-		Name:       itemName,
-		IsFavorite: isFavorite, // Assuming you add this field to view.Item
+	itemName := fmt.Sprintf("Item %s", itemID)
+	itemProps := partials.ItemProps{
+		Item: view.Item{
+			ID:         itemID,
+			Name:       itemName,
+			IsFavorite: isFavorite,
+		},
 	}
-
-	// Return the updated item partial
-	// Pass the item itself as data context for the partial
-	webutil.RenderTemplate(w, r, http.StatusOK, "partials/item.html", map[string]interface{}{"Item": data})
+	view.Render(w, r, http.StatusOK, partials.Item(itemProps))
 }
