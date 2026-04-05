@@ -23,10 +23,11 @@ func GetUserProfile(w http.ResponseWriter, r *http.Request) {
         JSONError(w, http.StatusBadRequest, errors.New("missing userID"))
         return
     }
+    // TODO: fetch real user from database by ID
     user := view.UserProfile{
         ID:    userID,
-        Name:  "John Doe",
-        Email: "johndoe@example.com",
+        Name:  "Stub User",
+        Email: "stub@example.com",
     }
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)

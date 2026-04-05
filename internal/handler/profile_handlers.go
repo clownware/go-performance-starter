@@ -5,17 +5,39 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
+
+// userNameFromContext extracts the display name from the authenticated user context.
+// Falls back to email, then "User" if no auth data is available.
+func userNameFromContext(r *http.Request) string {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		return "User"
+	}
+	if name, _ := user.UserMetadata["full_name"].(string); name != "" {
+		return name
+	}
+	if name, _ := user.UserMetadata["name"].(string); name != "" {
+		return name
+	}
+	if user.Email != "" {
+		return user.Email
+	}
+	return "User"
+}
 
 // ProfileView renders the profile page (full page or fragment fallback).
 func ProfileView(w http.ResponseWriter, r *http.Request) {
+	userName := userNameFromContext(r)
+	baseProps := view.NewBaseProps("Profile")
+	baseProps.UserName = userName
 	props := pages.ProfilePageProps{
-		BaseProps: view.NewBaseProps("Profile"),
-		Name:     "John Doe",
+		BaseProps: baseProps,
+		Name:     userName,
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.ProfilePage(props)); err != nil {
 		slog.Error("Failed to render profile page", "error", err)
@@ -45,8 +67,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 				slog.Error("Failed to render profile form partial", "error", err)
 			}
 		} else {
+			baseProps := view.NewBaseProps("Profile")
+			baseProps.UserName = userNameFromContext(r)
 			pageProps := pages.ProfilePageProps{
-				BaseProps: view.NewBaseProps("Profile"),
+				BaseProps: baseProps,
 				Name:     name,
 				Errors:   errors,
 			}
@@ -59,7 +83,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// Stub update successful
 	if view.IsHTMXRequest(r) {
-		webutil.SetHXTrigger(w, "Profile updated successfully!")
+		view.SetHXTrigger(w, "Profile updated successfully!")
 		formProps := partials.ProfileFormProps{
 			Name:    name,
 			Success: true,
