@@ -29,8 +29,16 @@ tasks:
       - go mod tidy
 
   # Linting/Code quality tasks
+  lint:install:
+    desc: Install golangci-lint for local development
+    cmds:
+      - go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+    status:
+      - which golangci-lint
+
   lint:
     desc: Run linters
+    deps: [lint:install]
     cmds:
       - golangci-lint run ./...
 

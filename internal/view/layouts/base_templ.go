@@ -135,7 +135,7 @@ func Base(props view.BaseProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = header().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = header(props).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -175,7 +175,7 @@ func Base(props view.BaseProps) templ.Component {
 	})
 }
 
-func header() templ.Component {
+func header(props view.BaseProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -204,11 +204,18 @@ func header() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = userMenu().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if props.UserName != "" {
+			templ_7745c5c3_Err = userMenu(props.UserName).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<a href=\"/auth/page\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Sign In</a>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div></div></div></header>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div></div></div></div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -237,7 +244,7 @@ func darkModeToggle() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<button @click=\"dark = !dark\" :aria-pressed=\"dark\" :class=\"dark ? 'bg-primary text-white' : 'bg-surface text-primary'\" class=\"rounded-full p-2 border-2 border-primary focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors shadow-sm\" title=\"Toggle dark mode\"><img x-show=\"!dark\" x-cloak src=\"/static/img/emblem-black.svg\" alt=\"Enable dark mode\" class=\"h-5 w-5\"> <img x-show=\"dark\" x-cloak src=\"/static/img/emblem-white.svg\" alt=\"Enable light mode\" class=\"h-5 w-5\"></button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<button @click=\"dark = !dark\" :aria-pressed=\"dark\" :class=\"dark ? 'bg-primary text-white' : 'bg-surface text-primary'\" class=\"rounded-full p-2 border-2 border-primary focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors shadow-sm\" title=\"Toggle dark mode\"><img x-show=\"!dark\" x-cloak src=\"/static/img/emblem-black.svg\" alt=\"Enable dark mode\" class=\"h-5 w-5\"> <img x-show=\"dark\" x-cloak src=\"/static/img/emblem-white.svg\" alt=\"Enable light mode\" class=\"h-5 w-5\"></button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -245,7 +252,7 @@ func darkModeToggle() templ.Component {
 	})
 }
 
-func userMenu() templ.Component {
+func userMenu(userName string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -266,20 +273,33 @@ func userMenu() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div x-data=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div x-data=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(userMenuData())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 153, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 157, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" class=\"relative\"><button @click=\"open = !open\" class=\"flex items-center focus:outline-hidden focus:ring-2 focus:ring-primary\" aria-haspopup=\"true\" :aria-expanded=\"open.toString()\" aria-controls=\"user-menu-dropdown\"><span class=\"mr-2 text-text dark:text-text-dark\">John Doe</span> <svg class=\"w-4 h-4 transform transition-transform\" :class=\"{ 'rotate-180': open }\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"></path></svg></button><div x-show=\"open\" @keydown.escape.window=\"open = false\" @click.away=\"open = false\" class=\"absolute right-0 mt-2 w-48 bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow-lg rounded-md py-2 z-50\" role=\"menu\" id=\"user-menu-dropdown\" tabindex=\"-1\"><a href=\"/profile\" class=\"block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800\" role=\"menuitem\" tabindex=\"-1\">Profile</a> <a href=\"/auth/logout\" class=\"block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800\" role=\"menuitem\" tabindex=\"-1\">Logout</a></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"relative\"><button @click=\"open = !open\" class=\"flex items-center focus:outline-hidden focus:ring-2 focus:ring-primary\" aria-haspopup=\"true\" :aria-expanded=\"open.toString()\" aria-controls=\"user-menu-dropdown\"><span class=\"mr-2 text-text dark:text-text-dark\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(userName)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 165, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</span> <svg class=\"w-4 h-4 transform transition-transform\" :class=\"{ 'rotate-180': open }\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"></path></svg></button><div x-show=\"open\" @keydown.escape.window=\"open = false\" @click.away=\"open = false\" class=\"absolute right-0 mt-2 w-48 bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow-lg rounded-md py-2 z-50\" role=\"menu\" id=\"user-menu-dropdown\" tabindex=\"-1\"><a href=\"/profile\" class=\"block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800\" role=\"menuitem\" tabindex=\"-1\">Profile</a> <a href=\"/auth/logout\" class=\"block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800\" role=\"menuitem\" tabindex=\"-1\">Logout</a></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -303,25 +323,25 @@ func footer(props view.BaseProps) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<footer class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark border-t border-gray-200 dark:border-gray-800\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6\"><div class=\"flex flex-col md:flex-row justify-between items-center\"><p class=\"text-gray-500 dark:text-gray-400 text-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<footer class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark border-t border-gray-200 dark:border-gray-800\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6\"><div class=\"flex flex-col md:flex-row justify-between items-center\"><p class=\"text-gray-500 dark:text-gray-400 text-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(footerCopyright(props.CurrentYear))
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(footerCopyright(props.CurrentYear))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 186, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 190, Col: 41}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</p><div class=\"flex space-x-4 mt-4 md:mt-0\"><a href=\"/terms\" class=\"text-sm text-gray-500 hover:text-text dark:text-gray-400 dark:hover:text-text-dark\">Terms</a> <a href=\"/privacy\" class=\"text-sm text-gray-500 hover:text-text dark:text-gray-400 dark:hover:text-text-dark\">Privacy</a></div></div></div></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</p><div class=\"flex space-x-4 mt-4 md:mt-0\"><a href=\"/terms\" class=\"text-sm text-gray-500 hover:text-text dark:text-gray-400 dark:hover:text-text-dark\">Terms</a> <a href=\"/privacy\" class=\"text-sm text-gray-500 hover:text-text dark:text-gray-400 dark:hover:text-text-dark\">Privacy</a></div></div></div></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -345,12 +365,12 @@ func htmxLoadingIndicator() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var12 == nil {
+			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div id=\"global-loading\" class=\"hidden fixed inset-0 bg-gray-800/50 flex items-center justify-center z-50\"><div class=\"text-white font-semibold\">Loading...</div></div><script>\n\t\tdocument.body.addEventListener('htmx:beforeRequest', function() {\n\t\t\tdocument.getElementById('global-loading').classList.remove('hidden');\n\t\t});\n\t\tdocument.body.addEventListener('htmx:afterRequest', function() {\n\t\t\tdocument.getElementById('global-loading').classList.add('hidden');\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div id=\"global-loading\" class=\"hidden fixed inset-0 bg-gray-800/50 flex items-center justify-center z-50\"><div class=\"text-white font-semibold\">Loading...</div></div><script>\n\t\tdocument.body.addEventListener('htmx:beforeRequest', function() {\n\t\t\tdocument.getElementById('global-loading').classList.remove('hidden');\n\t\t});\n\t\tdocument.body.addEventListener('htmx:afterRequest', function() {\n\t\t\tdocument.getElementById('global-loading').classList.add('hidden');\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -374,38 +394,38 @@ func toastNotifications() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var12 == nil {
-			templ_7745c5c3_Var12 = templ.NopComponent
+		templ_7745c5c3_Var13 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var13 == nil {
+			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div x-data=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(toastData())
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 213, Col: 22}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" x-init=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div x-data=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(toastInit())
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(toastData())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 214, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 217, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" class=\"fixed bottom-4 right-4 z-50 flex flex-col space-y-3 items-end\" aria-live=\"polite\" aria-atomic=\"true\"><template x-for=\"toast in toasts\" :key=\"toast.id\"><div x-show=\"true\" x-transition:enter=\"transition ease-out duration-300\" x-transition:enter-start=\"opacity-0 translate-y-4\" x-transition:enter-end=\"opacity-100 translate-y-0\" x-transition:leave=\"transition ease-in duration-200\" x-transition:leave-start=\"opacity-100\" x-transition:leave-end=\"opacity-0\" :class=\"{\n\t\t\t\t\t'bg-green-600 text-white': toast.type === 'success',\n\t\t\t\t\t'bg-red-600 text-white': toast.type === 'error',\n\t\t\t\t\t'bg-yellow-500 text-black': toast.type === 'warning'\n\t\t\t\t}\" class=\"shadow-lg rounded px-4 py-2 min-w-[200px] flex items-center gap-2 animate-fade\" role=\"status\"><template x-if=\"toast.type === 'success'\"><span aria-hidden=\"true\">&#10003;</span></template><template x-if=\"toast.type === 'error'\"><span aria-hidden=\"true\">!</span></template><template x-if=\"toast.type === 'warning'\"><span aria-hidden=\"true\">&#9888;</span></template><span x-text=\"toast.msg\"></span></div></template></div><style>\n\t\t@keyframes fade {\n\t\t\tfrom { opacity: 0; }\n\t\t\tto { opacity: 1; }\n\t\t}\n\t\t.animate-fade {\n\t\t\tanimation: fade 0.5s;\n\t\t}\n\t</style>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" x-init=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var15 string
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(toastInit())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 218, Col: 22}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"fixed bottom-4 right-4 z-50 flex flex-col space-y-3 items-end\" aria-live=\"polite\" aria-atomic=\"true\"><template x-for=\"toast in toasts\" :key=\"toast.id\"><div x-show=\"true\" x-transition:enter=\"transition ease-out duration-300\" x-transition:enter-start=\"opacity-0 translate-y-4\" x-transition:enter-end=\"opacity-100 translate-y-0\" x-transition:leave=\"transition ease-in duration-200\" x-transition:leave-start=\"opacity-100\" x-transition:leave-end=\"opacity-0\" :class=\"{\n\t\t\t\t\t'bg-green-600 text-white': toast.type === 'success',\n\t\t\t\t\t'bg-red-600 text-white': toast.type === 'error',\n\t\t\t\t\t'bg-yellow-500 text-black': toast.type === 'warning'\n\t\t\t\t}\" class=\"shadow-lg rounded px-4 py-2 min-w-[200px] flex items-center gap-2 animate-fade\" role=\"status\"><template x-if=\"toast.type === 'success'\"><span aria-hidden=\"true\">&#10003;</span></template><template x-if=\"toast.type === 'error'\"><span aria-hidden=\"true\">!</span></template><template x-if=\"toast.type === 'warning'\"><span aria-hidden=\"true\">&#9888;</span></template><span x-text=\"toast.msg\"></span></div></template></div><style>\n\t\t@keyframes fade {\n\t\t\tfrom { opacity: 0; }\n\t\t\tto { opacity: 1; }\n\t\t}\n\t\t.animate-fade {\n\t\t\tanimation: fade 0.5s;\n\t\t}\n\t</style>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
