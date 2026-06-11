@@ -43,6 +43,11 @@ jobs:
     - name: Generate templ
       run: templ generate
 
+    - name: Bootstrap test auth stub
+      run: |
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+        PGPASSWORD=postgres psql -h localhost -U postgres -d alpine_saas_test -f sql/test/auth_stub.sql
+
     - name: Run migrations
       run: |
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz

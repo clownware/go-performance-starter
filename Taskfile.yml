@@ -101,6 +101,17 @@ tasks:
     cmds:
       - docker-compose down
 
+  db:auth-stub:
+    desc: Apply the Supabase auth.uid() stub to a vanilla Postgres (test/local only, not for Supabase)
+    cmds:
+      - psql "${DATABASE_URL}" -f sql/test/auth_stub.sql
+
+  db:test:setup:
+    desc: Bootstrap a vanilla Postgres for tests (auth stub + migrations)
+    cmds:
+      - task: db:auth-stub
+      - task: db:migrate:up
+
   db:migrate:up:
     desc: Run database migrations up
     cmds:
