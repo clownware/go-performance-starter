@@ -1,22 +1,26 @@
 # Alpine Go Performance Starter
 
-An opinionated, performance-first SaaS starter kit built with Go, HTMX, Alpine.js, and Tailwind CSS. Designed for solo developers and small teams who want production-ready infrastructure without the bloat.
+An opinionated, performance-first SaaS starter kit built with Go, templ, HTMX, Alpine.js, and Tailwind CSS. Designed for solo developers and small teams who want production-ready infrastructure without the bloat.
 
-**Stack:** Go (Chi) | HTMX + Alpine.js | Tailwind CSS | Supabase (Auth + PostgreSQL) | Cloudflare
+**Stack:** Go (Chi) | templ | HTMX + Alpine.js | Tailwind CSS | Supabase (Auth + PostgreSQL) | Cloudflare
+
+**Why this starter:** the bet is server-rendered Go with a minimal-JS frontend, where performance budgets and AI-agent guardrails are enforced in CI rather than aspired to in a README. It's a deliberately narrow, opinionated foundation — fewer choices, proven defaults — not a framework buffet.
 
 ## What You Get
 
 - **Authentication** -- Supabase email/password auth with server-side JWT validation
 - **User-scoped CRUD** -- "Items" resource with HTMX forms and optimistic UI
 - **Row Level Security** -- PostgreSQL RLS policies enforced at the database layer
+- **Type-safe templates** -- templ compiles HTML to Go; typed props, no `map[string]interface{}` (see [ADR-017](docs/adr/ADR-017-Templ-Adoption.md))
 - **Type-safe SQL** -- sqlc code generation with repository pattern
 - **Performance budgets** -- CI-enforced binary size, response time, and memory limits
+- **Agentic discipline** -- a layered AI constitution and halt-on-violation quality gate (see below)
 - **Observability** -- Prometheus metrics, structured logging (zerolog), health checks
 - **Developer experience** -- Hot reload (air), Taskfile automation, golangci-lint, CI/CD
 
 ## Prerequisites
 
-- Go 1.24+
+- Go 1.25+
 - Docker & Docker Compose (for local development database)
 - [Task](https://taskfile.dev) (task runner)
 - Node.js 20+ (for Tailwind CSS build)
@@ -38,7 +42,7 @@ npm install             # Install Tailwind tooling
 task dev                # Start dev server with hot reload
 ```
 
-The application runs at [http://localhost:8080](http://localhost:8080) by default.
+The application runs at [http://localhost:4000](http://localhost:4000) by default (`HTTP_PORT`).
 
 ## Available Tasks
 
@@ -47,6 +51,7 @@ Run `task --list` to see all available tasks. Key ones:
 | Task | Description |
 |------|-------------|
 | `task dev` | Start dev server with hot reload |
+| `task ci` | Halt-on-violation quality gate (fmt, lint, race tests, agent-spine drift, binary size, vuln scan) |
 | `task build` | Compile optimized binary to `./dist/app` |
 | `task test` | Run test suite with coverage |
 | `task test:performance` | Check performance budgets |
@@ -62,22 +67,32 @@ Run `task --list` to see all available tasks. Key ones:
 cmd/api/              Entry point
 internal/
   auth/               Supabase auth client
+  cache/              In-memory TTL cache
   config/             Environment-based configuration
-  database/           sqlc-generated types and queries
+  database/           sqlc-generated types and queries (generated)
   handler/            HTTP handlers
   middleware/         Auth, metrics, logging, request ID
   performance/        Performance budget definitions
   repository/         Data access interfaces + implementations
   server/             Router setup and middleware stack
-  view/               View models
-  webutil/            Template rendering, HTMX helpers
+  view/               templ UI: layouts/, pages/, partials/, components/ (+ render, props)
+  webutil/            HTMX + context helpers
 web/
-  templates/          Go html/template files
   static/             CSS, JS, images, fonts
 migrations/           golang-migrate SQL files
 sql/                  sqlc query and schema definitions
 docs/                 ADRs, implementation guides, product docs
+.claude/              Layered AI constitution (engineering, workflow, stack, roles, skills, agents)
 ```
+
+## Agentic Discipline
+
+This starter is built to be developed with AI coding agents — and it holds the agent to the same rules you follow. The discipline is operationalized, not aspirational:
+
+- **Layered AI constitution.** [`CLAUDE.md`](CLAUDE.md) holds ~10 halt-on-violation rules; [`.claude/engineering.md`](.claude/engineering.md), [`.claude/workflow.md`](.claude/workflow.md), and [`.claude/stack.md`](.claude/stack.md) carry engineering defaults, process, and ephemeral stack facts ([ADR-018](docs/adr/ADR-018-Layered-AI-Constitution.md)).
+- **Cross-tool spine.** [`AGENTS.md`](AGENTS.md) is **generated** from those layers via `task agents:build` and read natively by Cursor, Copilot, Codex, Windsurf, and others. CI fails if it drifts from its sources ([ADR-022](docs/adr/ADR-022-Cross-Tool-Agents-Spine.md)).
+- **Role-separated workflow.** Non-trivial features run a three-pass Architect → Coder → Reviewer flow, each pass producing an ADR, a failing test, or a review ([ADR-020](docs/adr/ADR-020-Agent-Roles.md)).
+- **Halt-on-violation gate.** `task ci` is the single definition of "done." An agent must clear it before claiming a change complete — no lowering thresholds, no `--no-verify` ([ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md)).
 
 ## Architecture Decisions
 
