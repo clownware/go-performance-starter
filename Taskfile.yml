@@ -39,6 +39,37 @@ tasks:
     cmds:
       - go fmt ./...
 
+  fmt:check:
+    desc: Fail if any Go file is not gofmt-clean
+    cmds:
+      - |
+        unformatted=$(gofmt -l $(find . -name '*.go' -not -name '*_templ.go' -not -path './vendor/*'))
+        if [ -n "$unformatted" ]; then
+          echo "❌ These files are not gofmt-clean:"; echo "$unformatted"; exit 1
+        fi
+        echo "✅ gofmt clean"
+
+  # Agentic discipline tasks
+  agents:build:
+    desc: Regenerate AGENTS.md from CLAUDE.md + .claude/*.md source layers
+    cmds:
+      - go run ./scripts/agentsmd build
+
+  agents:check:
+    desc: Fail if AGENTS.md has drifted from its source layers (ADR-022)
+    cmds:
+      - go run ./scripts/agentsmd check
+
+  ci:
+    desc: Halt-on-violation quality gate — run before claiming a change is complete (ADR-021)
+    cmds:
+      - task: fmt:check
+      - task: lint
+      - go test -race -cover ./...
+      - task: agents:check
+      - task: test:binary-size
+      - task: scan:vuln
+
   # Templ tasks
   templ:generate:
     desc: Generate Go code from templ files
