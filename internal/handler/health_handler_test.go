@@ -8,10 +8,10 @@ import (
 
 func TestHealthHandler(t *testing.T) {
 	tests := []struct {
-		name           string
-		method         string
-		wantStatus     int
-		wantBody       string
+		name       string
+		method     string
+		wantStatus int
+		wantBody   string
 	}{
 		{
 			name:       "GET returns 200 OK",

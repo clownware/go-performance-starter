@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 	"github.com/clownware/alpine-go-performance-starter/internal/config"
 	_ "github.com/clownware/alpine-go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
 	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
 	"github.com/clownware/alpine-go-performance-starter/internal/server"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
@@ -94,7 +94,7 @@ func main() {
 		slog.Error("Failed to create server", "error", err)
 		os.Exit(1)
 	}
-	
+
 	// Start memory metrics collector (updates every 30 seconds)
 	middleware.StartMemoryMetricsCollector(30 * time.Second)
 	slog.Info("Memory metrics collector started")

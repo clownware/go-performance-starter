@@ -8,9 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/clownware/alpine-go-performance-starter/internal/auth"
 	"github.com/clownware/alpine-go-performance-starter/internal/config"
 	"github.com/clownware/alpine-go-performance-starter/internal/handler"
@@ -18,6 +15,9 @@ import (
 	"github.com/clownware/alpine-go-performance-starter/internal/repository"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Server represents the main application server.
@@ -115,13 +115,13 @@ func isFileType(filePath string, extensions ...string) bool {
 
 func (s *Server) setupMiddleware() {
 	// Basic middleware (order matters!)
-	s.router.Use(mw.SecurityHeaders) // Security headers first (ADR-014)
-	s.router.Use(mw.RequestID)       // Generate request ID
-	s.router.Use(mw.RealIP)          // Extract real IP (before rate limiter)
-	s.router.Use(mw.RateLimiter(50, 10)) // Global rate limit (ADR-014)
-	s.router.Use(mw.Metrics)         // Track metrics (uses RequestID)
-	s.router.Use(mw.RequestLogger)   // Log requests with context
-	s.router.Use(mw.Recoverer)       // Panic recovery
+	s.router.Use(mw.SecurityHeaders)           // Security headers first (ADR-014)
+	s.router.Use(mw.RequestID)                 // Generate request ID
+	s.router.Use(mw.RealIP)                    // Extract real IP (before rate limiter)
+	s.router.Use(mw.RateLimiter(50, 10))       // Global rate limit (ADR-014)
+	s.router.Use(mw.Metrics)                   // Track metrics (uses RequestID)
+	s.router.Use(mw.RequestLogger)             // Log requests with context
+	s.router.Use(mw.Recoverer)                 // Panic recovery
 	s.router.Use(mw.Timeout(30 * time.Second)) // Request timeout
 
 	// Inject UserRepository into context for all routes (skip if DB not available)
@@ -155,8 +155,8 @@ func (s *Server) setupRoutes() {
 	})
 
 	// Health check endpoints (ADR-013)
-	s.router.Get("/healthz", handler.HealthHandler)       // Liveness probe (Dockerfile HEALTHCHECK)
-	s.router.Get("/health", handler.HealthDetailHandler)   // Detailed readiness check
+	s.router.Get("/healthz", handler.HealthHandler)      // Liveness probe (Dockerfile HEALTHCHECK)
+	s.router.Get("/health", handler.HealthDetailHandler) // Detailed readiness check
 
 	// Metrics endpoint for Prometheus
 	s.router.Handle("/metrics", promhttp.Handler())
@@ -179,8 +179,8 @@ func (s *Server) setupRoutes() {
 	// --- Authentication Routes ---
 	if s.authClient != nil {
 		r.Route("/auth", func(authRouter chi.Router) {
-			authRouter.Get("/page", handler.AuthPage) // Show login/signup form
-			authRouter.Post("/login", handler.AuthLoginPost(s.authClient)) // Handle login
+			authRouter.Get("/page", handler.AuthPage)                        // Show login/signup form
+			authRouter.Post("/login", handler.AuthLoginPost(s.authClient))   // Handle login
 			authRouter.Post("/signup", handler.AuthSignupPost(s.authClient)) // Handle signup
 			authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient)) // Handle logout
 		})
@@ -200,7 +200,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// Demo: hardcoded error to exercise the form validation component
 	props := pages.HomePageProps{
-		BaseProps:       view.NewBaseProps("Home Page"),
+		BaseProps:      view.NewBaseProps("Home Page"),
 		TestFieldError: "Server: This value is invalid!",
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.HomePage(props)); err != nil {

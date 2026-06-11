@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	startTime   time.Time
-	startOnce   sync.Once
-	healthDB    *pgxpool.Pool
-	healthDBMu  sync.RWMutex
+	startTime  time.Time
+	startOnce  sync.Once
+	healthDB   *pgxpool.Pool
+	healthDBMu sync.RWMutex
 )
 
 // InitHealth records the server start time and stores the DB pool for health checks.

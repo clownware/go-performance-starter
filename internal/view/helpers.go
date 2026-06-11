@@ -62,4 +62,3 @@ func AddHTMXResponseHeaders(w http.ResponseWriter, options map[string]string) {
 		w.Header().Set("HX-Trigger-After-Settle", options["triggerAfterSettle"])
 	}
 }
-

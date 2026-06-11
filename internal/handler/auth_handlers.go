@@ -5,11 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/supabase-community/gotrue-go/types"
 	"github.com/clownware/alpine-go-performance-starter/internal/auth"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
 	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/supabase-community/gotrue-go/types"
 )
 
 // AuthPage renders the combined login/signup page.

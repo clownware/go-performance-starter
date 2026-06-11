@@ -15,7 +15,7 @@ import (
 func ProfileView(w http.ResponseWriter, r *http.Request) {
 	props := pages.ProfilePageProps{
 		BaseProps: view.NewBaseProps("Profile"),
-		Name:     "John Doe",
+		Name:      "John Doe",
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.ProfilePage(props)); err != nil {
 		slog.Error("Failed to render profile page", "error", err)
@@ -47,8 +47,8 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		} else {
 			pageProps := pages.ProfilePageProps{
 				BaseProps: view.NewBaseProps("Profile"),
-				Name:     name,
-				Errors:   errors,
+				Name:      name,
+				Errors:    errors,
 			}
 			if err := view.Render(w, r, http.StatusUnprocessableEntity, pages.ProfilePage(pageProps)); err != nil {
 				slog.Error("Failed to render profile page", "error", err)
