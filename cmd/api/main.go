@@ -10,12 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
+
 	"github.com/clownware/alpine-go-performance-starter/internal/config"
 	_ "github.com/clownware/alpine-go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
 	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
 	"github.com/clownware/alpine-go-performance-starter/internal/server"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 // version is set at build time via -ldflags "-X main.version=..."

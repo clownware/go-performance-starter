@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository"
 )
 
 // OrganizationRepo implements the repository.OrganizationRepository interface using PostgreSQL.

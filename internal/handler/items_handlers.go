@@ -7,10 +7,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
-	"github.com/go-chi/chi/v5"
 )
 
 const itemsPerPage = 5

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"sync"
@@ -32,7 +33,7 @@ func InitHealth(db *pgxpool.Pool) {
 // Used by Dockerfile HEALTHCHECK — must return 200 with minimal overhead.
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK")) // liveness probe; nothing actionable if the write fails
 }
 
 // HealthDetailHandler returns a detailed JSON health check with dependency status.
@@ -82,5 +83,7 @@ func HealthDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		slog.Error("failed to encode health response", "error", err)
+	}
 }

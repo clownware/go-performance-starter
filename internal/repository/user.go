@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
 	"github.com/google/uuid"
+
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
 )
 
 // UserRepository defines the interface for user data access operations.

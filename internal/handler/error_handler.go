@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
@@ -14,5 +15,7 @@ type APIError struct {
 func JSONError(w http.ResponseWriter, status int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(APIError{Error: err.Error()})
+	if encodeErr := json.NewEncoder(w).Encode(APIError{Error: err.Error()}); encodeErr != nil {
+		slog.Error("failed to encode error response", "error", encodeErr)
+	}
 }

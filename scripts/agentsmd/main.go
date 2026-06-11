@@ -82,7 +82,7 @@ func generate(root string) ([]byte, error) {
 			return nil, fmt.Errorf("reading source %s: %w", rel, err)
 		}
 		b.WriteString("\n---\n\n")
-		b.WriteString(fmt.Sprintf("<!-- source: %s -->\n\n", rel))
+		fmt.Fprintf(&b, "<!-- source: %s -->\n\n", rel)
 		b.WriteString(demoteHeadings(string(raw)))
 	}
 

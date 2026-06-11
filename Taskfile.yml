@@ -43,9 +43,10 @@ tasks:
       - golangci-lint run ./...
 
   fmt:
-    desc: Format Go code
+    desc: Format Go code (gofmt + goimports via golangci-lint v2)
+    deps: [lint:install]
     cmds:
-      - go fmt ./...
+      - golangci-lint fmt ./...
 
   fmt:check:
     desc: Fail if any Go file is not gofmt-clean

@@ -22,9 +22,9 @@ func ProfilePage(w http.ResponseWriter, r *http.Request) {
 
 	// For now, just display the email from the JWT
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "<h1>User Profile</h1><p>Welcome, %s!</p><p>User ID: %s</p>", user.Email, user.ID)
+	_, _ = fmt.Fprintf(w, "<h1>User Profile</h1><p>Welcome, %s!</p><p>User ID: %s</p>", user.Email, user.ID)
 	// Add a logout button
-	fmt.Fprintf(w, `<form hx-post="/auth/logout" hx-target="body"><button type="submit">Logout</button></form>`)
+	_, _ = fmt.Fprint(w, `<form hx-post="/auth/logout" hx-target="body"><button type="submit">Logout</button></form>`)
 
 	log.Printf("[INFO] Displayed profile page for user: %s", user.Email)
 }
