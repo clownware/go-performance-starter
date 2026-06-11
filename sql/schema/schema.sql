@@ -23,7 +23,8 @@ CREATE TABLE users (
     is_active BOOLEAN,
     last_login_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL
+    updated_at TIMESTAMPTZ NOT NULL,
+    first_run_complete BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Organization members table
