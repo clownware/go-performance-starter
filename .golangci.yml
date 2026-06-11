@@ -1,48 +1,46 @@
+version: "2"
 run:
-  timeout: 5m
-  go: '1.24'
+  go: "1.25"
   modules-download-mode: readonly
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    # Basic linters
-    - errcheck      # Checks for unchecked errors
-    - gosimple      # Simplifies code
-    - govet         # Reports suspicious constructs
-    - ineffassign   # Detects unused assignments
-    - staticcheck   # Go static analysis tool
-    - typecheck     # Type checking
-    - unused        # Checks for unused constants, variables, functions, types
-    
-    # Style linters
-    - goimports     # Manages imports and formats code
-    - gofmt         # Formats code
-    - misspell      # Finds commonly misspelled words
-    - whitespace    # Checks for unnecessary whitespace
-    
-    # Additional linters (can be enabled as needed)
-    # - bodyclose     # Checks whether HTTP response bodies are closed
-    # - gosec         # Security checker
-    # - prealloc      # Finds slice declarations that could be preallocated
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/clownware/alpine-go-performance-starter
-
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unused
+    - whitespace
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+        path: _test\.go
+      - path: (.+)\.go$
+        text: should have a package comment
+      - path: (.+)\.go$
+        text: exported .* should have comment or be unexported
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-rules:
-    # Exclude some linters from tests
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-      
   max-issues-per-linter: 0
   max-same-issues: 0
-  
-  # Don't show issues with auto-generated code  
-  exclude-use-default: false
-  exclude:
-    - should have a package comment
-    - exported .* should have comment or be unexported
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/clownware/alpine-go-performance-starter
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

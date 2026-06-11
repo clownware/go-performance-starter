@@ -3,17 +3,21 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
 )
 
 // APIPlaceholder returns a simple JSON message
 func APIPlaceholder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "API is running"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"message": "API is running"}); err != nil {
+		slog.Error("failed to encode response", "handler", "APIPlaceholder", "error", err)
+	}
 }
 
 // GetUserProfile returns a stub user profile
@@ -31,7 +35,9 @@ func GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		slog.Error("failed to encode response", "handler", "GetUserProfile", "error", err)
+	}
 }
 
 // ListOrganizations returns a stub list of organizations
@@ -42,5 +48,7 @@ func ListOrganizations(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(orgs)
+	if err := json.NewEncoder(w).Encode(orgs); err != nil {
+		slog.Error("failed to encode response", "handler", "ListOrganizations", "error", err)
+	}
 }

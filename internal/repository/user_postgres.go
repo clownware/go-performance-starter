@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
 )
 
 type userRepository struct {

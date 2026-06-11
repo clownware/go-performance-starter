@@ -14,7 +14,7 @@ type AuthClient struct {
 // NewAuthClient creates and initializes a new Supabase client.
 func NewAuthClient(supabaseURL, supabaseAnonKey string) (*AuthClient, error) {
 	if supabaseURL == "" || supabaseAnonKey == "" {
-		return nil, errors.New("Supabase URL and Anon Key are required")
+		return nil, errors.New("supabase URL and anon key are required")
 	}
 
 	// Initialize the Supabase client

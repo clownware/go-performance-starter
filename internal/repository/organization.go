@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
 	"github.com/google/uuid"
+
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
 )
 
 // OrganizationRepository defines the interface for organization data access operations.
