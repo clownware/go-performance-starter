@@ -4,6 +4,7 @@ package view
 type BaseProps struct {
 	Title       string
 	CurrentYear int
+	UserName    string // display name shown in the authenticated user menu; empty for guest pages
 }
 
 // NewBaseProps constructs a BaseProps with CurrentYear computed automatically.

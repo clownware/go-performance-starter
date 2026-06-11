@@ -7,20 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-05
+
+### Added
+- Type-safe templ component library: buttons, cards, forms, inputs, alerts,
+  accessibility helpers — all with typed props structs (ADR-017)
+- ADR-017 documenting templ adoption rationale and migration strategy
+- `UserName` field on `BaseProps` — user menu now shows the authenticated user's
+  display name (falls back to email, then "User"); guest pages show "Sign In" link
+- `lint:install` Taskfile task — auto-installs golangci-lint for local dev parity
+  with CI
+- HTMX response helpers (`SetHXTrigger`, `SetHXRedirect`) consolidated into `view`
+  package alongside `IsHTMXRequest`
+
 ### Changed
 - **Complete templ migration** — all pages and partials converted from `html/template`
-  to [templ](https://templ.guide) type-safe templates (ADR-017)
+  to [templ](https://templ.guide) type-safe templates
   - Pages: home, dashboard, terms, privacy, logout, auth (login/signup), profile, items
-  - Partials: profile_form, items_list, item (optimistic UI), first_run onboarding
+  - Partials: profile_form, items_list, item (optimistic UI), first_run onboarding,
+    empty_state
   - All template data is now typed props structs instead of `map[string]interface{}`
   - HTMX partial responses render fragments directly (no layout wrapper)
+- **Tailwind CSS 4 upgrade** — removed `postcss.config.js` and `tailwind.config.js`
+  in favor of CSS-based `@import "tailwindcss"` configuration
+- Semantic color system updated to Tailwind 4 `@theme` syntax
+- CI workflow and Dockerfile updated for Tailwind 4 build process
+- `lint` task now auto-installs golangci-lint if missing
 
 ### Removed
-- `web/templates/` directory — all old `.html` template files
-- `webutil.RenderTemplate` and `RenderTemplateWithErrors` functions
-- `webutil.FormErrors` type and `view.TemplateFuncs()` — no longer needed with templ
-- Unused component templates (button, input, form, card, alert, accessibility) that
-  were defined but never invoked
+- `web/templates/` directory — all legacy `.html` template files
+- `webutil.RenderTemplate`, `RenderTemplateWithErrors`, `FormErrors`,
+  `view.TemplateFuncs()` — no longer needed with templ
+- Unused component templates that were defined but never invoked
+- `postcss.config.js` and `tailwind.config.js` (replaced by CSS-based config)
+- `webutil/htmx_helpers.go` — HTMX helpers consolidated into `view` package
+- Unused HTMX helpers: `GetHTMXRequest`, `AddHTMXResponseHeaders`,
+  `SetHXTriggerAfterSwap`, `SetHXTriggerAfterSettle`
+
+### Fixed
+- Hardcoded "John Doe" in user menu, profile page, and API stub replaced with
+  dynamic user data from auth context (closes #3)
 
 ## [0.1.0] - 2025-04-04
 
@@ -50,5 +76,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   injection works correctly
 - Build commands in Taskfile now include `-ldflags` version injection
 
-[Unreleased]: https://github.com/yourusername/go-alpine-saas-starter/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/yourusername/go-alpine-saas-starter/releases/tag/v0.1.0
+[Unreleased]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/clownware/alpine-go-performance-starter/releases/tag/v0.1.0

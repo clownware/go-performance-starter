@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/clownware/alpine-go-performance-starter/internal/auth"
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/supabase-community/gotrue-go/types"
 )
 
@@ -26,8 +26,8 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			if err != nil {
 				log.Printf("[AUTH] Unauthorized: No access token cookie found: %v", err)
 				// If HTMX request, maybe return a trigger to redirect, otherwise 401
-				if webutil.IsHTMXRequest(r) {
-					webutil.SetHXRedirect(w, "/auth/page") // Redirect to login
+				if view.IsHTMXRequest(r) {
+					view.SetHXRedirect(w, "/auth/page") // Redirect to login
 					w.WriteHeader(http.StatusUnauthorized)
 				} else {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -38,8 +38,8 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			accessToken := cookie.Value
 			if accessToken == "" {
 				log.Println("[AUTH] Unauthorized: Access token cookie is empty")
-				if webutil.IsHTMXRequest(r) {
-					webutil.SetHXRedirect(w, "/auth/page")
+				if view.IsHTMXRequest(r) {
+					view.SetHXRedirect(w, "/auth/page")
 					w.WriteHeader(http.StatusUnauthorized)
 				} else {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -56,8 +56,8 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 				// Clear potentially invalid cookies and redirect
 				http.SetCookie(w, &http.Cookie{Name: "sb-access-token", Value: "", Path: "/", MaxAge: -1})
 				http.SetCookie(w, &http.Cookie{Name: "sb-refresh-token", Value: "", Path: "/", MaxAge: -1})
-				if webutil.IsHTMXRequest(r) {
-					webutil.SetHXRedirect(w, "/auth/page")
+				if view.IsHTMXRequest(r) {
+					view.SetHXRedirect(w, "/auth/page")
 					w.WriteHeader(http.StatusUnauthorized)
 				} else {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
