@@ -173,7 +173,7 @@ func getRoutePattern(r *http.Request) string {
 // UpdateMemoryMetrics updates memory usage metrics
 func UpdateMemoryMetrics() {
 	stats := performance.GetMemoryStats()
-	
+
 	if allocMB, ok := stats["alloc_mb"].(float64); ok {
 		memoryUsage.WithLabelValues("alloc").Set(allocMB * 1024 * 1024)
 	}
@@ -201,28 +201,28 @@ func StartMemoryMetricsCollector(interval time.Duration) {
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		// Wrap response writer to capture status
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-		
+
 		// Add request ID to context if available
 		requestID := middleware.GetReqID(r.Context())
-		
+
 		logger := log.With().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
 			Str("remote_addr", r.RemoteAddr).
 			Str("request_id", requestID).
 			Logger()
-		
+
 		// Add logger to context
 		ctx := logger.WithContext(r.Context())
-		
+
 		// Process request
 		next.ServeHTTP(ww, r.WithContext(ctx))
-		
+
 		duration := time.Since(start)
-		
+
 		// Log request
 		logger.Info().
 			Int("status", ww.Status()).

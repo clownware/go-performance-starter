@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/google/uuid"
 )
 
 // OrganizationMemberRepository defines the interface for organization member data access operations.

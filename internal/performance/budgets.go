@@ -15,10 +15,10 @@ const (
 	MaxP99ResponseTime = 200 * time.Millisecond
 
 	// Resource Budgets
-	MaxBinarySize   = 20 * 1024 * 1024      // 20MB
-	MaxMemoryUsage  = 128 * 1024 * 1024     // 128MB
-	MaxPeakMemory   = 256 * 1024 * 1024     // 256MB
-	MaxStartupTime  = 500 * time.Millisecond // 500ms
+	MaxBinarySize  = 20 * 1024 * 1024       // 20MB
+	MaxMemoryUsage = 128 * 1024 * 1024      // 128MB
+	MaxPeakMemory  = 256 * 1024 * 1024      // 256MB
+	MaxStartupTime = 500 * time.Millisecond // 500ms
 
 	// Frontend Budgets
 	MaxJavaScriptSize = 50 * 1024  // 50KB

@@ -11,8 +11,8 @@ import (
 type contextKey string
 
 const (
-	userContextKey    contextKey = "user"
-	repoContextKey    contextKey = "userRepo"
+	userContextKey contextKey = "user"
+	repoContextKey contextKey = "userRepo"
 )
 
 // WithUser stores the user in the context.

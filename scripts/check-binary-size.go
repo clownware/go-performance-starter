@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	
+
 	"github.com/clownware/alpine-go-performance-starter/internal/performance"
 )
 
@@ -29,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("✅ Binary size check passed: %d bytes (%.2f MB)\n", 
-		info.Size(), 
+	fmt.Printf("✅ Binary size check passed: %d bytes (%.2f MB)\n",
+		info.Size(),
 		float64(info.Size())/1024/1024)
 }

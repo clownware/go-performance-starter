@@ -4,10 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/go-chi/chi/v5"
 )
 
 // FirstRunHandlers registers first-run onboarding routes.

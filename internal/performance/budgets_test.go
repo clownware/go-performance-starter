@@ -13,9 +13,9 @@ func TestCheckBinarySize(t *testing.T) {
 	binaryPath := filepath.Join(tmpDir, "test-binary")
 
 	tests := []struct {
-		name       string
-		size       int64
-		wantErr    bool
+		name        string
+		size        int64
+		wantErr     bool
 		errContains string
 	}{
 		{
@@ -24,9 +24,9 @@ func TestCheckBinarySize(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:       "exceeds budget",
-			size:       25 * 1024 * 1024, // 25MB
-			wantErr:    true,
+			name:        "exceeds budget",
+			size:        25 * 1024 * 1024, // 25MB
+			wantErr:     true,
 			errContains: "Binary size exceeds budget",
 		},
 		{
@@ -250,7 +250,7 @@ func TestBudgetViolationError(t *testing.T) {
 
 // Helper function to check if string contains substring
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || 
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > 0 && len(substr) > 0 && hasSubstring(s, substr)))
 }
 

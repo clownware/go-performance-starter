@@ -18,10 +18,10 @@ const (
 // ButtonProps configures a Button component.
 type ButtonProps struct {
 	Text     string
-	Type     string           // "button" | "submit" | "reset"; defaults to "button"
-	Variant  ButtonVariant    // defaults to ButtonPrimary
+	Type     string        // "button" | "submit" | "reset"; defaults to "button"
+	Variant  ButtonVariant // defaults to ButtonPrimary
 	ID       string
-	Class    string           // overrides variant-based class when set
+	Class    string // overrides variant-based class when set
 	Disabled bool
 	Attrs    templ.Attributes // HTMX, ARIA, or any extra HTML attributes
 }

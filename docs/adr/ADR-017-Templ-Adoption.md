@@ -1,5 +1,7 @@
 # ADR-017: Templ Adoption for Type-Safe Templates
 
+**Date**: 2026-04-04
+
 ## Status
 Accepted (supersedes ADR-008)
 

@@ -36,18 +36,18 @@ func TestLoad_Defaults(t *testing.T) {
 
 func TestLoad_FromEnv(t *testing.T) {
 	tests := []struct {
-		name     string
-		envVars  map[string]string
-		checkFn  func(t *testing.T, cfg *Config)
+		name    string
+		envVars map[string]string
+		checkFn func(t *testing.T, cfg *Config)
 	}{
 		{
 			name: "all fields from env",
 			envVars: map[string]string{
-				"ENV":                      "production",
-				"HTTP_PORT":                "8080",
-				"DATABASE_URL":             "postgres://localhost:5432/test",
-				"SUPABASE_URL":             "https://test.supabase.co",
-				"SUPABASE_ANON_KEY":        "anon-key-123",
+				"ENV":                       "production",
+				"HTTP_PORT":                 "8080",
+				"DATABASE_URL":              "postgres://localhost:5432/test",
+				"SUPABASE_URL":              "https://test.supabase.co",
+				"SUPABASE_ANON_KEY":         "anon-key-123",
 				"SUPABASE_SERVICE_ROLE_KEY": "service-role-key-456",
 			},
 			checkFn: func(t *testing.T, cfg *Config) {

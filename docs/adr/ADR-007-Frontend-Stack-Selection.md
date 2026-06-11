@@ -1,5 +1,7 @@
 # ADR-007: Frontend Stack Selection
 
+**Date**: 2025-05-01
+
 ## Status
 
 Accepted

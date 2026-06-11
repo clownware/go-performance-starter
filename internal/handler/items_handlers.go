@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
+	"github.com/go-chi/chi/v5"
 )
 
 const itemsPerPage = 5
@@ -34,8 +34,8 @@ func ItemsPage(w http.ResponseWriter, r *http.Request) {
 	}
 	props := pages.ItemsPageProps{
 		BaseProps: view.NewBaseProps("Items List"),
-		Items:    items,
-		NextPage: page + 1,
+		Items:     items,
+		NextPage:  page + 1,
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.ItemsPage(props)); err != nil {
 		slog.Error("Failed to render items page", "error", err)
@@ -96,8 +96,8 @@ func ItemsList(w http.ResponseWriter, r *http.Request) {
 	} else {
 		props := pages.ItemsPageProps{
 			BaseProps: view.NewBaseProps("Items List"),
-			Items:    items,
-			NextPage: page + 1,
+			Items:     items,
+			NextPage:  page + 1,
 		}
 		if err := view.Render(w, r, http.StatusOK, pages.ItemsPage(props)); err != nil {
 			slog.Error("Failed to render items page", "error", err)
