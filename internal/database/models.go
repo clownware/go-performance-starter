@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Flashcard struct {
+	ID         uuid.UUID   `json:"id"`
+	UserID     uuid.UUID   `json:"user_id"`
+	QuestionID pgtype.UUID `json:"question_id"`
+	Front      string      `json:"front"`
+	Back       string      `json:"back"`
+	IsKnown    bool        `json:"is_known"`
+	CreatedAt  time.Time   `json:"created_at"`
+	UpdatedAt  time.Time   `json:"updated_at"`
+}
+
 type Organization struct {
 	ID                uuid.UUID   `json:"id"`
 	Name              string      `json:"name"`
@@ -30,6 +41,26 @@ type OrganizationMember struct {
 	IsPrimaryOrganization pgtype.Bool `json:"is_primary_organization"`
 	CreatedAt             time.Time   `json:"created_at"`
 	UpdatedAt             time.Time   `json:"updated_at"`
+}
+
+type QuizAttempt struct {
+	ID            uuid.UUID `json:"id"`
+	UserID        uuid.UUID `json:"user_id"`
+	QuestionID    uuid.UUID `json:"question_id"`
+	SelectedIndex int32     `json:"selected_index"`
+	IsCorrect     bool      `json:"is_correct"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type QuizQuestion struct {
+	ID           uuid.UUID `json:"id"`
+	Slug         string    `json:"slug"`
+	Topic        string    `json:"topic"`
+	Prompt       string    `json:"prompt"`
+	Choices      []byte    `json:"choices"`
+	CorrectIndex int32     `json:"correct_index"`
+	Explanation  string    `json:"explanation"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type User struct {
