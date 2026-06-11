@@ -1,5 +1,7 @@
 # ADR-001: Foundation Architectural Decisions
 
+**Date**: 2025-04-30
+
 ## Status
 
 Accepted

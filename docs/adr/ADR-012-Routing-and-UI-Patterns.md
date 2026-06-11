@@ -1,5 +1,7 @@
 # ADR-012: Routing, Handler, and UI Patterns
 
+**Date**: 2025-05-01
+
 ## Status
 Accepted
 

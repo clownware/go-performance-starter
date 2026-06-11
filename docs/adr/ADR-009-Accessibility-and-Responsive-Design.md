@@ -1,5 +1,7 @@
 # ADR-009: Accessibility and Responsive Design
 
+**Date**: 2025-05-01
+
 ## Status
 Accepted
 

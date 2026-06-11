@@ -1,5 +1,7 @@
 # ADR-008: UI Composition and Template Structure
 
+**Date**: 2025-05-01
+
 ## Status
 Superseded by ADR-017
 

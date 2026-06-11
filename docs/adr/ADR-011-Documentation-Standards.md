@@ -1,5 +1,7 @@
 # ADR-011: Documentation Standards
 
+**Date**: 2025-05-01
+
 ## Status
 Accepted
 

@@ -1,5 +1,7 @@
 # ADR-010: Testing, Linting, and Code Quality
 
+**Date**: 2025-05-01
+
 ## Status
 Accepted
 
