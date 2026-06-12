@@ -38,3 +38,37 @@ CREATE TABLE organization_members (
     updated_at TIMESTAMPTZ NOT NULL,
     CONSTRAINT unique_org_user UNIQUE (organization_id, user_id)
 );
+
+-- Quiz questions table (demo domain, ADR-024)
+CREATE TABLE quiz_questions (
+    id UUID PRIMARY KEY,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    topic VARCHAR(100) NOT NULL,
+    prompt TEXT NOT NULL,
+    choices JSONB NOT NULL,
+    correct_index INTEGER NOT NULL,
+    explanation TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+
+-- Quiz attempts table (user-owned)
+CREATE TABLE quiz_attempts (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    question_id UUID NOT NULL,
+    selected_index INTEGER NOT NULL,
+    is_correct BOOLEAN NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL
+);
+
+-- Flashcards table (user-owned)
+CREATE TABLE flashcards (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    question_id UUID,
+    front TEXT NOT NULL,
+    back TEXT NOT NULL,
+    is_known BOOLEAN NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL
+);

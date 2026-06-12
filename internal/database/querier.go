@@ -12,29 +12,40 @@ import (
 )
 
 type Querier interface {
+	CountCorrectAttemptsByUser(ctx context.Context, userID uuid.UUID) (int64, error)
 	// The organization_id from step 1
 	CountOrganizationMembers(ctx context.Context, organizationID uuid.UUID) (int64, error)
+	CreateFlashcard(ctx context.Context, arg CreateFlashcardParams) (Flashcard, error)
 	CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (Organization, error)
 	CreateOrganizationMember(ctx context.Context, arg CreateOrganizationMemberParams) (OrganizationMember, error)
+	CreateQuizAttempt(ctx context.Context, arg CreateQuizAttemptParams) (QuizAttempt, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteFlashcard(ctx context.Context, arg DeleteFlashcardParams) error
 	DeleteOrganization(ctx context.Context, id uuid.UUID) error
 	DeleteOrganizationMember(ctx context.Context, arg DeleteOrganizationMemberParams) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
+	GetFlashcard(ctx context.Context, id uuid.UUID) (Flashcard, error)
 	GetOrganization(ctx context.Context, id uuid.UUID) (Organization, error)
 	GetOrganizationBySlug(ctx context.Context, slug string) (Organization, error)
 	GetOrganizationMember(ctx context.Context, id uuid.UUID) (OrganizationMember, error)
 	GetOrganizationMemberByUserAndOrg(ctx context.Context, arg GetOrganizationMemberByUserAndOrgParams) (OrganizationMember, error)
+	GetQuizQuestion(ctx context.Context, id uuid.UUID) (QuizQuestion, error)
+	GetQuizQuestionBySlug(ctx context.Context, slug string) (QuizQuestion, error)
 	GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByAuthID(ctx context.Context, authID pgtype.Text) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserPrimaryOrganization(ctx context.Context, userID uuid.UUID) (Organization, error)
+	ListFlashcardsByUser(ctx context.Context, userID uuid.UUID) ([]Flashcard, error)
 	ListOrganizationMembers(ctx context.Context, arg ListOrganizationMembersParams) ([]OrganizationMember, error)
 	ListOrganizationMembershipsForUser(ctx context.Context, userID uuid.UUID) ([]ListOrganizationMembershipsForUserRow, error)
 	ListOrganizations(ctx context.Context, arg ListOrganizationsParams) ([]Organization, error)
+	ListQuizAttemptsByUser(ctx context.Context, arg ListQuizAttemptsByUserParams) ([]QuizAttempt, error)
+	ListQuizQuestions(ctx context.Context) ([]QuizQuestion, error)
 	ListUserOrganizations(ctx context.Context, arg ListUserOrganizationsParams) ([]Organization, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	PermanentDeleteOrganization(ctx context.Context, id uuid.UUID) error
 	PermanentDeleteUser(ctx context.Context, id uuid.UUID) error
+	SetFlashcardKnown(ctx context.Context, arg SetFlashcardKnownParams) (Flashcard, error)
 	// Step 1: Set the target membership as primary
 	SetPrimaryOrganizationStep1(ctx context.Context, arg SetPrimaryOrganizationStep1Params) error
 	// Step 2: Set all other memberships for the user as non-primary
