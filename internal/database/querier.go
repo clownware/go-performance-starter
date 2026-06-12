@@ -19,6 +19,7 @@ type Querier interface {
 	CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (Organization, error)
 	CreateOrganizationMember(ctx context.Context, arg CreateOrganizationMemberParams) (OrganizationMember, error)
 	CreateQuizAttempt(ctx context.Context, arg CreateQuizAttemptParams) (QuizAttempt, error)
+	CreateQuizQuestion(ctx context.Context, arg CreateQuizQuestionParams) (QuizQuestion, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteFlashcard(ctx context.Context, arg DeleteFlashcardParams) error
 	DeleteOrganization(ctx context.Context, id uuid.UUID) error

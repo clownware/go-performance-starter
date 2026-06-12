@@ -8,6 +8,14 @@ SELECT id, slug, topic, prompt, choices, correct_index, explanation, created_at
 FROM quiz_questions
 WHERE id = $1 LIMIT 1;
 
+-- name: CreateQuizQuestion :one
+INSERT INTO quiz_questions (
+    slug, topic, prompt, choices, correct_index, explanation
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+RETURNING id, slug, topic, prompt, choices, correct_index, explanation, created_at;
+
 -- name: GetQuizQuestionBySlug :one
 SELECT id, slug, topic, prompt, choices, correct_index, explanation, created_at
 FROM quiz_questions

@@ -59,6 +59,47 @@ func (q *Queries) CreateQuizAttempt(ctx context.Context, arg CreateQuizAttemptPa
 	return i, err
 }
 
+const createQuizQuestion = `-- name: CreateQuizQuestion :one
+INSERT INTO quiz_questions (
+    slug, topic, prompt, choices, correct_index, explanation
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+RETURNING id, slug, topic, prompt, choices, correct_index, explanation, created_at
+`
+
+type CreateQuizQuestionParams struct {
+	Slug         string `json:"slug"`
+	Topic        string `json:"topic"`
+	Prompt       string `json:"prompt"`
+	Choices      []byte `json:"choices"`
+	CorrectIndex int32  `json:"correct_index"`
+	Explanation  string `json:"explanation"`
+}
+
+func (q *Queries) CreateQuizQuestion(ctx context.Context, arg CreateQuizQuestionParams) (QuizQuestion, error) {
+	row := q.db.QueryRow(ctx, createQuizQuestion,
+		arg.Slug,
+		arg.Topic,
+		arg.Prompt,
+		arg.Choices,
+		arg.CorrectIndex,
+		arg.Explanation,
+	)
+	var i QuizQuestion
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Topic,
+		&i.Prompt,
+		&i.Choices,
+		&i.CorrectIndex,
+		&i.Explanation,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getQuizQuestion = `-- name: GetQuizQuestion :one
 SELECT id, slug, topic, prompt, choices, correct_index, explanation, created_at
 FROM quiz_questions
