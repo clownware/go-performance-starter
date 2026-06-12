@@ -78,18 +78,24 @@ ALTER TABLE users FORCE ROW LEVEL SECURITY;
 ALTER TABLE organizations FORCE ROW LEVEL SECURITY;
 ALTER TABLE organization_members FORCE ROW LEVEL SECURITY;
 
--- Create policy to allow service role to bypass RLS (for backend operations)
+-- Create policy to allow the service role to bypass RLS (for backend operations).
+-- Scoped TO service_role so it does NOT apply to anon/authenticated — otherwise
+-- a permissive USING(true) for ALL roles would OR-override the self-access
+-- policies and nullify RLS.
 CREATE POLICY service_role_bypass ON users
-    FOR ALL 
+    FOR ALL
+    TO service_role
     USING (true)
     WITH CHECK (true);
 
 CREATE POLICY service_role_bypass ON organizations
-    FOR ALL 
+    FOR ALL
+    TO service_role
     USING (true)
     WITH CHECK (true);
 
 CREATE POLICY service_role_bypass ON organization_members
-    FOR ALL 
+    FOR ALL
+    TO service_role
     USING (true)
     WITH CHECK (true);

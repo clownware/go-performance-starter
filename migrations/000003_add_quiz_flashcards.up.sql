@@ -69,6 +69,7 @@ ALTER TABLE quiz_attempts FORCE ROW LEVEL SECURITY;
 ALTER TABLE flashcards FORCE ROW LEVEL SECURITY;
 
 -- Service-role bypass for backend operations and seeding (mirrors 000002).
-CREATE POLICY service_role_bypass ON quiz_questions FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY service_role_bypass ON quiz_attempts FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY service_role_bypass ON flashcards FOR ALL USING (true) WITH CHECK (true);
+-- Scoped TO service_role so it doesn't nullify the self-access policies.
+CREATE POLICY service_role_bypass ON quiz_questions FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY service_role_bypass ON quiz_attempts FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY service_role_bypass ON flashcards FOR ALL TO service_role USING (true) WITH CHECK (true);
