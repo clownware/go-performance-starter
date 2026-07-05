@@ -20,9 +20,19 @@ CREATE SCHEMA IF NOT EXISTS auth;
 -- Returns the current request's auth id, or NULL when unset (→ RLS denies).
 -- Returns text because every call site casts auth.uid()::text and compares
 -- against users.auth_id (varchar).
+--
+-- Mirrors Supabase's real auth.uid(): coalesce of the legacy per-claim
+-- setting and the modern request.jwt.claims JSON. The app sets both
+-- (internal/repository/postgres/scope.go), so tests and production resolve
+-- identically.
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS text
     LANGUAGE sql STABLE
-    AS $$ SELECT nullif(current_setting('request.jwt.claim.sub', true), '') $$;
+    AS $$
+        SELECT coalesce(
+            nullif(current_setting('request.jwt.claim.sub', true), ''),
+            nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+        )
+    $$;
 
 -- Supabase roles. service_role bypasses RLS (matches Supabase); anon and
 -- authenticated are subject to it.

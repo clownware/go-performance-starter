@@ -193,6 +193,22 @@ func (q *Queries) PermanentDeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const setUserFirstRunComplete = `-- name: SetUserFirstRunComplete :exec
+UPDATE users
+SET first_run_complete = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type SetUserFirstRunCompleteParams struct {
+	ID               uuid.UUID `json:"id"`
+	FirstRunComplete bool      `json:"first_run_complete"`
+}
+
+func (q *Queries) SetUserFirstRunComplete(ctx context.Context, arg SetUserFirstRunCompleteParams) error {
+	_, err := q.db.Exec(ctx, setUserFirstRunComplete, arg.ID, arg.FirstRunComplete)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET 
