@@ -20,6 +20,10 @@ The application must protect against the OWASP Top 10 threats while maintaining 
 - Token expiration: 1 hour (refresh tokens: 30 days)
 - Session management via HTTP-only cookies
 
+#### Session Model (documented 2026-07-05, per ADR-025)
+
+Sessions are **stateless**: the Supabase JWTs are the session, carried in two cookies — `sb-access-token` (1h) and `sb-refresh-token` (30d) — set with `HttpOnly`, `SameSite=Lax`, and `Secure` in production. There is no server-side session store; any instance can serve any request (see [ADR-025](ADR-025-Deployment-Target.md)). Logout clears both cookies and signs out of GoTrue. Anonymous guest sessions ([ADR-024](ADR-024-Demo-Application-Direction.md)) use the identical mechanism — the JWT simply carries the `is_anonymous` claim.
+
 #### Authorization Strategy
 - **Row Level Security (RLS)** for data access control (as defined in ADR-004)
 - Multi-tenant isolation enforced at database layer
@@ -345,17 +349,19 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
 
 ## OWASP Top 10 Coverage
 
+> **Amended 2026-07-05**: statuses corrected against the deployment-readiness audit. The original table marked several mitigations "Implemented" that exist in this ADR but not in code. Do not mark a row ✅ until the code and a test exist.
+
 | Threat | Mitigation | Status |
 |--------|-----------|--------|
-| A01: Broken Access Control | RLS + Authentication middleware | ✅ Implemented |
-| A02: Cryptographic Failures | HTTPS, encrypted secrets, JWT | ✅ Implemented |
+| A01: Broken Access Control | RLS + Authentication middleware | ⚠️ Partial — RLS policies proven in integration tests, but the app does not yet propagate JWT claims to the database per request, so RLS is not engaged at runtime (hardening phase) |
+| A02: Cryptographic Failures | HTTPS, encrypted secrets, JWT | ✅ Implemented (TLS terminates at the edge per ADR-025) |
 | A03: Injection | Parameterized queries, input validation | ✅ Implemented |
 | A04: Insecure Design | Threat modeling, secure defaults | ✅ Implemented |
-| A05: Security Misconfiguration | Security headers, hardened defaults | ✅ Implemented |
+| A05: Security Misconfiguration | Security headers, hardened defaults | ⚠️ Partial — headers middleware exists; HSTS `ENV=production` gating and server timeouts pending |
 | A06: Vulnerable Components | Dependency scanning, pinning | ✅ Implemented |
-| A07: Authentication Failures | Rate limiting, JWT expiration | ✅ Implemented |
-| A08: Data Integrity Failures | CSRF tokens, signed requests | ✅ Implemented |
-| A09: Logging Failures | Structured logging, log scrubbing | ✅ Implemented |
+| A07: Authentication Failures | Rate limiting, JWT expiration | ⚠️ Partial — global IP rate limiter only; the tiered limits in §4 (auth, per-user, per-email) are not yet wired |
+| A08: Data Integrity Failures | CSRF tokens, signed requests | ❌ Not implemented — no CSRF middleware exists; interim mitigation is `SameSite=Lax` cookies (hardening phase) |
+| A09: Logging Failures | Structured logging, log scrubbing | ⚠️ Partial — structured logging present but split across libraries until ADR-026 lands |
 | A10: Server-Side Request Forgery | URL validation, allowlist | ⚠️ Review per feature |
 
 ## Consequences

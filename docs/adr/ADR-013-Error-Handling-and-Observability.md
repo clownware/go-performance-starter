@@ -133,6 +133,8 @@ func (r *PostRepository) GetBySlug(ctx context.Context, slug string) (*Post, err
 
 ### 2. Structured Logging
 
+> **Amended 2026-07-05**: [ADR-026](ADR-026-Logging-Standardization.md) standardizes logging on stdlib `log/slog`. The level semantics, required context fields, and scrubbing rules below are unchanged; the zerolog code samples are illustrative of the pattern, not the library.
+
 Use **zerolog** (as defined in ADR-001) with consistent context:
 
 ```go

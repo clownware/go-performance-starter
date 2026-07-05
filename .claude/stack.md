@@ -61,12 +61,15 @@ Budgets are enforced in CI via `task test:performance` / `task test:binary-size`
 - **ADR-018:** Layered AI constitution (this file structure)
 - **ADR-019–022:** Scope boundary, agent roles, quality gate, cross-tool AGENTS.md spine
 - **ADR-023:** Testing philosophy
+- **ADR-024:** Demo application direction (explainer + /patterns + quiz/flashcards, anonymous guest auth)
+- **ADR-025:** Deployment target (stateless container behind Cloudflare; supersedes ADR-001 §5)
+- **ADR-026:** Logging standardized on `log/slog` (supersedes ADR-001 §3)
 
 ## Deployment
 
 - **Default port:** `4000` (`HTTP_PORT`, see `internal/config/config.go`)
 - **Build:** `task build` → `./dist/app` (stripped). Multi-stage Dockerfile (Node→Tailwind, Go→templ+build, Alpine runtime).
-- **Target:** Cloudflare edge / container host.
+- **Target (ADR-025):** single stateless container on a container host (Fly.io as the worked example) behind the Cloudflare proxy, which terminates TLS and serves as CDN. Cloudflare Workers is not an application runtime. Sessions are stateless (JWT cookies); backups are delegated to Supabase managed Postgres; production migrations are forward-only and run before deploy.
 
 ## Cross-tool spine
 
