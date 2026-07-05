@@ -67,12 +67,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: Set up logger (Phase 0) - for now use standard log
-	slog.Info("Configuration loaded successfully")
+	// Fail fast on misconfiguration (ADR-015) instead of at first use
+	if err := cfg.Validate(); err != nil {
+		slog.Error("Invalid configuration", "error", err)
+		os.Exit(1)
+	}
 
-	// Connect to the database
+	// Connect to the database with tuned pool settings (ADR-025)
 	slog.Info("Connecting to database...")
-	db, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	poolCfg, err := cfg.PoolConfig()
+	if err != nil {
+		slog.Error("Failed to build database pool config", "error", err)
+		os.Exit(1)
+	}
+	db, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
 		slog.Error("Failed to connect to database", "error", err)
 		os.Exit(1)
@@ -102,10 +110,7 @@ func main() {
 
 	// Set up the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
-	httpServer := &http.Server{
-		Addr:    addr,
-		Handler: srv,
-	}
+	httpServer := newHTTPServer(addr, srv)
 
 	// Start the server in a goroutine
 	go func() {
@@ -130,4 +135,19 @@ func main() {
 	}
 
 	slog.Info("Server stopped gracefully")
+}
+
+// newHTTPServer builds the http.Server with connection timeouts. Without
+// these, slow or idle clients hold connections indefinitely (connection
+// exhaustion). WriteTimeout intentionally exceeds the 30s request timeout
+// middleware so handler deadlines fire before the connection is cut.
+func newHTTPServer(addr string, h http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           h,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      45 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
 }

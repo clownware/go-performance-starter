@@ -1,9 +1,21 @@
 package layouts
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
+
+// csrfHxHeaders builds the hx-headers JSON so every HTMX request carries the
+// CSRF token (ADR-014 §3); hx-headers is inherited by all descendants.
+func csrfHxHeaders(token string) string {
+	b, err := json.Marshal(map[string]string{"X-CSRF-Token": token})
+	if err != nil {
+		return "{}"
+	}
+	return string(b)
+}
 
 // darkModeData returns the Alpine.js x-data expression for dark mode state.
 func darkModeData() string {
@@ -84,6 +96,7 @@ templ Base(props view.BaseProps) {
 		<body
 			x-data={ darkModeData() }
 			x-init={ darkModeInit() }
+			hx-headers={ csrfHxHeaders(webutil.CSRFTokenFromContext(ctx)) }
 			class="min-h-screen flex flex-col bg-background dark:bg-background-dark text-text dark:text-text-dark"
 		>
 			<!-- Skip to content link for accessibility -->

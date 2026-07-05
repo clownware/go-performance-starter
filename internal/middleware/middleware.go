@@ -18,3 +18,6 @@ var Recoverer = chimiddleware.Recoverer
 
 // Timeout enforces a maximum duration for each request.
 var Timeout = chimiddleware.Timeout
+
+// Compress applies gzip/deflate response compression at the given level.
+var Compress = chimiddleware.Compress

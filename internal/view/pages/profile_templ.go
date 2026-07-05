@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/components"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
 )
@@ -56,6 +57,10 @@ func ProfilePage(props ProfilePageProps) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6\"><h1 class=\"text-2xl font-semibold mb-4\">Profile</h1><form id=\"profile-form\" hx-post=\"/profile\" hx-target=\"#profile-form\" hx-swap=\"innerHTML\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.CSRFField().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -2,6 +2,7 @@ package pages
 
 import (
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/view/components"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
 )
 
@@ -10,6 +11,7 @@ templ LogoutPage(props view.BaseProps) {
 		<div class="max-w-md mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6 mt-12 text-center">
 			<h1 class="text-2xl font-bold">Sign Out</h1>
 			<form hx-post="/auth/logout" hx-target="body" method="post">
+				@components.CSRFField()
 				<button class="btn btn-primary mt-4" type="submit">Confirm Logout</button>
 			</form>
 			<p class="mt-4"><a href="/">Cancel</a></p>
