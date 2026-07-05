@@ -1,0 +1,37 @@
+# Worked-example deployment config (ADR-025 §6). Fly.io is an example, not a
+# requirement — the Docker image built by ./Dockerfile is the portable
+# contract; any container host works. Run behind Cloudflare-proxied DNS in
+# Full (strict) mode: TLS terminates at the edge, the app serves plain HTTP
+# on HTTP_PORT inside the private network (ADR-025 §2).
+#
+# Secrets (DATABASE_URL, SUPABASE_*, METRICS_TOKEN) go through
+# `fly secrets set` — never in this file (ADR-015).
+
+app = "alpine-go-performance-starter"
+primary_region = "ewr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ENV = "production"
+  HTTP_PORT = "4000"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "3s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # Steady-state budget is 128MB (ADR-000); 256MB leaves headroom for spikes.
+  memory = "256mb"
