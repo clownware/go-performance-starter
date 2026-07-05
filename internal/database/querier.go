@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -21,6 +22,10 @@ type Querier interface {
 	CreateQuizAttempt(ctx context.Context, arg CreateQuizAttemptParams) (QuizAttempt, error)
 	CreateQuizQuestion(ctx context.Context, arg CreateQuizQuestionParams) (QuizQuestion, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	// Reaps anonymous guest accounts older than the TTL (ADR-024). Upgraded
+	// accounts have is_anonymous=false and are exempt. Flashcards and quiz
+	// attempts cascade via their user_id foreign keys.
+	DeleteExpiredAnonymousUsers(ctx context.Context, createdAt time.Time) ([]DeleteExpiredAnonymousUsersRow, error)
 	DeleteFlashcard(ctx context.Context, arg DeleteFlashcardParams) error
 	DeleteOrganization(ctx context.Context, id uuid.UUID) error
 	DeleteOrganizationMember(ctx context.Context, arg DeleteOrganizationMemberParams) error

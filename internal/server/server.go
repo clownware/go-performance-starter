@@ -42,6 +42,9 @@ func New(cfg *config.Config, db *pgxpool.Pool) (*Server, error) {
 			slog.Error("Failed to create Supabase auth client", "error", err)
 			return nil, fmt.Errorf("failed to create auth client: %w", err)
 		}
+		if cfg.SupabaseServiceRoleKey != "" {
+			authClient.WithServiceRoleKey(cfg.SupabaseServiceRoleKey)
+		}
 		slog.Info("Supabase auth client initialized")
 	} else {
 		slog.Warn("Supabase credentials not set — auth disabled")
@@ -216,6 +219,12 @@ func (s *Server) setupRoutes() {
 // ServeHTTP implements the http.Handler interface, making Server usable with http.ListenAndServe.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
+}
+
+// AuthClient exposes the Supabase auth client (nil when auth is disabled)
+// for background jobs that need admin operations (e.g. the guest reaper).
+func (s *Server) AuthClient() *auth.AuthClient {
+	return s.authClient
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {

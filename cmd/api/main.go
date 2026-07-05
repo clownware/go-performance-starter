@@ -15,7 +15,9 @@ import (
 
 	"github.com/clownware/alpine-go-performance-starter/internal/config"
 	_ "github.com/clownware/alpine-go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
+	"github.com/clownware/alpine-go-performance-starter/internal/jobs"
 	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository/postgres"
 	"github.com/clownware/alpine-go-performance-starter/internal/server"
 )
 
@@ -105,6 +107,18 @@ func main() {
 	// Start memory metrics collector (updates every 30 seconds)
 	middleware.StartMemoryMetricsCollector(30 * time.Second)
 	slog.Info("Memory metrics collector started")
+
+	// Guest mode: reap expired anonymous accounts (ADR-024). Auth-side
+	// cleanup runs only when the service role key is configured.
+	if cfg.GuestModeEnabled {
+		var deleteAuthUser jobs.AuthUserDeleter
+		if ac := srv.AuthClient(); ac != nil && ac.HasServiceRoleKey() {
+			deleteAuthUser = ac.AdminDeleteUser
+		}
+		reaper := jobs.NewReaper(postgres.NewReaperRepo(db), deleteAuthUser, cfg.GuestTTL, cfg.ReaperInterval)
+		reaper.Start(ctx)
+		slog.Info("Anonymous-user reaper started", "ttl", cfg.GuestTTL, "interval", cfg.ReaperInterval)
+	}
 
 	// Set up the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)

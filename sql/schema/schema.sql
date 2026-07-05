@@ -24,7 +24,8 @@ CREATE TABLE users (
     last_login_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
-    first_run_complete BOOLEAN NOT NULL DEFAULT FALSE
+    first_run_complete BOOLEAN NOT NULL DEFAULT FALSE,
+    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Organization members table

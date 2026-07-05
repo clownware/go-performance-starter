@@ -73,9 +73,16 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			// 4. Attach the validated identity as claims so the repository
 			// layer applies it to database connections and RLS evaluates
 			// against this user (ADR-004; see repository/postgres/scope.go).
+			// is_anonymous comes from the token payload — safe to decode
+			// unverified here because GetUser above validated the token.
+			_, isAnonymous, err := auth.TokenClaims(accessToken)
+			if err != nil {
+				slog.Warn("Failed to parse token claims; treating session as non-anonymous", "error", err)
+			}
 			ctx = webutil.WithAuthClaims(ctx, webutil.AuthClaims{
-				Sub:  user.ID.String(),
-				Role: webutil.RoleAuthenticated,
+				Sub:         user.ID.String(),
+				Role:        webutil.RoleAuthenticated,
+				IsAnonymous: isAnonymous,
 			})
 
 			// 5. Call next handler

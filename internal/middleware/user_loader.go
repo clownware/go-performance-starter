@@ -32,7 +32,7 @@ func UserLoader(repo repository.UserRepository) func(http.Handler) http.Handler 
 
 			user, err := repo.GetByAuthID(r.Context(), claims.Sub)
 			if errors.Is(err, repository.ErrNotFound) {
-				user, err = provisionUser(r, repo, claims.Sub)
+				user, err = provisionUser(r, repo, claims)
 			}
 			if err != nil {
 				slog.Error("Failed to load user row", "sub", claims.Sub, "error", err)
@@ -47,10 +47,14 @@ func UserLoader(repo repository.UserRepository) func(http.Handler) http.Handler 
 }
 
 // provisionUser creates the users row for a first-time authenticated visitor,
-// copying identity fields from the validated gotrue user in context.
-func provisionUser(r *http.Request, repo repository.UserRepository, sub string) (*database.User, error) {
+// copying identity fields from the validated gotrue user in context. The
+// is_anonymous flag mirrors the JWT claim so the TTL reaper can distinguish
+// guests from registered users (ADR-024).
+func provisionUser(r *http.Request, repo repository.UserRepository, claims webutil.AuthClaims) (*database.User, error) {
+	sub := claims.Sub
 	params := database.CreateUserParams{
-		AuthID: pgtype.Text{String: sub, Valid: true},
+		AuthID:      pgtype.Text{String: sub, Valid: true},
+		IsAnonymous: claims.IsAnonymous,
 	}
 	if gotrueUser, ok := GetUserFromContext(r.Context()); ok {
 		params.Email = gotrueUser.Email

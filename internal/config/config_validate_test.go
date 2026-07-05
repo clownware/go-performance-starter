@@ -38,6 +38,24 @@ func TestValidate(t *testing.T) {
 		}, ""},
 		{"zero max conns", func(c *Config) { c.DBMaxConns = 0 }, "DB_MAX_CONNS"},
 		{"min conns above max", func(c *Config) { c.DBMinConns = 50 }, "DB_MIN_CONNS"},
+		{"guest mode without supabase", func(c *Config) {
+			c.GuestModeEnabled = true
+			c.GuestTTL = time.Hour
+			c.ReaperInterval = time.Hour
+		}, "GUEST_MODE_ENABLED"},
+		{"guest mode with zero ttl", func(c *Config) {
+			c.GuestModeEnabled = true
+			c.SupabaseURL = "https://x.supabase.co"
+			c.SupabaseAnonKey = "anon"
+			c.ReaperInterval = time.Hour
+		}, "GUEST_TTL"},
+		{"guest mode fully configured is valid", func(c *Config) {
+			c.GuestModeEnabled = true
+			c.SupabaseURL = "https://x.supabase.co"
+			c.SupabaseAnonKey = "anon"
+			c.GuestTTL = 720 * time.Hour
+			c.ReaperInterval = time.Hour
+		}, ""},
 	}
 
 	for _, tt := range tests {
