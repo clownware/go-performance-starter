@@ -8,8 +8,11 @@ WORKDIR /build
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies. The Tailwind toolchain lives in devDependencies and
+# this is a builder stage, so install everything — `--omit=dev` would skip
+# the CSS compiler this stage exists to run (and the removed `--only` flag
+# errors on npm 10+).
+RUN npm ci
 
 # Copy frontend source and templ files (needed for @source directive)
 COPY web ./web

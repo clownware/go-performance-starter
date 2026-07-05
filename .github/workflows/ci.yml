@@ -132,6 +132,37 @@ jobs:
     - name: Build
       run: go build -v ./cmd/api
 
+  docker:
+    name: Docker Image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # Build (no push) on every PR so Dockerfile rot is caught continuously,
+    # not first discovered by a release tag. The v0.3.0 release failed on an
+    # npm flag removed years earlier because nothing ever built the image.
+    - name: Build image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        load: true
+        tags: local/app:ci
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Enforce 30MB image budget (ADR-000)
+      run: |
+        SIZE=$(docker image inspect local/app:ci --format='{{.Size}}')
+        MAX=$((30 * 1024 * 1024))
+        echo "Image size: $SIZE bytes (budget: $MAX)"
+        if [ "$SIZE" -gt "$MAX" ]; then
+          echo "::error::Docker image ($SIZE bytes) exceeds the 30MB budget (ADR-000)"
+          exit 1
+        fi
+
   performance:
     name: Performance Budget Check
     runs-on: ubuntu-latest
