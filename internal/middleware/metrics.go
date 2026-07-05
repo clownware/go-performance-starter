@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/rs/zerolog/log"
 
 	"github.com/clownware/alpine-go-performance-starter/internal/performance"
 )
@@ -135,14 +135,14 @@ func Metrics(next http.Handler) http.Handler {
 
 		// Log slow requests
 		if duration > performance.MaxP95ResponseTime {
-			log.Warn().
-				Str("method", r.Method).
-				Str("path", r.URL.Path).
-				Str("route", routePattern).
-				Dur("duration", duration).
-				Dur("budget", performance.MaxP95ResponseTime).
-				Int("status", ww.statusCode).
-				Msg("slow request detected")
+			slog.Warn("slow request detected",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"route", routePattern,
+				"duration_ms", duration.Milliseconds(),
+				"budget_ms", performance.MaxP95ResponseTime.Milliseconds(),
+				"status", ww.statusCode,
+			)
 		}
 	})
 }
@@ -197,7 +197,8 @@ func StartMemoryMetricsCollector(interval time.Duration) {
 	}()
 }
 
-// RequestLogger is a custom logger middleware that integrates with our metrics
+// RequestLogger logs each completed request with the context fields required
+// by ADR-013 (request_id, duration, status).
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -205,29 +206,16 @@ func RequestLogger(next http.Handler) http.Handler {
 		// Wrap response writer to capture status
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
-		// Add request ID to context if available
-		requestID := middleware.GetReqID(r.Context())
+		next.ServeHTTP(ww, r)
 
-		logger := log.With().
-			Str("method", r.Method).
-			Str("path", r.URL.Path).
-			Str("remote_addr", r.RemoteAddr).
-			Str("request_id", requestID).
-			Logger()
-
-		// Add logger to context
-		ctx := logger.WithContext(r.Context())
-
-		// Process request
-		next.ServeHTTP(ww, r.WithContext(ctx))
-
-		duration := time.Since(start)
-
-		// Log request
-		logger.Info().
-			Int("status", ww.Status()).
-			Int("bytes", ww.BytesWritten()).
-			Dur("duration", duration).
-			Msg("request completed")
+		slog.Info("request completed",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"remote_addr", r.RemoteAddr,
+			"request_id", middleware.GetReqID(r.Context()),
+			"status", ww.Status(),
+			"bytes", ww.BytesWritten(),
+			"duration_ms", time.Since(start).Milliseconds(),
+		)
 	})
 }

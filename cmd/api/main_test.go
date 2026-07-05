@@ -1,10 +1,33 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 	"time"
 )
+
+func TestParseLogLevel(t *testing.T) {
+	tests := []struct {
+		in   string
+		want slog.Level
+	}{
+		{"", slog.LevelInfo},
+		{"debug", slog.LevelDebug},
+		{"DEBUG", slog.LevelDebug},
+		{"info", slog.LevelInfo},
+		{"warn", slog.LevelWarn},
+		{"error", slog.LevelError},
+		{"nonsense", slog.LevelInfo},
+	}
+	for _, tt := range tests {
+		t.Run("level_"+tt.in, func(t *testing.T) {
+			if got := parseLogLevel(tt.in); got != tt.want {
+				t.Errorf("parseLogLevel(%q) = %v, want %v", tt.in, got, tt.want)
+			}
+		})
+	}
+}
 
 // TestNewHTTPServerTimeouts guards against connection-exhaustion regressions:
 // a server without read/write/idle timeouts holds slow or idle connections

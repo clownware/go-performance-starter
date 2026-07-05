@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -26,7 +25,7 @@ func AuthPage(w http.ResponseWriter, r *http.Request) {
 func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			log.Printf("[ERROR] Parsing login form: %v", err)
+			slog.Error("Failed to parse login form", "error", err)
 			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Failed to process form."}}`)
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -47,14 +46,15 @@ func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 		_, err := authClient.Client.SignInWithEmailPassword(email, password)
 
 		if err != nil {
-			log.Printf("[ERROR] Supabase login failed for %s: %v", email, err)
+			// Email is intentionally not logged (ADR-014 §7: no PII in logs)
+			slog.Warn("Supabase login failed", "error", err)
 			// Provide a generic error for security
 			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Invalid login credentials."}}`)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		log.Printf("[INFO] User login successful for email: %s", email)
+		slog.Info("User login successful")
 		// Supabase client handles setting cookies.
 		// Trigger a full page reload or redirect client-side via HTMX header.
 		view.SetHXRedirect(w, "/profile") // Redirect to profile page after login
@@ -66,7 +66,7 @@ func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			log.Printf("[ERROR] Parsing signup form: %v", err)
+			slog.Error("Failed to parse signup form", "error", err)
 			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Failed to process form."}}`)
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -89,7 +89,7 @@ func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 		})
 
 		if err != nil {
-			log.Printf("[ERROR] Supabase signup failed: %v", err)
+			slog.Warn("Supabase signup failed", "error", err)
 			// Provide a more user-friendly error based on the type of Supabase error if possible
 			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Signup failed. User might already exist or password is too weak."}}`)
 			w.WriteHeader(http.StatusConflict) // Or Bad Request depending on error
@@ -97,7 +97,7 @@ func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 			return
 		}
 
-		log.Printf("[INFO] User signup initiated for email: %s", email)
+		slog.Info("User signup initiated")
 		view.SetHXTrigger(w, `{"showToast":{"level":"success","message":"Signup successful! Please check your email to confirm your account."}}`)
 		w.WriteHeader(http.StatusOK)
 		// Optionally clear the form or redirect, or just show the toast
@@ -113,7 +113,7 @@ func AuthLogoutPost(authClient *auth.AuthClient) http.HandlerFunc {
 		err := authClient.Client.Auth.Logout()
 		if err != nil {
 			// Log the error, but proceed with logout flow client-side anyway
-			log.Printf("[ERROR] Supabase signout failed: %v", err)
+			slog.Warn("Supabase signout failed", "error", err)
 		}
 
 		// Clear Supabase cookies explicitly (best practice)
@@ -137,7 +137,7 @@ func AuthLogoutPost(authClient *auth.AuthClient) http.HandlerFunc {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		log.Println("[INFO] User logout processed.")
+		slog.Info("User logout processed")
 		view.SetHXTrigger(w, `{"showToast":{"level":"success","message":"You have been logged out."}}`)
 		view.SetHXRedirect(w, "/auth/page") // Redirect to login page
 		w.WriteHeader(http.StatusOK)
