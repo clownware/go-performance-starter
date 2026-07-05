@@ -24,6 +24,7 @@ import (
 // Server represents the main application server.
 type Server struct {
 	router     chi.Router
+	cfg        *config.Config
 	db         *pgxpool.Pool
 	authClient *auth.AuthClient
 	// Add other dependencies like database connections here as needed
@@ -49,6 +50,7 @@ func New(cfg *config.Config, db *pgxpool.Pool) (*Server, error) {
 
 	s := &Server{
 		router:     r,
+		cfg:        cfg,
 		db:         db,
 		authClient: authClient,
 	}
@@ -115,15 +117,19 @@ func isFileType(filePath string, extensions ...string) bool {
 }
 
 func (s *Server) setupMiddleware() {
+	isProd := s.cfg.IsProduction()
+
 	// Basic middleware (order matters!)
-	s.router.Use(mw.SecurityHeaders)           // Security headers first (ADR-014)
+	s.router.Use(mw.SecurityHeaders(isProd))   // Security headers first (ADR-014; HSTS in prod per ADR-025)
 	s.router.Use(mw.RequestID)                 // Generate request ID
 	s.router.Use(mw.RealIP)                    // Extract real IP (before rate limiter)
 	s.router.Use(mw.RateLimiter(50, 10))       // Global rate limit (ADR-014)
+	s.router.Use(mw.Compress(5))               // gzip/deflate responses
 	s.router.Use(mw.Metrics)                   // Track metrics (uses RequestID)
 	s.router.Use(mw.RequestLogger)             // Log requests with context
 	s.router.Use(mw.Recoverer)                 // Panic recovery
 	s.router.Use(mw.Timeout(30 * time.Second)) // Request timeout
+	s.router.Use(mw.CSRF(isProd))              // CSRF double-submit cookie (ADR-014 §3)
 
 	// Inject UserRepository into context for all routes (skip if DB not available)
 	if s.db != nil {
@@ -159,8 +165,10 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/healthz", handler.HealthHandler)      // Liveness probe (Dockerfile HEALTHCHECK)
 	s.router.Get("/health", handler.HealthDetailHandler) // Detailed readiness check
 
-	// Metrics endpoint for Prometheus
-	s.router.Handle("/metrics", promhttp.Handler())
+	// Metrics endpoint for Prometheus — bearer-token gated; hidden in
+	// production when METRICS_TOKEN is unset (2026-07-05 audit)
+	s.router.With(mw.MetricsGuard(s.cfg.MetricsToken, s.cfg.IsProduction())).
+		Handle("/metrics", promhttp.Handler())
 
 	// Profile page (HTMX-enabled, requires auth)
 	if s.authClient != nil {
@@ -180,9 +188,14 @@ func (s *Server) setupRoutes() {
 	// --- Authentication Routes ---
 	if s.authClient != nil {
 		r.Route("/auth", func(authRouter chi.Router) {
-			authRouter.Get("/page", handler.AuthPage)                        // Show login/signup form
-			authRouter.Post("/login", handler.AuthLoginPost(s.authClient))   // Handle login
-			authRouter.Post("/signup", handler.AuthSignupPost(s.authClient)) // Handle signup
+			authRouter.Get("/page", handler.AuthPage) // Show login/signup form
+			// Credential endpoints get the strict tier: 5 attempts/min
+			// per IP (ADR-014 §4), on top of the global limiter.
+			authRouter.Group(func(strict chi.Router) {
+				strict.Use(mw.RateLimiter(5.0/60.0, 5))
+				strict.Post("/login", handler.AuthLoginPost(s.authClient))   // Handle login
+				strict.Post("/signup", handler.AuthSignupPost(s.authClient)) // Handle signup
+			})
 			authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient)) // Handle logout
 		})
 	} else {
