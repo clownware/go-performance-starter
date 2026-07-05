@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-05
+
+Deployment-readiness release: the 2026-07-05 audit's findings implemented end
+to end — decided deployment topology, security hardening, runtime RLS
+enforcement, unified logging, guest-mode backend, and a release pipeline.
+
+### Added
+- **ADR-025 Deployment Target**: stateless container behind the Cloudflare
+  proxy (Fly.io worked example, `fly.toml` at repo root); edge-terminated TLS;
+  stateless JWT-cookie sessions; Supabase-delegated backups; forward-only
+  pre-deploy migrations
+- **ADR-026 Logging Standardization**: stdlib `log/slog` everywhere
+- **CSRF protection** (ADR-014 §3): double-submit-cookie middleware, token via
+  `hx-headers` on `<body>` plus hidden-field fallback in all POST forms
+- **Runtime RLS enforcement** (ADR-004): every repository call carries the
+  requester's JWT identity onto the connection (`SET LOCAL ROLE` +
+  `request.jwt.claims`); CI integration tests prove cross-user isolation
+  through the production path
+- **Anonymous guest-mode backend** (ADR-024): server-side GoTrue anonymous
+  sign-in, `is_anonymous` claim plumbing, `GuestSession` middleware, TTL
+  reaper with GoTrue-side cleanup (`GUEST_MODE_ENABLED`, `GUEST_TTL`,
+  `REAPER_INTERVAL`)
+- **User provisioning**: `UserLoader` middleware JIT-creates the `users` row
+  on first authenticated request (RLS `WITH CHECK` proves ownership); fixes
+  the first-run onboarding flow
+- Tiered rate limiting: 5/min per IP on login/signup atop the global limiter
+- HTTP server timeouts (read/write/idle/read-header); env-tunable pgxpool
+  (`DB_MAX_CONNS` etc.); `config.Validate()` fail-fast at boot
+- `/metrics` guard: bearer `METRICS_TOKEN`, hidden in production when unset
+- HSTS emitted when `ENV=production`; gzip compression middleware
+- Release workflow: ghcr.io image publish with a 30MB image-budget gate,
+  migrations applied before deploy, secret-gated Fly.io deploy
+- DB migration workflow now validates the full chain against a fresh Postgres
+  before touching production (and actually triggers — it watched the wrong
+  branch)
+- Migrations 000005 (rescope `service_role_bypass` for pre-fix deployments)
+  and 000006 (`users.is_anonymous`)
+
+### Changed
+- ADR-024 accepted (demo direction + anonymous sign-in mechanism); ADR-001/013
+  amended per ADR-025/026; ADR-014's OWASP table corrected to audited reality
+- Logging: env-driven setup — JSON in production, `LOG_LEVEL` (default info);
+  auth logs no longer contain email addresses (ADR-014 §7)
+- Go toolchain pinned to a patched release; pgx upgraded (govulncheck clean)
+
+### Removed
+- zerolog dependency; dead `profile_handler.go`; stub `user_postgres.go`
+  (nil-returning methods and a hand-written SQL string)
+
 ## [0.2.0] - 2026-04-05
 
 ### Added

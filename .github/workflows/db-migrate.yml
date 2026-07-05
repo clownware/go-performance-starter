@@ -1,24 +1,69 @@
+# Applies migrations to the production database when migration files change
+# on the default branch. A validation job runs the full migration chain
+# against a fresh Postgres first, so broken SQL never reaches production.
+# The production job skips gracefully when SUPABASE_DATABASE_URL is unset.
 name: DB Migrations
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'migrations/**'
   workflow_dispatch:
 
 jobs:
-  migrate:
+  validate:
+    name: Validate migrations against fresh Postgres
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: migrate_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
+
+      - name: Bootstrap auth stub (vanilla Postgres lacks Supabase's auth schema)
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+          PGPASSWORD=postgres psql -h localhost -U postgres -d migrate_check -f sql/test/auth_stub.sql
 
       - name: Install golang-migrate
         run: |
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/local/bin/
 
+      - name: Migrate up
+        run: migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/migrate_check?sslmode=disable" up
+
+  migrate:
+    name: Apply to production
+    runs-on: ubuntu-latest
+    needs: validate
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip when no database secret is configured
+        if: env.DATABASE_URL == ''
+        run: echo "SUPABASE_DATABASE_URL not set — skipping production migrations."
+
+      - name: Install golang-migrate
+        if: env.DATABASE_URL != ''
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/
+
       - name: Run migrations
-        env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        if: env.DATABASE_URL != ''
         run: migrate -path migrations -database "$DATABASE_URL" up

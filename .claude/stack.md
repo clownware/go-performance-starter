@@ -69,6 +69,7 @@ Budgets are enforced in CI via `task test:performance` / `task test:binary-size`
 
 - **Default port:** `4000` (`HTTP_PORT`, see `internal/config/config.go`)
 - **Build:** `task build` → `./dist/app` (stripped). Multi-stage Dockerfile (Node→Tailwind, Go→templ+build, Alpine runtime).
+- **Release:** pushing a `v*` tag runs `.github/workflows/release.yml` — ghcr.io image (30MB budget gate), migrations before deploy, secret-gated Fly deploy. `fly.toml` at repo root is the ADR-025 worked example. `db-migrate.yml` validates migrations on a fresh Postgres before applying to production.
 - **Target (ADR-025):** single stateless container on a container host (Fly.io as the worked example) behind the Cloudflare proxy, which terminates TLS and serves as CDN. Cloudflare Workers is not an application runtime. Sessions are stateless (JWT cookies); backups are delegated to Supabase managed Postgres; production migrations are forward-only and run before deploy.
 
 ## Cross-tool spine

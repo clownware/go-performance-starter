@@ -1,0 +1,110 @@
+# Release pipeline (ADR-025): on a version tag, build and publish the Docker
+# image, enforce the 30MB image budget (ADR-000), apply migrations BEFORE
+# deploying (ADR-025 §5), then deploy the demo instance. Migration and deploy
+# jobs skip gracefully when the corresponding secrets are not configured, so
+# forks can tag releases without a Supabase/Fly account.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  image:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image (local, for budget check)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: local/app:budget-check
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Enforce 30MB image budget (ADR-000)
+        run: |
+          SIZE=$(docker image inspect local/app:budget-check --format='{{.Size}}')
+          MAX=$((30 * 1024 * 1024))
+          echo "Image size: $SIZE bytes (budget: $MAX)"
+          if [ "$SIZE" -gt "$MAX" ]; then
+            echo "::error::Docker image ($SIZE bytes) exceeds the 30MB budget (ADR-000)"
+            exit 1
+          fi
+
+      - name: Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          cache-from: type=gha
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+
+  migrate:
+    name: Apply Migrations
+    runs-on: ubuntu-latest
+    needs: image
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip when no database secret is configured
+        if: env.DATABASE_URL == ''
+        run: echo "SUPABASE_DATABASE_URL not set — skipping production migrations."
+
+      - name: Install golang-migrate
+        if: env.DATABASE_URL != ''
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/
+
+      - name: Run migrations (before deploy, ADR-025 §5)
+        if: env.DATABASE_URL != ''
+        run: migrate -path migrations -database "$DATABASE_URL" up
+
+  deploy:
+    name: Deploy (Fly.io example)
+    runs-on: ubuntu-latest
+    needs: migrate
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip when no Fly token is configured
+        if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN not set — skipping deploy."
+
+      - name: Set up flyctl
+        if: env.FLY_API_TOKEN != ''
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        if: env.FLY_API_TOKEN != ''
+        run: flyctl deploy --remote-only --image ghcr.io/${{ github.repository }}:${{ github.ref_name }}
