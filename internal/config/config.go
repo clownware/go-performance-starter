@@ -29,6 +29,15 @@ type Config struct {
 	DBMinConns        int32         `envconfig:"DB_MIN_CONNS" default:"2"`
 	DBMaxConnLifetime time.Duration `envconfig:"DB_MAX_CONN_LIFETIME" default:"30m"`
 	DBMaxConnIdleTime time.Duration `envconfig:"DB_MAX_CONN_IDLE_TIME" default:"5m"`
+
+	// Guest mode (ADR-024): anonymous Supabase identities for visitors.
+	// Requires "anonymous sign-ins" enabled in the Supabase project.
+	GuestModeEnabled bool `envconfig:"GUEST_MODE_ENABLED" default:"false"`
+	// GuestTTL is how long an unupgraded anonymous account lives before the
+	// reaper removes it (measured from creation).
+	GuestTTL time.Duration `envconfig:"GUEST_TTL" default:"720h"`
+	// ReaperInterval is how often the reaper pass runs.
+	ReaperInterval time.Duration `envconfig:"REAPER_INTERVAL" default:"1h"`
 }
 
 // Load loads configuration from environment variables.
@@ -71,6 +80,17 @@ func (c *Config) Validate() error {
 	}
 	if c.DBMinConns < 0 || c.DBMinConns > c.DBMaxConns {
 		return fmt.Errorf("DB_MIN_CONNS %d invalid: must be between 0 and DB_MAX_CONNS (%d)", c.DBMinConns, c.DBMaxConns)
+	}
+	if c.GuestModeEnabled {
+		if c.SupabaseURL == "" {
+			return fmt.Errorf("GUEST_MODE_ENABLED requires SUPABASE_URL and SUPABASE_ANON_KEY (guests are real Supabase identities)")
+		}
+		if c.GuestTTL <= 0 {
+			return fmt.Errorf("GUEST_TTL %v invalid: must be positive", c.GuestTTL)
+		}
+		if c.ReaperInterval <= 0 {
+			return fmt.Errorf("REAPER_INTERVAL %v invalid: must be positive", c.ReaperInterval)
+		}
 	}
 	return nil
 }

@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -18,11 +19,12 @@ INSERT INTO users (
     name,
     avatar_url,
     auth_id,
-    first_run_complete
+    first_run_complete,
+    is_anonymous
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
-RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 `
 
 type CreateUserParams struct {
@@ -31,6 +33,7 @@ type CreateUserParams struct {
 	AvatarUrl        pgtype.Text `json:"avatar_url"`
 	AuthID           pgtype.Text `json:"auth_id"`
 	FirstRunComplete bool        `json:"first_run_complete"`
+	IsAnonymous      bool        `json:"is_anonymous"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -40,6 +43,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.AvatarUrl,
 		arg.AuthID,
 		arg.FirstRunComplete,
+		arg.IsAnonymous,
 	)
 	var i User
 	err := row.Scan(
@@ -53,8 +57,43 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FirstRunComplete,
+		&i.IsAnonymous,
 	)
 	return i, err
+}
+
+const deleteExpiredAnonymousUsers = `-- name: DeleteExpiredAnonymousUsers :many
+DELETE FROM users
+WHERE is_anonymous AND created_at < $1
+RETURNING id, auth_id
+`
+
+type DeleteExpiredAnonymousUsersRow struct {
+	ID     uuid.UUID   `json:"id"`
+	AuthID pgtype.Text `json:"auth_id"`
+}
+
+// Reaps anonymous guest accounts older than the TTL (ADR-024). Upgraded
+// accounts have is_anonymous=false and are exempt. Flashcards and quiz
+// attempts cascade via their user_id foreign keys.
+func (q *Queries) DeleteExpiredAnonymousUsers(ctx context.Context, createdAt time.Time) ([]DeleteExpiredAnonymousUsersRow, error) {
+	rows, err := q.db.Query(ctx, deleteExpiredAnonymousUsers, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DeleteExpiredAnonymousUsersRow{}
+	for rows.Next() {
+		var i DeleteExpiredAnonymousUsersRow
+		if err := rows.Scan(&i.ID, &i.AuthID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -69,7 +108,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 FROM users
 WHERE id = $1 LIMIT 1
 `
@@ -88,12 +127,13 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FirstRunComplete,
+		&i.IsAnonymous,
 	)
 	return i, err
 }
 
 const getUserByAuthID = `-- name: GetUserByAuthID :one
-SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 FROM users
 WHERE auth_id = $1 LIMIT 1
 `
@@ -112,12 +152,13 @@ func (q *Queries) GetUserByAuthID(ctx context.Context, authID pgtype.Text) (User
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FirstRunComplete,
+		&i.IsAnonymous,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 FROM users
 WHERE email = $1 LIMIT 1
 `
@@ -136,12 +177,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FirstRunComplete,
+		&i.IsAnonymous,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 FROM users
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
@@ -172,6 +214,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.FirstRunComplete,
+			&i.IsAnonymous,
 		); err != nil {
 			return nil, err
 		}
@@ -211,7 +254,7 @@ func (q *Queries) SetUserFirstRunComplete(ctx context.Context, arg SetUserFirstR
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET 
+SET
     email = COALESCE($2, email),
     name = COALESCE($3, name),
     avatar_url = COALESCE($4, avatar_url),
@@ -220,7 +263,7 @@ SET
     last_login_at = COALESCE($7, last_login_at),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 `
 
 type UpdateUserParams struct {
@@ -255,6 +298,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FirstRunComplete,
+		&i.IsAnonymous,
 	)
 	return i, err
 }

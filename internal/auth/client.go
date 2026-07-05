@@ -9,6 +9,13 @@ import (
 // AuthClient wraps the Supabase client.
 type AuthClient struct {
 	Client *supabase.Client // Store the Supabase client directly
+
+	// baseURL/anonKey are kept for direct GoTrue REST calls the client
+	// library doesn't cover (anonymous sign-in, ADR-024). serviceRoleKey
+	// is optional and enables admin calls (reaper auth-side cleanup).
+	baseURL        string
+	anonKey        string
+	serviceRoleKey string
 }
 
 // NewAuthClient creates and initializes a new Supabase client.
@@ -24,5 +31,5 @@ func NewAuthClient(supabaseURL, supabaseAnonKey string) (*AuthClient, error) {
 		return nil, err
 	}
 
-	return &AuthClient{Client: sbClient}, nil
+	return &AuthClient{Client: sbClient, baseURL: supabaseURL, anonKey: supabaseAnonKey}, nil
 }

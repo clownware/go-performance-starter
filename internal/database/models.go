@@ -74,4 +74,5 @@ type User struct {
 	CreatedAt        time.Time          `json:"created_at"`
 	UpdatedAt        time.Time          `json:"updated_at"`
 	FirstRunComplete bool               `json:"first_run_complete"`
+	IsAnonymous      bool               `json:"is_anonymous"`
 }
