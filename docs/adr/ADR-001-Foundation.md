@@ -4,7 +4,7 @@
 
 ## Status
 
-Accepted
+Accepted (§3 superseded by ADR-026; §5 superseded by ADR-025)
 
 ## Context
 
@@ -39,6 +39,8 @@ Rationale:
 
 ### 3. Structured Logging
 
+> **Amended 2026-07-05**: Superseded by [ADR-026](ADR-026-Logging-Standardization.md) — structured logging is standardized on stdlib `log/slog`.
+
 We will use **zerolog** as our structured logging library.
 
 Rationale:
@@ -66,6 +68,8 @@ We adopt a two-tier approach to secret management:
 - No hardcoded secrets or configuration in application code
 
 ### 5. Deployment Considerations
+
+> **Amended 2026-07-05**: Superseded by [ADR-025](ADR-025-Deployment-Target.md) — the deployment target is a single stateless container behind the Cloudflare proxy; Cloudflare Workers is explicitly ruled out as an application runtime.
 
 We acknowledge the following deployment constraints:
 

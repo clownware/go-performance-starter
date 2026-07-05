@@ -4,7 +4,7 @@
 
 ## Status
 
-Proposed
+Accepted (2026-07-05)
 
 ## Context
 
@@ -24,6 +24,8 @@ Build the demo as a **self-documenting architecture explainer** with three coher
 
 **Identity: anonymous-auth guest mode, issued server-side.** Visitors get a real but anonymous Supabase identity on arrival (no signup), so RLS and per-user CRUD are genuinely exercised — the anonymous user is just a `users` row whose `auth_id` is the anonymous `auth.uid()`, and the existing `auth_id = auth.uid()::text` self-access policy applies unchanged. Because the app is server-rendered (not a SPA), the Go backend performs the anonymous sign-in against GoTrue and manages an httpOnly session cookie. An **"upgrade to keep your progress"** flow links an email/password identity to the same account (data-preserving). This is one identity model — no parallel guest path.
 
+**Anonymous sign-in mechanism (decided at acceptance, 2026-07-05).** `gotrue-go v1.2.1` / `supabase-go v0.0.4` expose no anonymous sign-in method, so the Go backend calls the GoTrue REST endpoint directly (credential-less `POST /auth/v1/signup`, the same call `supabase-js` `signInAnonymously()` makes) with "anonymous sign-ins" enabled in Supabase. No new dependency; the exact request shape is verified against a live Supabase project during implementation. Bumping the client library was rejected until a released version supports anonymous sign-in; a custom server-signed guest session was rejected because it forks the identity model this ADR exists to avoid.
+
 ### Accompanying constraints (best practice for anonymous auth)
 
 - Gate expensive/destructive operations on the `is_anonymous` claim.
@@ -36,7 +38,7 @@ Build the demo as a **self-documenting architecture explainer** with three coher
 - The abstract `items` handlers and in-memory `itemStore` are retired (some logic may be reused inside the `/patterns` showcase as stub demos).
 - New tables (`quiz_questions`, `quiz_attempts`, `flashcards`) with RLS mirroring the existing `users_self_access` pattern; new sqlc queries and repositories.
 - New surface area to secure: a public, anonymous-writable endpoint set — must ship with rate limiting and `is_anonymous` gating from day one.
-- Requires Supabase anonymous sign-in enabled; the Go/GoTrue server-side path must be verified (fallback: call the GoTrue anonymous sign-in REST endpoint directly — still a real anonymous user).
+- Requires Supabase anonymous sign-in enabled; the server-side path is the direct GoTrue REST call decided above — still a real anonymous user.
 - Explainer content is a writing cost, but it doubles as user-facing documentation.
 
 ## Alternatives Considered
