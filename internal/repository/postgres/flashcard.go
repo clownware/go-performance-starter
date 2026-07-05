@@ -16,6 +16,8 @@ import (
 var _ repository.FlashcardRepository = (*FlashcardRepo)(nil)
 
 // FlashcardRepo implements repository.FlashcardRepository using PostgreSQL.
+// All methods run through inScope so RLS evaluates against the requester
+// (ADR-004).
 type FlashcardRepo struct {
 	db      *pgxpool.Pool
 	querier database.Querier
@@ -28,7 +30,9 @@ func NewFlashcardRepo(db *pgxpool.Pool, querier database.Querier) *FlashcardRepo
 
 // Create adds a flashcard for a user.
 func (r *FlashcardRepo) Create(ctx context.Context, params database.CreateFlashcardParams) (*database.Flashcard, error) {
-	card, err := r.querier.CreateFlashcard(ctx, params)
+	card, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.Flashcard, error) {
+		return q.CreateFlashcard(ctx, params)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +41,9 @@ func (r *FlashcardRepo) Create(ctx context.Context, params database.CreateFlashc
 
 // Get retrieves a flashcard by ID.
 func (r *FlashcardRepo) Get(ctx context.Context, id uuid.UUID) (*database.Flashcard, error) {
-	card, err := r.querier.GetFlashcard(ctx, id)
+	card, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.Flashcard, error) {
+		return q.GetFlashcard(ctx, id)
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, repository.ErrNotFound
@@ -49,14 +55,18 @@ func (r *FlashcardRepo) Get(ctx context.Context, id uuid.UUID) (*database.Flashc
 
 // ListByUser returns a user's flashcards, most recent first.
 func (r *FlashcardRepo) ListByUser(ctx context.Context, userID uuid.UUID) ([]database.Flashcard, error) {
-	return r.querier.ListFlashcardsByUser(ctx, userID)
+	return inScope(ctx, r.db, r.querier, func(q database.Querier) ([]database.Flashcard, error) {
+		return q.ListFlashcardsByUser(ctx, userID)
+	})
 }
 
 // SetKnown marks a flashcard as known/unknown.
 func (r *FlashcardRepo) SetKnown(ctx context.Context, id uuid.UUID, known bool) (*database.Flashcard, error) {
-	card, err := r.querier.SetFlashcardKnown(ctx, database.SetFlashcardKnownParams{
-		ID:      id,
-		IsKnown: known,
+	card, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.Flashcard, error) {
+		return q.SetFlashcardKnown(ctx, database.SetFlashcardKnownParams{
+			ID:      id,
+			IsKnown: known,
+		})
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -69,8 +79,11 @@ func (r *FlashcardRepo) SetKnown(ctx context.Context, id uuid.UUID, known bool) 
 
 // Delete removes a flashcard, scoped to its owner.
 func (r *FlashcardRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
-	return r.querier.DeleteFlashcard(ctx, database.DeleteFlashcardParams{
-		ID:     id,
-		UserID: userID,
+	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (struct{}, error) {
+		return struct{}{}, q.DeleteFlashcard(ctx, database.DeleteFlashcardParams{
+			ID:     id,
+			UserID: userID,
+		})
 	})
+	return err
 }

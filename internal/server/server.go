@@ -14,9 +14,10 @@ import (
 
 	"github.com/clownware/alpine-go-performance-starter/internal/auth"
 	"github.com/clownware/alpine-go-performance-starter/internal/config"
+	"github.com/clownware/alpine-go-performance-starter/internal/database"
 	"github.com/clownware/alpine-go-performance-starter/internal/handler"
 	mw "github.com/clownware/alpine-go-performance-starter/internal/middleware"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository"
+	"github.com/clownware/alpine-go-performance-starter/internal/repository/postgres"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
 	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
 )
@@ -133,7 +134,7 @@ func (s *Server) setupMiddleware() {
 
 	// Inject UserRepository into context for all routes (skip if DB not available)
 	if s.db != nil {
-		s.router.Use(mw.UserRepoMiddleware(repository.NewUserRepository(s.db)))
+		s.router.Use(mw.UserRepoMiddleware(postgres.NewUserRepo(s.db, database.New(s.db))))
 	}
 
 	// Static file server with cache control
@@ -150,9 +151,6 @@ func (s *Server) setupRoutes() {
 
 	// Logout GET route for UX (renders confirm form)
 	r.Get("/auth/logout", handler.LogoutPage)
-
-	// First-run onboarding (after signup)
-	handler.FirstRunHandlers(r)
 
 	// API routes
 	s.router.Route("/api", func(api chi.Router) {
@@ -176,6 +174,15 @@ func (s *Server) setupRoutes() {
 			protectedRouter.Use(mw.AuthMiddleware(s.authClient))
 			protectedRouter.Get("/profile", handler.ProfileView)
 			protectedRouter.Post("/profile", handler.ProfileUpdate)
+
+			// First-run onboarding needs the DB user row loaded (and
+			// JIT-provisioned) from the authenticated identity.
+			if s.db != nil {
+				protectedRouter.Group(func(firstRun chi.Router) {
+					firstRun.Use(mw.UserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
+					handler.FirstRunHandlers(firstRun)
+				})
+			}
 		})
 	}
 

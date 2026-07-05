@@ -52,3 +52,8 @@ WHERE id = $1;
 -- name: PermanentDeleteUser :exec
 DELETE FROM users
 WHERE id = $1;
+
+-- name: SetUserFirstRunComplete :exec
+UPDATE users
+SET first_run_complete = $2, updated_at = NOW()
+WHERE id = $1;

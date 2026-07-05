@@ -9,6 +9,7 @@ import (
 
 	"github.com/clownware/alpine-go-performance-starter/internal/auth"
 	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
 )
 
 // UserContextKey is the key used to store user information in the request context.
@@ -69,7 +70,15 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			// 3. Add user info to context
 			ctx := context.WithValue(r.Context(), ContextUserKey, user)
 
-			// 4. Call next handler
+			// 4. Attach the validated identity as claims so the repository
+			// layer applies it to database connections and RLS evaluates
+			// against this user (ADR-004; see repository/postgres/scope.go).
+			ctx = webutil.WithAuthClaims(ctx, webutil.AuthClaims{
+				Sub:  user.ID.String(),
+				Role: webutil.RoleAuthenticated,
+			})
+
+			// 5. Call next handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

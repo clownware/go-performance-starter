@@ -12,7 +12,9 @@ import (
 	"github.com/clownware/alpine-go-performance-starter/internal/repository"
 )
 
-// OrganizationMemberRepo implements the repository.OrganizationMemberRepository interface using PostgreSQL.
+// OrganizationMemberRepo implements the repository.OrganizationMemberRepository
+// interface using PostgreSQL. All methods run through inScope so RLS evaluates
+// against the requester (ADR-004).
 type OrganizationMemberRepo struct {
 	db      *pgxpool.Pool
 	querier database.Querier
@@ -28,7 +30,9 @@ func NewOrganizationMemberRepo(db *pgxpool.Pool, querier database.Querier) *Orga
 
 // Get retrieves an organization member by ID.
 func (r *OrganizationMemberRepo) Get(ctx context.Context, id uuid.UUID) (*database.OrganizationMember, error) {
-	member, err := r.querier.GetOrganizationMember(ctx, id)
+	member, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.OrganizationMember, error) {
+		return q.GetOrganizationMember(ctx, id)
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, repository.ErrNotFound
@@ -40,9 +44,11 @@ func (r *OrganizationMemberRepo) Get(ctx context.Context, id uuid.UUID) (*databa
 
 // GetByUserAndOrg retrieves a member relationship by user ID and organization ID.
 func (r *OrganizationMemberRepo) GetByUserAndOrg(ctx context.Context, userID, orgID uuid.UUID) (*database.OrganizationMember, error) {
-	member, err := r.querier.GetOrganizationMemberByUserAndOrg(ctx, database.GetOrganizationMemberByUserAndOrgParams{
-		UserID:         userID,
-		OrganizationID: orgID,
+	member, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.OrganizationMember, error) {
+		return q.GetOrganizationMemberByUserAndOrg(ctx, database.GetOrganizationMemberByUserAndOrgParams{
+			UserID:         userID,
+			OrganizationID: orgID,
+		})
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -55,16 +61,20 @@ func (r *OrganizationMemberRepo) GetByUserAndOrg(ctx context.Context, userID, or
 
 // List retrieves all members for an organization with pagination.
 func (r *OrganizationMemberRepo) List(ctx context.Context, orgID uuid.UUID, limit, offset int32) ([]database.OrganizationMember, error) {
-	return r.querier.ListOrganizationMembers(ctx, database.ListOrganizationMembersParams{
-		OrganizationID: orgID,
-		Limit:          limit,
-		Offset:         offset,
+	return inScope(ctx, r.db, r.querier, func(q database.Querier) ([]database.OrganizationMember, error) {
+		return q.ListOrganizationMembers(ctx, database.ListOrganizationMembersParams{
+			OrganizationID: orgID,
+			Limit:          limit,
+			Offset:         offset,
+		})
 	})
 }
 
 // Create adds a new organization member.
 func (r *OrganizationMemberRepo) Create(ctx context.Context, params database.CreateOrganizationMemberParams) (*database.OrganizationMember, error) {
-	member, err := r.querier.CreateOrganizationMember(ctx, params)
+	member, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.OrganizationMember, error) {
+		return q.CreateOrganizationMember(ctx, params)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +83,9 @@ func (r *OrganizationMemberRepo) Create(ctx context.Context, params database.Cre
 
 // Update modifies an existing organization member.
 func (r *OrganizationMemberRepo) Update(ctx context.Context, params database.UpdateOrganizationMemberParams) (*database.OrganizationMember, error) {
-	member, err := r.querier.UpdateOrganizationMember(ctx, params)
+	member, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.OrganizationMember, error) {
+		return q.UpdateOrganizationMember(ctx, params)
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, repository.ErrNotFound
@@ -85,44 +97,39 @@ func (r *OrganizationMemberRepo) Update(ctx context.Context, params database.Upd
 
 // Delete removes an organization member.
 func (r *OrganizationMemberRepo) Delete(ctx context.Context, userID, orgID uuid.UUID) error {
-	return r.querier.DeleteOrganizationMember(ctx, database.DeleteOrganizationMemberParams{
-		UserID:         userID,
-		OrganizationID: orgID,
+	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (struct{}, error) {
+		return struct{}{}, q.DeleteOrganizationMember(ctx, database.DeleteOrganizationMemberParams{
+			UserID:         userID,
+			OrganizationID: orgID,
+		})
 	})
+	return err
 }
 
-// SetPrimary marks an organization as the primary one for a user.
+// SetPrimary marks an organization as the primary one for a user. Both steps
+// of the two-step pattern (ADR-005) run in the single transaction inScope
+// opens, preserving atomicity.
 func (r *OrganizationMemberRepo) SetPrimary(ctx context.Context, userID, orgID uuid.UUID) error {
-	tx, err := r.db.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback(ctx) }() // Rollback is a no-op if tx has already been committed.
-
-	qtx := database.New(tx) // Create a new Querier instance with the transaction
-
-	// Step 1: Set the target membership as primary
-	err = qtx.SetPrimaryOrganizationStep1(ctx, database.SetPrimaryOrganizationStep1Params{
-		OrganizationID: orgID,
-		UserID:         userID,
+	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (struct{}, error) {
+		// Step 1: Set the target membership as primary
+		if err := q.SetPrimaryOrganizationStep1(ctx, database.SetPrimaryOrganizationStep1Params{
+			OrganizationID: orgID,
+			UserID:         userID,
+		}); err != nil {
+			return struct{}{}, err
+		}
+		// Step 2: Set all other memberships for the user as non-primary
+		return struct{}{}, q.SetPrimaryOrganizationStep2(ctx, database.SetPrimaryOrganizationStep2Params{
+			UserID:         userID, // User ID from step 1
+			OrganizationID: orgID,  // Org ID from step 1 (to exclude)
+		})
 	})
-	if err != nil {
-		return err
-	}
-
-	// Step 2: Set all other memberships for the user as non-primary
-	err = qtx.SetPrimaryOrganizationStep2(ctx, database.SetPrimaryOrganizationStep2Params{
-		UserID:         userID, // User ID from step 1
-		OrganizationID: orgID,  // Org ID from step 1 (to exclude)
-	})
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit(ctx)
+	return err
 }
 
 // Count returns the number of members in an organization.
 func (r *OrganizationMemberRepo) Count(ctx context.Context, orgID uuid.UUID) (int64, error) {
-	return r.querier.CountOrganizationMembers(ctx, orgID)
+	return inScope(ctx, r.db, r.querier, func(q database.Querier) (int64, error) {
+		return q.CountOrganizationMembers(ctx, orgID)
+	})
 }

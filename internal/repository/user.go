@@ -23,7 +23,7 @@ type UserRepository interface {
 	GetByAuthID(ctx context.Context, authID string) (*database.User, error)
 
 	// List retrieves users with pagination
-	List(ctx context.Context, limit, offset int32) ([]*database.User, error)
+	List(ctx context.Context, limit, offset int32) ([]database.User, error)
 
 	// Create adds a new user
 	Create(ctx context.Context, params database.CreateUserParams) (*database.User, error)
@@ -34,12 +34,6 @@ type UserRepository interface {
 	// Delete soft-deletes a user by setting is_active to false
 	Delete(ctx context.Context, id uuid.UUID) error
 
-	// RecordLogin updates the last_login_at timestamp for a user
-	RecordLogin(ctx context.Context, id uuid.UUID, loginTime time.Time) error
-}
-
-// RecordLoginParams represents the parameters for recording a user login
-type RecordLoginParams struct {
-	ID          uuid.UUID
-	LastLoginAt time.Time
+	// SetLastLogin updates the last_login_at timestamp for a user
+	SetLastLogin(ctx context.Context, id uuid.UUID, loginTime time.Time) error
 }

@@ -51,6 +51,7 @@ type Querier interface {
 	SetPrimaryOrganizationStep1(ctx context.Context, arg SetPrimaryOrganizationStep1Params) error
 	// Step 2: Set all other memberships for the user as non-primary
 	SetPrimaryOrganizationStep2(ctx context.Context, arg SetPrimaryOrganizationStep2Params) error
+	SetUserFirstRunComplete(ctx context.Context, arg SetUserFirstRunCompleteParams) error
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (Organization, error)
 	UpdateOrganizationMember(ctx context.Context, arg UpdateOrganizationMemberParams) (OrganizationMember, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
