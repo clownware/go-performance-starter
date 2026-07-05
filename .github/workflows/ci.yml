@@ -69,7 +69,7 @@ jobs:
     - name: Upload coverage reports
       uses: codecov/codecov-action@v5
       with:
-        file: ./coverage.txt
+        files: ./coverage.txt
         fail_ci_if_error: false
 
   agents:

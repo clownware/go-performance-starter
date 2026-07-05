@@ -149,7 +149,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 - **Frontend:** HTMX + Alpine.js (minimal JS), Tailwind CSS v4 (`@tailwindcss/cli`)
 - **Database:** PostgreSQL via pgx/v5 + pgxpool; sqlc for type-safe queries; golang-migrate for migrations
 - **Auth:** Supabase (gotrue) — JWT validation server-side; auth is optional/disabled if unconfigured
-- **Observability:** Prometheus (`client_golang`) + structured logging (zerolog/slog)
+- **Observability:** Prometheus (`client_golang`) + structured logging via stdlib `log/slog` (ADR-026; JSON in production, `LOG_LEVEL` env)
 - **Task runner:** Taskfile (`taskfile.dev`)
 - **Node:** 20+ (Tailwind CLI only)
 

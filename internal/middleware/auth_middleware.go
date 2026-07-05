@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/supabase-community/gotrue-go/types"
@@ -26,7 +26,7 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			// 1. Get token from cookie
 			cookie, err := r.Cookie("sb-access-token") // Default Supabase cookie name
 			if err != nil {
-				log.Printf("[AUTH] Unauthorized: No access token cookie found: %v", err)
+				slog.Debug("Unauthorized: no access token cookie", "error", err)
 				// If HTMX request, maybe return a trigger to redirect, otherwise 401
 				if view.IsHTMXRequest(r) {
 					view.SetHXRedirect(w, "/auth/page") // Redirect to login
@@ -39,7 +39,7 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 
 			accessToken := cookie.Value
 			if accessToken == "" {
-				log.Println("[AUTH] Unauthorized: Access token cookie is empty")
+				slog.Debug("Unauthorized: access token cookie is empty")
 				if view.IsHTMXRequest(r) {
 					view.SetHXRedirect(w, "/auth/page")
 					w.WriteHeader(http.StatusUnauthorized)
@@ -54,7 +54,7 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			// We use the underlying gotrue client here.
 			user, err := authClient.Client.Auth.WithToken(accessToken).GetUser()
 			if err != nil {
-				log.Printf("[AUTH] Unauthorized: Failed to validate token/get user: %v", err)
+				slog.Warn("Unauthorized: token validation failed", "error", err)
 				// Clear potentially invalid cookies and redirect
 				http.SetCookie(w, &http.Cookie{Name: "sb-access-token", Value: "", Path: "/", MaxAge: -1})
 				http.SetCookie(w, &http.Cookie{Name: "sb-refresh-token", Value: "", Path: "/", MaxAge: -1})

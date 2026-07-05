@@ -23,14 +23,8 @@ import (
 var version = "dev"
 
 func main() {
-	slog.Info("Starting Alpine Go Performance Starter", "version", version)
-
-	// Set global log level to Debug to see diagnostic messages
-	logLevel := new(slog.LevelVar)
-	logLevel.Set(slog.LevelDebug)
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
-
-	// Manually load .env and set environment variables
+	// Manually load .env and set environment variables (before logger setup
+	// so LOG_LEVEL/ENV from .env apply)
 	envMap, err := godotenv.Read() // Read .env into a map
 	if err != nil {
 		slog.Warn("Error reading .env file, relying on existing environment variables", "error", err)
@@ -44,8 +38,12 @@ func main() {
 				}
 			}
 		}
-		slog.Info(".env file processed successfully")
 	}
+
+	// Structured logging per ADR-026: JSON in production, text otherwise,
+	// level from LOG_LEVEL (default info)
+	setupLogger(os.Getenv("ENV"), os.Getenv("LOG_LEVEL"))
+	slog.Info("Starting Alpine Go Performance Starter", "version", version)
 
 	// Create context that listens for termination signals
 	ctx, cancel := context.WithCancel(context.Background())
@@ -135,6 +133,29 @@ func main() {
 	}
 
 	slog.Info("Server stopped gracefully")
+}
+
+// setupLogger installs the process-wide slog logger (ADR-026): JSON handler
+// in production for log aggregation, text handler elsewhere for readability.
+func setupLogger(env, level string) {
+	opts := &slog.HandlerOptions{Level: parseLogLevel(level)}
+	var handler slog.Handler
+	if env == "production" {
+		handler = slog.NewJSONHandler(os.Stderr, opts)
+	} else {
+		handler = slog.NewTextHandler(os.Stderr, opts)
+	}
+	slog.SetDefault(slog.New(handler))
+}
+
+// parseLogLevel maps LOG_LEVEL to a slog.Level, defaulting to info on empty
+// or unrecognized values (fail-open to the safe default rather than crashing).
+func parseLogLevel(s string) slog.Level {
+	var level slog.Level
+	if err := level.UnmarshalText([]byte(s)); err != nil {
+		return slog.LevelInfo
+	}
+	return level
 }
 
 // newHTTPServer builds the http.Server with connection timeouts. Without
