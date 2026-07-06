@@ -22,9 +22,10 @@ coverage.txt
 *.prof
 app
 
-# Node
+# Node — node_modules is rebuilt inside the image; package-lock.json must
+# stay IN the context: `npm ci` requires it for lockfile-exact installs
+# (ADR-014 §8 dependency pinning).
 node_modules/
-package-lock.json
 
 # IDE
 .vscode/
