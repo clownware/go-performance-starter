@@ -56,10 +56,11 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # Stage 3: Create minimal runtime image
 FROM alpine:3.21
 
-# Install runtime dependencies only
+# Install runtime dependencies only. tzdata is intentionally absent: nothing
+# calls time.LoadLocation; if that changes, build with -tags timetzdata
+# rather than reinstalling the ~3.5MB package (30MB image budget, ADR-000).
 RUN apk add --no-cache \
     ca-certificates \
-    tzdata \
     && rm -rf /var/cache/apk/*
 
 # Create non-root user for security
@@ -68,17 +69,16 @@ RUN addgroup -g 1000 appuser && \
 
 WORKDIR /app
 
-# Copy binary from builder
-COPY --from=go-builder /build/app ./app
+# Copy binary from builder. Ownership is set at COPY time: a separate
+# `RUN chown -R` would rewrite every file into an extra image layer,
+# duplicating ~37MB (this alone blew the 30MB budget).
+COPY --from=go-builder --chown=appuser:appuser /build/app ./app
 
 # Copy static assets
-COPY --from=go-builder /build/web ./web
+COPY --from=go-builder --chown=appuser:appuser /build/web ./web
 
 # Copy migrations (if needed at runtime)
-COPY --from=go-builder /build/migrations ./migrations
-
-# Set ownership
-RUN chown -R appuser:appuser /app
+COPY --from=go-builder --chown=appuser:appuser /build/migrations ./migrations
 
 # Switch to non-root user
 USER appuser
