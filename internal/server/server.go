@@ -124,16 +124,17 @@ func (s *Server) setupMiddleware() {
 	isProd := s.cfg.IsProduction()
 
 	// Basic middleware (order matters!)
-	s.router.Use(mw.SecurityHeaders(isProd))   // Security headers first (ADR-014; HSTS in prod per ADR-025)
-	s.router.Use(mw.RequestID)                 // Generate request ID
-	s.router.Use(mw.RealIP)                    // Extract real IP (before rate limiter)
-	s.router.Use(mw.RateLimiter(50, 10))       // Global rate limit (ADR-014)
-	s.router.Use(mw.Compress(5))               // gzip/deflate responses
-	s.router.Use(mw.Metrics)                   // Track metrics (uses RequestID)
-	s.router.Use(mw.RequestLogger)             // Log requests with context
-	s.router.Use(mw.Recoverer)                 // Panic recovery
-	s.router.Use(mw.Timeout(30 * time.Second)) // Request timeout
-	s.router.Use(mw.CSRF(isProd))              // CSRF double-submit cookie (ADR-014 §3)
+	s.router.Use(mw.SecurityHeaders(isProd))                 // Security headers first (ADR-014; HSTS in prod per ADR-025)
+	s.router.Use(mw.RequestID)                               // Generate request ID
+	s.router.Use(mw.RealIP(s.cfg.TrustedProxyCIDRs))         // Resolve client IP via trusted proxies (ADR-027; before rate limiter)
+	s.router.Use(mw.MaxBodyBytes(s.cfg.MaxRequestBodyBytes)) // Cap request body size (2026-07-06 audit)
+	s.router.Use(mw.RateLimiter(50, 10))                     // Global rate limit (ADR-014)
+	s.router.Use(mw.Compress(5))                             // gzip/deflate responses
+	s.router.Use(mw.Metrics)                                 // Track metrics (uses RequestID)
+	s.router.Use(mw.RequestLogger)                           // Log requests with context
+	s.router.Use(mw.Recoverer)                               // Panic recovery
+	s.router.Use(mw.Timeout(30 * time.Second))               // Request timeout
+	s.router.Use(mw.CSRF(isProd))                            // CSRF double-submit cookie (ADR-014 §3)
 
 	// Inject UserRepository into context for all routes (skip if DB not available)
 	if s.db != nil {
@@ -174,7 +175,7 @@ func (s *Server) setupRoutes() {
 	// Profile page (HTMX-enabled, requires auth)
 	if s.authClient != nil {
 		r.Group(func(protectedRouter chi.Router) {
-			protectedRouter.Use(mw.AuthMiddleware(s.authClient))
+			protectedRouter.Use(mw.AuthMiddleware(s.authClient, s.cfg.IsProduction()))
 			protectedRouter.Get("/profile", handler.ProfileView)
 			protectedRouter.Post("/profile", handler.ProfileUpdate)
 
@@ -206,7 +207,7 @@ func (s *Server) setupRoutes() {
 				strict.Post("/login", handler.AuthLoginPost(s.authClient))   // Handle login
 				strict.Post("/signup", handler.AuthSignupPost(s.authClient)) // Handle signup
 			})
-			authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient)) // Handle logout
+			authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient, s.cfg.IsProduction())) // Handle logout
 		})
 	} else {
 		r.Get("/auth/page", handler.AuthPage) // Show login form (non-functional without Supabase)

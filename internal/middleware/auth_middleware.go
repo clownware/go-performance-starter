@@ -19,8 +19,11 @@ const ( // Renamed key to avoid potential conflict with other string values
 	ContextUserKey UserContextKey = "user"
 )
 
-// AuthMiddleware validates the JWT token from Supabase.
-func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Handler {
+// AuthMiddleware validates the JWT token from Supabase. secureCookie marks the
+// cookies it clears on a failed validation Secure, matching how the login and
+// CSRF cookies are issued (ADR-025: TLS terminates at the edge, so r.TLS is nil
+// in production and cannot be used to decide the flag).
+func AuthMiddleware(authClient *auth.AuthClient, secureCookie bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// 1. Get token from cookie
@@ -55,9 +58,11 @@ func AuthMiddleware(authClient *auth.AuthClient) func(next http.Handler) http.Ha
 			user, err := authClient.Client.Auth.WithToken(accessToken).GetUser()
 			if err != nil {
 				slog.Warn("Unauthorized: token validation failed", "error", err)
-				// Clear potentially invalid cookies and redirect
-				http.SetCookie(w, &http.Cookie{Name: "sb-access-token", Value: "", Path: "/", MaxAge: -1})
-				http.SetCookie(w, &http.Cookie{Name: "sb-refresh-token", Value: "", Path: "/", MaxAge: -1})
+				// Clear potentially invalid cookies and redirect. Mirror the
+				// full attribute set used when issuing them so the browser
+				// reliably matches and drops the cookie.
+				http.SetCookie(w, &http.Cookie{Name: "sb-access-token", Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureCookie, SameSite: http.SameSiteLaxMode})
+				http.SetCookie(w, &http.Cookie{Name: "sb-refresh-token", Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureCookie, SameSite: http.SameSiteLaxMode})
 				if view.IsHTMXRequest(r) {
 					view.SetHXRedirect(w, "/auth/page")
 					w.WriteHeader(http.StatusUnauthorized)

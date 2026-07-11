@@ -3,7 +3,9 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,6 +24,19 @@ type Config struct {
 	// MetricsToken gates /metrics: required as a bearer token when set;
 	// with no token, /metrics is open in dev and hidden in production.
 	MetricsToken string `envconfig:"METRICS_TOKEN"`
+
+	// TrustedProxyCIDRs lists the proxy networks whose X-Forwarded-For /
+	// X-Real-IP headers are honored for client-IP resolution (ADR-027).
+	// Empty (default) trusts no forwarded headers — the direct peer IP is
+	// used, which fails closed toward more rate limiting rather than
+	// trusting a spoofable header. Set to the edge proxy's egress ranges
+	// (e.g. Cloudflare) in production.
+	TrustedProxyCIDRs []string `envconfig:"TRUSTED_PROXY_CIDRS"`
+
+	// MaxRequestBodyBytes caps the request body size accepted before a
+	// handler reads it, bounding memory use on form/upload endpoints
+	// (2026-07-06 audit). Default 1 MiB.
+	MaxRequestBodyBytes int64 `envconfig:"MAX_REQUEST_BODY_BYTES" default:"1048576"`
 
 	// Database pool tuning (ADR-025; pgxpool defaults are too small for
 	// production — MaxConns defaults to max(4, CPUs)).
@@ -80,6 +95,17 @@ func (c *Config) Validate() error {
 	}
 	if c.DBMinConns < 0 || c.DBMinConns > c.DBMaxConns {
 		return fmt.Errorf("DB_MIN_CONNS %d invalid: must be between 0 and DB_MAX_CONNS (%d)", c.DBMinConns, c.DBMaxConns)
+	}
+	if c.MaxRequestBodyBytes < 1 {
+		return fmt.Errorf("MAX_REQUEST_BODY_BYTES %d invalid: must be at least 1", c.MaxRequestBodyBytes)
+	}
+	for _, cidr := range c.TrustedProxyCIDRs {
+		if strings.TrimSpace(cidr) == "" {
+			continue
+		}
+		if _, _, err := net.ParseCIDR(strings.TrimSpace(cidr)); err != nil {
+			return fmt.Errorf("TRUSTED_PROXY_CIDRS entry %q invalid: %w", cidr, err)
+		}
 	}
 	if c.GuestModeEnabled {
 		if c.SupabaseURL == "" {

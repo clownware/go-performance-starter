@@ -8,13 +8,14 @@ import (
 
 func validConfig() *Config {
 	return &Config{
-		Env:               "development",
-		HTTPPort:          "4000",
-		DatabaseURL:       "postgres://localhost:5432/app",
-		DBMaxConns:        25,
-		DBMinConns:        2,
-		DBMaxConnLifetime: 30 * time.Minute,
-		DBMaxConnIdleTime: 5 * time.Minute,
+		Env:                 "development",
+		HTTPPort:            "4000",
+		DatabaseURL:         "postgres://localhost:5432/app",
+		DBMaxConns:          25,
+		DBMinConns:          2,
+		DBMaxConnLifetime:   30 * time.Minute,
+		DBMaxConnIdleTime:   5 * time.Minute,
+		MaxRequestBodyBytes: 1048576,
 	}
 }
 
@@ -38,6 +39,7 @@ func TestValidate(t *testing.T) {
 		}, ""},
 		{"zero max conns", func(c *Config) { c.DBMaxConns = 0 }, "DB_MAX_CONNS"},
 		{"min conns above max", func(c *Config) { c.DBMinConns = 50 }, "DB_MIN_CONNS"},
+		{"zero max request body", func(c *Config) { c.MaxRequestBodyBytes = 0 }, "MAX_REQUEST_BODY_BYTES"},
 		{"guest mode without supabase", func(c *Config) {
 			c.GuestModeEnabled = true
 			c.GuestTTL = time.Hour

@@ -105,8 +105,11 @@ func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 	}
 }
 
-// AuthLogoutPost handles the logout request.
-func AuthLogoutPost(authClient *auth.AuthClient) http.HandlerFunc {
+// AuthLogoutPost handles the logout request. secureCookie marks the cleared
+// cookies Secure (true in production, where TLS terminates at the edge and
+// r.TLS is nil — ADR-025), matching how the CSRF and guest-session cookies are
+// issued so every cookie mutation shares one security posture.
+func AuthLogoutPost(authClient *auth.AuthClient, secureCookie bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Call Logout on the underlying gotrue client.
 		// It implicitly uses the auth token from the request cookies/headers.
@@ -124,7 +127,7 @@ func AuthLogoutPost(authClient *auth.AuthClient) http.HandlerFunc {
 			Path:     "/",
 			MaxAge:   -1, // Expire immediately
 			HttpOnly: true,
-			Secure:   r.TLS != nil, // Set Secure flag if using HTTPS
+			Secure:   secureCookie,
 			SameSite: http.SameSiteLaxMode,
 		})
 		http.SetCookie(w, &http.Cookie{
@@ -133,7 +136,7 @@ func AuthLogoutPost(authClient *auth.AuthClient) http.HandlerFunc {
 			Path:     "/",
 			MaxAge:   -1,
 			HttpOnly: true,
-			Secure:   r.TLS != nil,
+			Secure:   secureCookie,
 			SameSite: http.SameSiteLaxMode,
 		})
 
