@@ -1,6 +1,9 @@
 package components
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // formMethod returns the method attribute, defaulting to "post".
 func formMethod(props FormProps) string {
@@ -70,13 +73,15 @@ func formValidationPatternMsg(props FormValidationProps) string {
 	return "Please enter a valid value"
 }
 
-// formValidationXData returns the Alpine.js x-data expression for form validation.
-// Security note: serverError is currently used for demo strings.
-// When this becomes user-supplied, escape quotes and backslashes.
+// formValidationXData returns the Alpine.js x-data expression for form
+// validation. Every prop-derived string is emitted through jsonString so a
+// value containing a quote, backslash, or "</script>" cannot break out of the
+// JS string context into executable code (2026-07-06 audit; ADR-017 keeps the
+// props typed but the JS-context escaping is this function's responsibility).
 func formValidationXData(props FormValidationProps) string {
 	patternJS := "null"
 	if props.Pattern != "" {
-		patternJS = fmt.Sprintf("'%s'", props.Pattern)
+		patternJS = jsonString(props.Pattern)
 	}
 
 	maxLen := 999999
@@ -85,13 +90,13 @@ func formValidationXData(props FormValidationProps) string {
 	}
 
 	return fmt.Sprintf(`{
-		value: '%s',
+		value: %s,
 		touched: false,
 		required: %t,
 		pattern: %s,
 		minLength: %d,
 		maxLength: %d,
-		serverError: '%s',
+		serverError: %s,
 		get isValid() {
 			if (this.serverError) return false;
 			if (this.required && !this.value) return false;
@@ -102,22 +107,33 @@ func formValidationXData(props FormValidationProps) string {
 		},
 		get displayMessage() {
 			if (this.serverError) return this.serverError;
-			if (this.required && !this.value) return '%s';
-			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return '%s';
+			if (this.required && !this.value) return %s;
+			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return %s;
 			if (this.minLength > 0 && this.value.length < this.minLength) return 'Must be at least ' + this.minLength + ' characters';
 			if (this.maxLength > 0 && this.value.length > this.maxLength) return 'Must be at most ' + this.maxLength + ' characters';
 			return '';
 		}
 	}`,
-		props.Value,
+		jsonString(props.Value),
 		props.Required,
 		patternJS,
 		props.MinLength,
 		maxLen,
-		props.ServerError,
-		formValidationRequiredMsg(props),
-		formValidationPatternMsg(props),
+		jsonString(props.ServerError),
+		jsonString(formValidationRequiredMsg(props)),
+		jsonString(formValidationPatternMsg(props)),
 	)
+}
+
+// jsonString renders s as a JSON string literal safe to embed in a JS/HTML
+// context: quotes and backslashes are escaped, and Go's default HTML escaping
+// turns <, >, & into \u00xx so the value cannot terminate a <script> block.
+func jsonString(s string) string {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return `""`
+	}
+	return string(b)
 }
 
 templ FormValidation(props FormValidationProps) {

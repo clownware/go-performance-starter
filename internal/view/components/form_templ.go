@@ -8,7 +8,10 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // formMethod returns the method attribute, defaulting to "post".
 func formMethod(props FormProps) string {
@@ -64,7 +67,7 @@ func Form(props FormProps) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 24, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 27, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -83,7 +86,7 @@ func Form(props FormProps) templ.Component {
 			var templ_7745c5c3_Var4 templ.SafeURL
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(props.Action))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 27, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 30, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -101,7 +104,7 @@ func Form(props FormProps) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(formMethod(props))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 29, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 32, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -180,13 +183,15 @@ func formValidationPatternMsg(props FormValidationProps) string {
 	return "Please enter a valid value"
 }
 
-// formValidationXData returns the Alpine.js x-data expression for form validation.
-// Security note: serverError is currently used for demo strings.
-// When this becomes user-supplied, escape quotes and backslashes.
+// formValidationXData returns the Alpine.js x-data expression for form
+// validation. Every prop-derived string is emitted through jsonString so a
+// value containing a quote, backslash, or "</script>" cannot break out of the
+// JS string context into executable code (2026-07-06 audit; ADR-017 keeps the
+// props typed but the JS-context escaping is this function's responsibility).
 func formValidationXData(props FormValidationProps) string {
 	patternJS := "null"
 	if props.Pattern != "" {
-		patternJS = fmt.Sprintf("'%s'", props.Pattern)
+		patternJS = jsonString(props.Pattern)
 	}
 
 	maxLen := 999999
@@ -195,13 +200,13 @@ func formValidationXData(props FormValidationProps) string {
 	}
 
 	return fmt.Sprintf(`{
-		value: '%s',
+		value: %s,
 		touched: false,
 		required: %t,
 		pattern: %s,
 		minLength: %d,
 		maxLength: %d,
-		serverError: '%s',
+		serverError: %s,
 		get isValid() {
 			if (this.serverError) return false;
 			if (this.required && !this.value) return false;
@@ -212,22 +217,33 @@ func formValidationXData(props FormValidationProps) string {
 		},
 		get displayMessage() {
 			if (this.serverError) return this.serverError;
-			if (this.required && !this.value) return '%s';
-			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return '%s';
+			if (this.required && !this.value) return %s;
+			if (this.pattern && !new RegExp(this.pattern).test(this.value)) return %s;
 			if (this.minLength > 0 && this.value.length < this.minLength) return 'Must be at least ' + this.minLength + ' characters';
 			if (this.maxLength > 0 && this.value.length > this.maxLength) return 'Must be at most ' + this.maxLength + ' characters';
 			return '';
 		}
 	}`,
-		props.Value,
+		jsonString(props.Value),
 		props.Required,
 		patternJS,
 		props.MinLength,
 		maxLen,
-		props.ServerError,
-		formValidationRequiredMsg(props),
-		formValidationPatternMsg(props),
+		jsonString(props.ServerError),
+		jsonString(formValidationRequiredMsg(props)),
+		jsonString(formValidationPatternMsg(props)),
 	)
+}
+
+// jsonString renders s as a JSON string literal safe to embed in a JS/HTML
+// context: quotes and backslashes are escaped, and Go's default HTML escaping
+// turns <, >, & into \u00xx so the value cannot terminate a <script> block.
+func jsonString(s string) string {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return `""`
+	}
+	return string(b)
 }
 
 func FormValidation(props FormValidationProps) templ.Component {
@@ -263,7 +279,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(formValidationXData(props))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 125, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 141, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -294,7 +310,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(props.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 130, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 146, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -307,7 +323,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(props.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 133, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 149, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -335,7 +351,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(props.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 140, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 156, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -348,7 +364,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(props.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 141, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 157, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -361,7 +377,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formValidationType(props))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 142, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 158, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -374,7 +390,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(props.Placeholder)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 143, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 159, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -398,7 +414,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(props.Pattern)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 152, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 168, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -417,7 +433,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", props.MinLength))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 155, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 171, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -436,7 +452,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", props.MaxLength))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 158, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 174, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -454,7 +470,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(props.ID + "-error")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 160, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 176, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -475,7 +491,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(props.ID + "-error")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 167, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 183, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -493,7 +509,7 @@ func FormValidation(props FormValidationProps) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(props.HelperText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 174, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/components/form.templ`, Line: 190, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
