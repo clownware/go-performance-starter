@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-12
+
+### Fixed
+- Release pipeline deploy step: Fly cannot pull private GHCR images, so
+  `flyctl deploy --image ghcr.io/...` failed with "Authentication required"
+  (v0.3.0 and v0.4.0 both died here; v0.3.1's jobs skipped). The deploy job
+  now mirrors the budget-checked image into `registry.fly.io` and deploys
+  that — works with private packages and on forks; GHCR remains the
+  published artifact
+
 ## [0.4.0] - 2026-07-12
 
 The ADR-024 demo application, live end to end: the visible product finally
