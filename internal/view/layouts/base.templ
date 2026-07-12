@@ -111,31 +111,25 @@ templ Base(props view.BaseProps) {
 				</div>
 			</main>
 			@footer(props)
-			<!-- App scripts -->
+			<!-- App scripts: all behavior lives in external files or Alpine
+			     attributes; inline script blocks are CSP-forbidden (ADR-028) -->
 			<script src="/static/js/app.js" defer></script>
 			@htmxLoadingIndicator()
 			@toastNotifications()
-			<!-- Alpine.js initialization -->
-			<script>
-				document.addEventListener('alpine:init', () => {
-					// Alpine.js data and components can be registered here
-				});
-			</script>
 		</body>
 	</html>
 }
 
 templ header(props view.BaseProps) {
-	<header class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow">
+	<header class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow" x-data="{ navOpen: false }">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 			<div class="flex justify-between items-center">
 				<div class="flex items-center space-x-4">
 					<a href="/" class="text-xl font-bold text-primary-600">
-						Micro SaaS Starter
+						Go Performance Starter
 					</a>
-					<nav class="hidden md:flex space-x-4" role="navigation">
-						<a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800" aria-current="page">Home</a>
-						<a href="/dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Dashboard</a>
+					<nav class="hidden md:flex space-x-4" role="navigation" aria-label="Primary">
+						@navLinks()
 					</nav>
 				</div>
 				<div class="flex items-center space-x-4">
@@ -146,11 +140,39 @@ templ header(props view.BaseProps) {
 						} else {
 							<a href="/auth/page" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Sign In</a>
 						}
+						<button
+							type="button"
+							class="md:hidden rounded-md p-2 text-text dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-primary"
+							@click="navOpen = !navOpen"
+							:aria-expanded="navOpen.toString()"
+							aria-controls="mobile-nav"
+							aria-label="Toggle navigation"
+						>
+							<svg x-show="!navOpen" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+							</svg>
+							<svg x-show="navOpen" x-cloak class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+							</svg>
+						</button>
 					</div>
 				</div>
 			</div>
+			<nav id="mobile-nav" x-show="navOpen" x-cloak @click.away="navOpen = false" class="md:hidden mt-3 flex flex-col gap-1 pb-2" role="navigation" aria-label="Primary">
+				@navLinks()
+			</nav>
 		</div>
 	</header>
+}
+
+// navLinks is the shared primary navigation, rendered in both the desktop
+// bar and the mobile disclosure panel.
+templ navLinks() {
+	<a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Home</a>
+	<a href="/patterns" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Patterns</a>
+	<a href="/learn/quiz" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Quiz</a>
+	<a href="/learn/flashcards" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Flashcards</a>
+	<a href="/dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800">Dashboard</a>
 }
 
 templ darkModeToggle() {
@@ -211,18 +233,13 @@ templ footer(props view.BaseProps) {
 	</footer>
 }
 
+// htmxLoadingIndicator is the overlay app.js toggles on htmx:beforeRequest /
+// htmx:afterRequest (the listeners live there — inline scripts are
+// CSP-forbidden per ADR-028).
 templ htmxLoadingIndicator() {
 	<div id="global-loading" class="hidden fixed inset-0 bg-gray-800/50 flex items-center justify-center z-50">
 		<div class="text-white font-semibold">Loading...</div>
 	</div>
-	<script>
-		document.body.addEventListener('htmx:beforeRequest', function() {
-			document.getElementById('global-loading').classList.remove('hidden');
-		});
-		document.body.addEventListener('htmx:afterRequest', function() {
-			document.getElementById('global-loading').classList.add('hidden');
-		});
-	</script>
 }
 
 templ toastNotifications() {

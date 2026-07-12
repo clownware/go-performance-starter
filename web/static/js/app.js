@@ -31,3 +31,15 @@ document.addEventListener('htmx:afterSwap', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Go Performance Starter loaded');
 });
+
+// Global HTMX loading indicator — the overlay markup lives in the base
+// layout; the listeners live here because inline <script> is CSP-forbidden
+// (ADR-028). Events bubble to document, so this covers swapped content too.
+document.addEventListener('htmx:beforeRequest', () => {
+  const el = document.getElementById('global-loading');
+  if (el) el.classList.remove('hidden');
+});
+document.addEventListener('htmx:afterRequest', () => {
+  const el = document.getElementById('global-loading');
+  if (el) el.classList.add('hidden');
+});
