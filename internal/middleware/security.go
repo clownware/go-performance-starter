@@ -11,8 +11,10 @@ import "net/http"
 //
 // CSP note: 'unsafe-inline' is required for style-src because Tailwind CSS
 // generates utility classes that may be applied via style attributes.
-// script-src is locked to 'self' only — HTMX and Alpine.js are loaded as
-// script files, not inline scripts, so unsafe-inline is not needed for scripts.
+// script-src carries 'unsafe-eval' because Alpine 3 compiles x-data/x-show
+// expressions with the Function constructor (ADR-028) — without it every
+// Alpine behavior fails silently. Inline <script> blocks stay forbidden
+// (no 'unsafe-inline' for scripts): behavior lives in self-hosted files.
 func SecurityHeaders(isProd bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +27,7 @@ func SecurityHeaders(isProd bool) func(http.Handler) http.Handler {
 			w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
-					"script-src 'self'; "+
+					"script-src 'self' 'unsafe-eval'; "+
 					"style-src 'self' 'unsafe-inline'; "+
 					"img-src 'self' data:; "+
 					"font-src 'self'; "+

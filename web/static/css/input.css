@@ -43,6 +43,14 @@
 /* Semantic color CSS variables (dark mode switching) */
 @import "./semantic-colors.css";
 
+/* Alpine.js: hide x-cloak elements until Alpine initializes — without this
+   rule the attribute does nothing and hidden panels flash on load. */
+@layer base {
+  [x-cloak] {
+    display: none !important;
+  }
+}
+
 /* Restore v3 default border color behavior */
 @layer base {
   *,

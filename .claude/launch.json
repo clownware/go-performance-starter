@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./cmd/api"],
+      "port": 4000
+    }
+  ]
+}

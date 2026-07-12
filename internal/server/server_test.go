@@ -3,6 +3,8 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/clownware/go-performance-starter/internal/config"
@@ -136,5 +138,41 @@ func TestServer_HSTSGating(t *testing.T) {
 				t.Errorf("ENV=%s: HSTS present = %v, want %v", tt.env, got, tt.wantHSTS)
 			}
 		})
+	}
+}
+
+// TestServer_NavAndBrand pins the Phase-A UX fixes: the header carries the
+// real project name and links to every demo surface (the /learn hrefs are
+// static layout markup, so they render even when auth is disabled), and no
+// page ships inline <script> blocks — script-src forbids them (ADR-028), so
+// behavior must live in external files.
+func TestServer_NavAndBrand(t *testing.T) {
+	srv := newTestServer(t, "development")
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET / status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+
+	for _, want := range []string{
+		"Go Performance Starter",
+		`href="/patterns"`,
+		`href="/learn/quiz"`,
+		`href="/learn/flashcards"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("GET / body missing %q", want)
+		}
+	}
+	if strings.Contains(body, "Micro SaaS Starter") {
+		t.Error("GET / still carries the stale 'Micro SaaS Starter' brand")
+	}
+
+	// Every <script> must have a src attribute; inline bodies are CSP-blocked.
+	for _, m := range regexp.MustCompile(`<script[^>]*>`).FindAllString(body, -1) {
+		if !strings.Contains(m, "src=") {
+			t.Errorf("inline script tag %q would be blocked by script-src 'self' (ADR-028)", m)
+		}
 	}
 }

@@ -280,6 +280,10 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
         w.Header().Set("X-XSS-Protection", "1; mode=block")
         
         // Content Security Policy
+        // (Amended 2026-07-12: the live policy is stricter than this sketch —
+        // script-src is 'self' 'unsafe-eval', with inline scripts forbidden.
+        // 'unsafe-eval' is required by Alpine 3's expression engine; see
+        // ADR-028-CSP-Alpine-Compatibility.)
         w.Header().Set("Content-Security-Policy", 
             "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
         
