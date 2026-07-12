@@ -1,5 +1,11 @@
 name: CI
 
+# The quality gate is `task ci` (ADR-021) — one definition of done, shared by
+# local development and CI so the two cannot drift (same principle as the
+# AGENTS.md spine check, ADR-022). This workflow only provides environment:
+# a Postgres service, tool installs, and DB bootstrap. The docker job is the
+# one genuinely CI-shaped check (image build + 30MB budget, ADR-000).
+
 on:
   push:
     branches: [ main, master ]
@@ -7,9 +13,12 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
-    name: Test
+  ci:
+    name: Quality Gate (task ci)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     services:
       postgres:
         image: postgres:15
@@ -24,6 +33,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/alpine_saas_test?sslmode=disable
+      ENV: test
 
     steps:
     - uses: actions/checkout@v4
@@ -31,40 +43,32 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.25'
+        # go.mod's toolchain directive is the single source of the Go version;
+        # a version pinned here went stale once already (GO-2026-5856 bump).
+        go-version-file: 'go.mod'
         cache: true
 
-    - name: Install dependencies
-      run: go mod download
+    - name: Install Task
+      run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
-    - name: Install templ
-      run: go install github.com/a-h/templ/cmd/templ@v0.3.1001
+    - name: Install tools (templ, govulncheck, migrate, psql)
+      run: |
+        go install github.com/a-h/templ/cmd/templ@v0.3.1001
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xz migrate
+        sudo mv migrate /usr/local/bin/
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
 
     - name: Generate templ
       run: templ generate
 
-    - name: Bootstrap test auth stub
-      run: |
-        sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
-        PGPASSWORD=postgres psql -h localhost -U postgres -d alpine_saas_test -f sql/test/auth_stub.sql
-
-    - name: Run migrations
-      run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
-        ./migrate -path=./migrations -database "postgres://postgres:postgres@localhost:5432/alpine_saas_test?sslmode=disable" up
-
-    - name: Lint
-      run: |
-        go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-        export PATH="$PATH:$(go env GOPATH)/bin"
-        golangci-lint run ./...
-
-    - name: Test
-      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+    - name: Bootstrap test database (auth stub + migrations)
+      run: task db:test:setup
       env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/alpine_saas_test?sslmode=disable
-        JWT_SECRET: test-secret-key-for-ci-only
-        ENV: test
+        PGPASSWORD: postgres
+
+    - name: Run quality gate
+      run: task ci
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v5
@@ -72,65 +76,24 @@ jobs:
         files: ./coverage.txt
         fail_ci_if_error: false
 
-  agents:
-    name: Agent Spine Drift Check
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
+    - name: Comment PR with binary size
+      if: github.event_name == 'pull_request'
+      continue-on-error: true
+      uses: actions/github-script@v7
       with:
-        go-version: '1.25'
-        cache: true
+        script: |
+          const fs = require('fs');
+          const stats = fs.statSync('./dist/app');
+          const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+          const budgetMB = 20;
+          const emoji = stats.size <= budgetMB * 1024 * 1024 ? '✅' : '❌';
 
-    - name: Check AGENTS.md is in sync with its sources (ADR-022)
-      run: go run ./scripts/agentsmd check
-
-  security:
-    name: Vulnerability Scan
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25'
-        cache: true
-
-    - name: Install templ
-      run: go install github.com/a-h/templ/cmd/templ@v0.3.1001
-
-    - name: Generate templ
-      run: templ generate
-
-    - name: govulncheck
-      run: |
-        go install golang.org/x/vuln/cmd/govulncheck@latest
-        govulncheck ./...
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25'
-        cache: true
-
-    - name: Install templ
-      run: go install github.com/a-h/templ/cmd/templ@v0.3.1001
-
-    - name: Generate templ
-      run: templ generate
-
-    - name: Build
-      run: go build -v ./cmd/api
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Performance Budget Check ${emoji}\n\n**Binary Size:** ${sizeMB} MB / ${budgetMB} MB`
+          });
 
   docker:
     name: Docker Image
@@ -162,57 +125,3 @@ jobs:
           echo "::error::Docker image ($SIZE bytes) exceeds the 30MB budget (ADR-000)"
           exit 1
         fi
-
-  performance:
-    name: Performance Budget Check
-    runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25'
-        cache: true
-
-    - name: Install templ
-      run: go install github.com/a-h/templ/cmd/templ@v0.3.1001
-
-    - name: Generate templ
-      run: templ generate
-
-    - name: Install Task
-      run: |
-        sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
-
-    - name: Run performance budget tests
-      run: task test:performance
-
-    - name: Check binary size
-      run: |
-        mkdir -p ./dist
-        go build -ldflags="-s -w" -o ./dist/app ./cmd/api
-        go run scripts/check-binary-size.go ./dist/app
-
-    - name: Comment PR with results
-      if: github.event_name == 'pull_request'
-      continue-on-error: true
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const stats = fs.statSync('./dist/app');
-          const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
-          const budgetMB = 20;
-          const emoji = stats.size <= budgetMB * 1024 * 1024 ? '✅' : '❌';
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `## Performance Budget Check ${emoji}\n\n**Binary Size:** ${sizeMB} MB / ${budgetMB} MB`
-          });
