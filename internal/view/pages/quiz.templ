@@ -9,6 +9,8 @@ import (
 // QuizPageProps holds data for the architecture quiz page (ADR-024).
 type QuizPageProps struct {
 	view.BaseProps
+	// Teaser marks a signed-out visit: preview the quiz and sell the sign-in.
+	Teaser bool
 	// Empty marks a database with no seeded questions.
 	Empty bool
 	// Question is the card to answer; nil when Empty or when Result is shown.
@@ -26,11 +28,13 @@ templ QuizPage(props QuizPageProps) {
 				Questions drawn from this starter's own architecture — every answer you
 				save is a real row behind Row Level Security.
 			</p>
-			if !props.Empty && props.Result == nil {
+			if !props.Empty && !props.Teaser && props.Result == nil {
 				@partials.QuizScoreBadge(props.Score)
 			}
 			<div id="quiz-card" class="mt-4">
-				if props.Empty {
+				if props.Teaser {
+					@partials.QuizTeaser()
+				} else if props.Empty {
 					@partials.QuizEmptyState()
 				} else if props.Result != nil {
 					@partials.QuizResult(*props.Result)

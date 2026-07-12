@@ -19,6 +19,26 @@ type AuthPageProps struct {
 	view.BaseProps
 	LoginFlash  string
 	SignupFlash string
+	// Mode selects the active tab server-side ("login" or "signup") so the
+	// page works without JS via the ?mode links; Alpine enhances switching.
+	Mode string
+}
+
+func authTabData(mode string) string {
+	if mode == "signup" {
+		return "{ tab: 'signup' }"
+	}
+	return "{ tab: 'login' }"
+}
+
+// authPanelClass is the server-rendered visibility fallback: Alpine strips
+// it on init (x-init) and takes over with x-show, so no-JS users see exactly
+// one panel and switch via the ?mode links.
+func authPanelClass(active bool) string {
+	if active {
+		return "block"
+	}
+	return "hidden"
 }
 
 func AuthPage(props AuthPageProps) templ.Component {
@@ -54,19 +74,80 @@ func AuthPage(props AuthPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-background dark:bg-background-dark text-text dark:text-text-dark\"><h1 class=\"text-2xl font-bold mb-8 text-center\">Welcome!</h1><div class=\"w-full max-w-md lg:max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-10\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-md mx-auto py-8\" x-data=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = loginCard(props.LoginFlash).Render(ctx, templ_7745c5c3_Buffer)
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(authTabData(props.Mode))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 38, Col: 69}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = signupCard(props.SignupFlash).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><h1 class=\"text-2xl font-bold mb-2 text-center\">Welcome</h1><p class=\"text-center text-gray-500 dark:text-gray-400 mb-6\">Sign in to keep your quiz progress and flashcards — every row is yours alone, enforced by Row Level Security.</p><div class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded-lg shadow-md overflow-hidden\"><div role=\"tablist\" aria-label=\"Sign in or create an account\" class=\"flex border-b border-gray-200 dark:border-gray-800\"><a href=\"/auth/page?mode=login\" role=\"tab\" @click.prevent=\"tab = 'login'\" :aria-selected=\"(tab === 'login').toString()\" :class=\"tab === 'login' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500 dark:text-gray-400'\" class=\"flex-1 text-center px-4 py-3 text-sm\">Sign in</a> <a href=\"/auth/page?mode=signup\" role=\"tab\" @click.prevent=\"tab = 'signup'\" :aria-selected=\"(tab === 'signup').toString()\" :class=\"tab === 'signup' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500 dark:text-gray-400'\" class=\"flex-1 text-center px-4 py-3 text-sm\">Create account</a></div><div id=\"auth-messages\" aria-live=\"polite\" class=\"empty:hidden px-6 pt-4\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div>")
+			var templ_7745c5c3_Var4 = []any{authPanelClass(props.Mode != "signup")}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"panel-login\" class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var5 string
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var4).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" x-init=\"$el.classList.remove('hidden', 'block')\" x-show=\"tab === 'login'\" role=\"tabpanel\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = loginPanel(props.LoginFlash).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 = []any{authPanelClass(props.Mode == "signup")}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"panel-signup\" class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var6).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" x-init=\"$el.classList.remove('hidden', 'block')\" x-show=\"tab === 'signup'\" role=\"tabpanel\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = signupPanel(props.SignupFlash).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -80,7 +161,7 @@ func AuthPage(props AuthPageProps) templ.Component {
 	})
 }
 
-func loginCard(flash string) templ.Component {
+func loginPanel(flash string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -96,35 +177,35 @@ func loginCard(flash string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark p-6 rounded shadow-md\"><h2 class=\"text-2xl font-semibold mb-6\">Login</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"p-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if flash != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"mb-4 p-3 rounded bg-red-100 text-red-700\" role=\"alert\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"mb-4 p-3 rounded bg-red-100 text-red-700\" role=\"alert\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(flash)
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(flash)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 33, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 94, Col: 11}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form hx-post=\"/auth/login\" hx-target=\"#auth-messages\" hx-swap=\"innerHTML\" autocomplete=\"on\" class=\"space-y-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form hx-post=\"/auth/login\" hx-target=\"#auth-messages\" hx-swap=\"innerHTML\" autocomplete=\"on\" class=\"space-y-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -132,7 +213,7 @@ func loginCard(flash string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"mb-4\"><label for=\"login-email\" class=\"block text-text text-sm font-bold mb-2\">Your Email Address</label> <input type=\"email\" id=\"login-email\" name=\"email\" required autocomplete=\"email\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-2\"><label for=\"login-password\" class=\"block text-text text-sm font-bold mb-2\">Your Password</label> <input type=\"password\" id=\"login-password\" name=\"password\" required autocomplete=\"current-password\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark mb-1 leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-4 text-right\"><a href=\"#\" class=\"text-sm text-primary hover:underline dark:text-primary-dark\">Reset password</a></div><button type=\"submit\" class=\"w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6\">Sign in to your account</button></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"mb-4\"><label for=\"login-email\" class=\"block text-text dark:text-text-dark text-sm font-bold mb-2\">Your Email Address</label> <input type=\"email\" id=\"login-email\" name=\"email\" required autocomplete=\"email\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-2\"><label for=\"login-password\" class=\"block text-text dark:text-text-dark text-sm font-bold mb-2\">Your Password</label> <input type=\"password\" id=\"login-password\" name=\"password\" required autocomplete=\"current-password\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark mb-1 leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-4 text-right\"><a href=\"#\" class=\"text-sm text-primary hover:underline dark:text-primary-dark\">Reset password</a></div><button type=\"submit\" class=\"w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6\">Sign in to your account</button></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,7 +221,7 @@ func loginCard(flash string) templ.Component {
 	})
 }
 
-func signupCard(flash string) templ.Component {
+func signupPanel(flash string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -156,35 +237,35 @@ func signupCard(flash string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark p-6 rounded shadow-md mt-10 lg:mt-0\"><h2 class=\"text-2xl font-semibold mb-6\">Sign Up</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"p-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if flash != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"mb-4 p-3 rounded bg-red-100 text-red-700\" role=\"alert\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"mb-4 p-3 rounded bg-red-100 text-red-700\" role=\"alert\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(flash)
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(flash)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 78, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/auth.templ`, Line: 138, Col: 11}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<form hx-post=\"/auth/signup\" hx-target=\"#auth-messages\" hx-swap=\"innerHTML\" autocomplete=\"on\" class=\"space-y-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<form hx-post=\"/auth/signup\" hx-target=\"#auth-messages\" hx-swap=\"innerHTML\" autocomplete=\"on\" class=\"space-y-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -192,7 +273,7 @@ func signupCard(flash string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"mb-4\"><label for=\"signup-email\" class=\"block text-text text-sm font-bold mb-2\">Your Email Address</label> <input type=\"email\" id=\"signup-email\" name=\"email\" required autocomplete=\"email\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-4\"><label for=\"signup-password\" class=\"block text-text text-sm font-bold mb-2\">Create a Password</label> <input type=\"password\" id=\"signup-password\" name=\"password\" required autocomplete=\"new-password\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-6\"><label for=\"signup-password-confirm\" class=\"block text-text text-sm font-bold mb-2\">Confirm Password</label> <input type=\"password\" id=\"signup-password-confirm\" name=\"password_confirm\" required autocomplete=\"new-password\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><button type=\"submit\" class=\"w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6\">Create your account</button></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"mb-4\"><label for=\"signup-email\" class=\"block text-text dark:text-text-dark text-sm font-bold mb-2\">Your Email Address</label> <input type=\"email\" id=\"signup-email\" name=\"email\" required autocomplete=\"email\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-4\"><label for=\"signup-password\" class=\"block text-text dark:text-text-dark text-sm font-bold mb-2\">Create a Password</label> <input type=\"password\" id=\"signup-password\" name=\"password\" required autocomplete=\"new-password\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><div class=\"mb-6\"><label for=\"signup-password-confirm\" class=\"block text-text dark:text-text-dark text-sm font-bold mb-2\">Confirm Password</label> <input type=\"password\" id=\"signup-password-confirm\" name=\"password_confirm\" required autocomplete=\"new-password\" class=\"shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500\"></div><button type=\"submit\" class=\"w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6\">Create your account</button></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -9,7 +9,9 @@ import (
 // FlashcardsPageProps holds data for the flashcard review page (ADR-024).
 type FlashcardsPageProps struct {
 	view.BaseProps
-	Cards []partials.FlashcardProps
+	// Teaser marks a signed-out visit: preview the surface, sell the sign-in.
+	Teaser bool
+	Cards  []partials.FlashcardProps
 }
 
 templ FlashcardsPage(props FlashcardsPageProps) {
@@ -22,7 +24,11 @@ templ FlashcardsPage(props FlashcardsPageProps) {
 				you don't need.
 			</p>
 			<div id="flashcard-list">
-				@partials.FlashcardList(partials.FlashcardListProps{Cards: props.Cards})
+				if props.Teaser {
+					@partials.FlashcardsTeaser()
+				} else {
+					@partials.FlashcardList(partials.FlashcardListProps{Cards: props.Cards})
+				}
 			</div>
 		</div>
 	}

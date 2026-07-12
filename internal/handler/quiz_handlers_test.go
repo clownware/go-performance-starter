@@ -236,12 +236,21 @@ func TestQuizPage(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name:         "missing user redirects to auth",
-			target:       "/learn/quiz",
-			repo:         &fakeQuizRepo{questions: questions},
-			user:         nil,
-			wantStatus:   http.StatusSeeOther,
-			wantLocation: "/auth/page",
+			// Signed-out browsing gets a preview that sells the sign-in —
+			// what the quiz is and why progress needs an identity — instead
+			// of a blind redirect (mutations still redirect; see answer test).
+			name:       "missing user sees the teaser with a sign-in call to action",
+			target:     "/learn/quiz",
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       nil,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-teaser"`,
+				`href="/auth/page"`,
+			},
+			wantAbsent: []string{
+				`data-testid="quiz-question"`,
+			},
 		},
 	}
 

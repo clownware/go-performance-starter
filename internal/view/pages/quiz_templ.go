@@ -17,6 +17,8 @@ import (
 // QuizPageProps holds data for the architecture quiz page (ADR-024).
 type QuizPageProps struct {
 	view.BaseProps
+	// Teaser marks a signed-out visit: preview the quiz and sell the sign-in.
+	Teaser bool
 	// Empty marks a database with no seeded questions.
 	Empty bool
 	// Question is the card to answer; nil when Empty or when Result is shown.
@@ -63,7 +65,7 @@ func QuizPage(props QuizPageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if !props.Empty && props.Result == nil {
+			if !props.Empty && !props.Teaser && props.Result == nil {
 				templ_7745c5c3_Err = partials.QuizScoreBadge(props.Score).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -73,7 +75,12 @@ func QuizPage(props QuizPageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if props.Empty {
+			if props.Teaser {
+				templ_7745c5c3_Err = partials.QuizTeaser().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else if props.Empty {
 				templ_7745c5c3_Err = partials.QuizEmptyState().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

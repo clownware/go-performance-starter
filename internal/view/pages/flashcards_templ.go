@@ -17,7 +17,9 @@ import (
 // FlashcardsPageProps holds data for the flashcard review page (ADR-024).
 type FlashcardsPageProps struct {
 	view.BaseProps
-	Cards []partials.FlashcardProps
+	// Teaser marks a signed-out visit: preview the surface, sell the sign-in.
+	Teaser bool
+	Cards  []partials.FlashcardProps
 }
 
 func FlashcardsPage(props FlashcardsPageProps) templ.Component {
@@ -57,9 +59,16 @@ func FlashcardsPage(props FlashcardsPageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = partials.FlashcardList(partials.FlashcardListProps{Cards: props.Cards}).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if props.Teaser {
+				templ_7745c5c3_Err = partials.FlashcardsTeaser().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = partials.FlashcardList(partials.FlashcardListProps{Cards: props.Cards}).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div>")
 			if templ_7745c5c3_Err != nil {

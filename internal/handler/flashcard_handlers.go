@@ -47,7 +47,14 @@ func flashcardsPage(repo repository.FlashcardRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := webutil.GetUserFromContext(r.Context())
 		if user == nil {
-			http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
+			// Browse-first: preview why flashcards need an identity instead
+			// of bouncing to the login page.
+			if view.IsHTMXRequest(r) {
+				renderQuiz(w, r, http.StatusOK, partials.FlashcardsTeaser())
+				return
+			}
+			props := pages.FlashcardsPageProps{BaseProps: view.NewBaseProps("Flashcards"), Teaser: true}
+			renderQuiz(w, r, http.StatusOK, pages.FlashcardsPage(props))
 			return
 		}
 

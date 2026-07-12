@@ -11,23 +11,84 @@ type AuthPageProps struct {
 	view.BaseProps
 	LoginFlash  string
 	SignupFlash string
+	// Mode selects the active tab server-side ("login" or "signup") so the
+	// page works without JS via the ?mode links; Alpine enhances switching.
+	Mode string
+}
+
+func authTabData(mode string) string {
+	if mode == "signup" {
+		return "{ tab: 'signup' }"
+	}
+	return "{ tab: 'login' }"
+}
+
+// authPanelClass is the server-rendered visibility fallback: Alpine strips
+// it on init (x-init) and takes over with x-show, so no-JS users see exactly
+// one panel and switch via the ?mode links.
+func authPanelClass(active bool) string {
+	if active {
+		return "block"
+	}
+	return "hidden"
 }
 
 templ AuthPage(props AuthPageProps) {
 	@layouts.Base(props.BaseProps) {
-		<div class="min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-background dark:bg-background-dark text-text dark:text-text-dark">
-			<h1 class="text-2xl font-bold mb-8 text-center">Welcome!</h1>
-			<div class="w-full max-w-md lg:max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-10">
-				@loginCard(props.LoginFlash)
-				@signupCard(props.SignupFlash)
+		<div class="max-w-md mx-auto py-8" x-data={ authTabData(props.Mode) }>
+			<h1 class="text-2xl font-bold mb-2 text-center">Welcome</h1>
+			<p class="text-center text-gray-500 dark:text-gray-400 mb-6">
+				Sign in to keep your quiz progress and flashcards — every row is yours alone, enforced by Row Level Security.
+			</p>
+			<div class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded-lg shadow-md overflow-hidden">
+				<div role="tablist" aria-label="Sign in or create an account" class="flex border-b border-gray-200 dark:border-gray-800">
+					<a
+						href="/auth/page?mode=login"
+						role="tab"
+						@click.prevent="tab = 'login'"
+						:aria-selected="(tab === 'login').toString()"
+						:class="tab === 'login' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500 dark:text-gray-400'"
+						class="flex-1 text-center px-4 py-3 text-sm"
+					>
+						Sign in
+					</a>
+					<a
+						href="/auth/page?mode=signup"
+						role="tab"
+						@click.prevent="tab = 'signup'"
+						:aria-selected="(tab === 'signup').toString()"
+						:class="tab === 'signup' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500 dark:text-gray-400'"
+						class="flex-1 text-center px-4 py-3 text-sm"
+					>
+						Create account
+					</a>
+				</div>
+				<div id="auth-messages" aria-live="polite" class="empty:hidden px-6 pt-4"></div>
+				<div
+					id="panel-login"
+					class={ authPanelClass(props.Mode != "signup") }
+					x-init="$el.classList.remove('hidden', 'block')"
+					x-show="tab === 'login'"
+					role="tabpanel"
+				>
+					@loginPanel(props.LoginFlash)
+				</div>
+				<div
+					id="panel-signup"
+					class={ authPanelClass(props.Mode == "signup") }
+					x-init="$el.classList.remove('hidden', 'block')"
+					x-show="tab === 'signup'"
+					role="tabpanel"
+				>
+					@signupPanel(props.SignupFlash)
+				</div>
 			</div>
 		</div>
 	}
 }
 
-templ loginCard(flash string) {
-	<div class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark p-6 rounded shadow-md">
-		<h2 class="text-2xl font-semibold mb-6">Login</h2>
+templ loginPanel(flash string) {
+	<div class="p-6">
 		if flash != "" {
 			<div class="mb-4 p-3 rounded bg-red-100 text-red-700" role="alert">
 				{ flash }
@@ -36,7 +97,7 @@ templ loginCard(flash string) {
 		<form hx-post="/auth/login" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-6">
 			@components.CSRFField()
 			<div class="mb-4">
-				<label for="login-email" class="block text-text text-sm font-bold mb-2">Your Email Address</label>
+				<label for="login-email" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Your Email Address</label>
 				<input
 					type="email"
 					id="login-email"
@@ -47,7 +108,7 @@ templ loginCard(flash string) {
 				/>
 			</div>
 			<div class="mb-2">
-				<label for="login-password" class="block text-text text-sm font-bold mb-2">Your Password</label>
+				<label for="login-password" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Your Password</label>
 				<input
 					type="password"
 					id="login-password"
@@ -70,9 +131,8 @@ templ loginCard(flash string) {
 	</div>
 }
 
-templ signupCard(flash string) {
-	<div class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark p-6 rounded shadow-md mt-10 lg:mt-0">
-		<h2 class="text-2xl font-semibold mb-6">Sign Up</h2>
+templ signupPanel(flash string) {
+	<div class="p-6">
 		if flash != "" {
 			<div class="mb-4 p-3 rounded bg-red-100 text-red-700" role="alert">
 				{ flash }
@@ -81,7 +141,7 @@ templ signupCard(flash string) {
 		<form hx-post="/auth/signup" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-6">
 			@components.CSRFField()
 			<div class="mb-4">
-				<label for="signup-email" class="block text-text text-sm font-bold mb-2">Your Email Address</label>
+				<label for="signup-email" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Your Email Address</label>
 				<input
 					type="email"
 					id="signup-email"
@@ -92,7 +152,7 @@ templ signupCard(flash string) {
 				/>
 			</div>
 			<div class="mb-4">
-				<label for="signup-password" class="block text-text text-sm font-bold mb-2">Create a Password</label>
+				<label for="signup-password" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Create a Password</label>
 				<input
 					type="password"
 					id="signup-password"
@@ -103,7 +163,7 @@ templ signupCard(flash string) {
 				/>
 			</div>
 			<div class="mb-6">
-				<label for="signup-password-confirm" class="block text-text text-sm font-bold mb-2">Confirm Password</label>
+				<label for="signup-password-confirm" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Confirm Password</label>
 				<input
 					type="password"
 					id="signup-password-confirm"
