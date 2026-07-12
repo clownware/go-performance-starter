@@ -23,6 +23,10 @@ primary_region = "ewr"
   # its private range makes per-client rate limiting see real visitor IPs
   # instead of one shared bucket (ADR-027).
   TRUSTED_PROXY_CIDRS = "172.16.0.0/12"
+  # Fly appends its own (unenumerable) edge IP to X-Forwarded-For, so XFF
+  # resolves to the edge, not the visitor — Fly-Client-IP is authoritative
+  # (verified live, issue #72; ADR-027 amendment).
+  CLIENT_IP_HEADER = "Fly-Client-IP"
   # Anonymous guest identities (ADR-024): requires "anonymous sign-ins"
   # enabled in the Supabase project (done 2026-07). Visitors to /learn get a
   # real Supabase identity server-side; the TTL reaper expires stale ones.
