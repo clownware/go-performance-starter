@@ -48,19 +48,50 @@ func TestServer_CSRFWiring(t *testing.T) {
 
 	// POST without a token is rejected.
 	rec = httptest.NewRecorder()
-	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/items/1/toggle", nil))
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/patterns/api/toast", nil))
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("POST without CSRF token: status = %d, want 403", rec.Code)
 	}
 
 	// POST with cookie + matching header passes CSRF.
-	req := httptest.NewRequest(http.MethodPost, "/items/1/toggle", nil)
+	req := httptest.NewRequest(http.MethodPost, "/patterns/api/toast", nil)
 	req.AddCookie(&http.Cookie{Name: mw.CSRFCookieName, Value: token})
 	req.Header.Set(mw.CSRFHeaderName, token)
 	rec = httptest.NewRecorder()
 	srv.ServeHTTP(rec, req)
 	if rec.Code == http.StatusForbidden {
 		t.Errorf("POST with valid CSRF token: status = %d, want non-403", rec.Code)
+	}
+}
+
+// TestServer_StubDemosRetired proves the pre-ADR-024 stub surfaces are gone
+// and the replacement demo is routed: the in-memory Items demo and the
+// hardcoded JSON API served fake data ("Stub User", org1) that under-sold the
+// stack, and ADR-024 Slice C retires them.
+func TestServer_StubDemosRetired(t *testing.T) {
+	srv := newTestServer(t, "development")
+
+	tests := []struct {
+		name       string
+		method     string
+		target     string
+		wantStatus int
+	}{
+		{"items page retired", http.MethodGet, "/items", http.StatusNotFound},
+		{"items list retired", http.MethodGet, "/items/list", http.StatusNotFound},
+		{"stub user API retired", http.MethodGet, "/api/users/123", http.StatusNotFound},
+		{"stub organizations API retired", http.MethodGet, "/api/organizations", http.StatusNotFound},
+		{"API placeholder retired", http.MethodGet, "/api", http.StatusNotFound},
+		{"patterns showcase replaces them", http.MethodGet, "/patterns", http.StatusOK},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			srv.ServeHTTP(rec, httptest.NewRequest(tt.method, tt.target, nil))
+			if rec.Code != tt.wantStatus {
+				t.Errorf("%s %s status = %d, want %d", tt.method, tt.target, rec.Code, tt.wantStatus)
+			}
+		})
 	}
 }
 
