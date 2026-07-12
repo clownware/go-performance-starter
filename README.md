@@ -14,6 +14,7 @@ A Go + HTMX SaaS starter built for **agent-assisted development** — a layered 
 - **Type-safe templates** -- templ compiles HTML to Go; typed props, no `map[string]interface{}` (see [ADR-017](docs/adr/ADR-017-Templ-Adoption.md))
 - **Type-safe SQL** -- sqlc code generation with repository pattern
 - **Performance budgets** -- CI-enforced binary size, gzipped asset budgets, and memory limits
+- **Role-based design system** -- semantic tokens (`bg-surface`, `text-muted-foreground`, ...) with dark mode flipping tokens instead of components, CI-enforced against raw grays and `dark:` drift; restyle the whole app from one `@theme` block ([docs/design-system.md](docs/design-system.md), [ADR-029](docs/adr/ADR-029-Role-Based-Design-Tokens.md))
 - **Agentic discipline** -- a layered AI constitution and halt-on-violation quality gate (see below)
 - **Observability** -- Prometheus metrics, structured logging (log/slog), health checks
 - **Developer experience** -- Hot reload (air), Taskfile automation, golangci-lint, CI/CD
@@ -68,6 +69,8 @@ task dev                # Start dev server with hot reload
 
 The application runs at [http://localhost:4000](http://localhost:4000) by default (`HTTP_PORT`).
 
+Making this template your own (module rename, deploy identity, branding)? Follow the [personalization guide](docs/personalization-guide.md) — ~30 minutes of required changes.
+
 ## Available Tasks
 
 Run `task --list` to see all available tasks. Key ones:
@@ -75,7 +78,7 @@ Run `task --list` to see all available tasks. Key ones:
 | Task | Description |
 |------|-------------|
 | `task dev` | Start dev server with hot reload |
-| `task ci` | Halt-on-violation quality gate (fmt, lint, race tests, agent-spine drift, binary size, vuln scan) |
+| `task ci` | Halt-on-violation quality gate (fmt, lint, race tests, agent-spine + versions drift, binary size, vuln scan) |
 | `task build` | Compile optimized binary to `./dist/app` |
 | `task test` | Run test suite with coverage |
 | `task test:performance` | Check performance budgets |
@@ -117,6 +120,12 @@ This starter is built to be developed with AI coding agents — and it holds the
 - **Cross-tool spine.** [`AGENTS.md`](AGENTS.md) is **generated** from those layers via `task agents:build` and read natively by Cursor, Copilot, Codex, Windsurf, and others. CI fails if it drifts from its sources ([ADR-022](docs/adr/ADR-022-Cross-Tool-Agents-Spine.md)).
 - **Role-separated workflow.** Non-trivial features run a three-pass Architect → Coder → Reviewer flow, each pass producing an ADR, a failing test, or a review ([ADR-020](docs/adr/ADR-020-Agent-Roles.md)).
 - **Halt-on-violation gate.** `task ci` is the single definition of "done." An agent must clear it before claiming a change complete — no lowering thresholds, no `--no-verify` ([ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md)).
+
+## versions.json Is a Public Contract
+
+[`versions.json`](versions.json) at the repo root is a machine-readable manifest of what this template ships — its own release version (`template`) plus one key per meaningful stack pin (Go, templ, HTMX, Alpine, Tailwind, sqlc, …). External consumers fetch it raw from the default branch at build time, so treat it as a consumption contract: **adding keys is fine; renaming or removing keys is a breaking change.**
+
+It cannot drift: `task versions:check` (part of `task ci`) fails when any key disagrees with its in-repo source of truth (`go.mod`, `package-lock.json`, vendored JS bundles, sqlc headers, workflow pins), and the release workflow stamps the `template` field from the git tag ([ADR-030](docs/adr/ADR-030-Versions-Manifest-Contract.md)).
 
 ## Architecture Decisions
 

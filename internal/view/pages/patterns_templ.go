@@ -541,7 +541,7 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "inline-validation":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<form x-data=\"{ email: '' }\" class=\"space-y-2\" @submit.prevent=\"\"><label for=\"inline-validation-email\" class=\"block text-sm\">Email</label> <input id=\"inline-validation-email\" type=\"email\" x-model=\"email\" class=\"input w-full\" placeholder=\"you@example.com\"><p x-show=\"email.length > 0 && !email.includes('@')\" class=\"text-danger text-sm\" role=\"alert\">That doesn't look like an email address.</p><p class=\"text-xs text-muted-foreground\">Alpine checks as you type; the same rules run server-side on submit (the profile form is the full round trip).</p></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<form x-data=\"{ email: '', touched: false }\" class=\"space-y-2\" @submit.prevent=\"\"><label for=\"inline-validation-email\" class=\"block text-sm\">Email</label> <input id=\"inline-validation-email\" type=\"email\" x-model=\"email\" @blur=\"touched = true\" class=\"input w-full\" placeholder=\"you@example.com\"><p x-show=\"touched && email.length > 0 && !email.includes('@')\" x-cloak class=\"text-danger text-sm\" role=\"alert\">That doesn't look like an email address.</p><p class=\"text-xs text-muted-foreground\">Alpine flags the field after you leave it — not on the first keystroke — and the error clears live as you fix it. The same rules run server-side on submit (the profile form is the full round trip).</p></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -551,7 +551,7 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "infinite-scroll":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<ul class=\"divide-y divide-border max-h-48 overflow-y-auto\" aria-label=\"Infinite scroll demo\"><li hx-get=\"/patterns/api/scroll?page=1\" hx-trigger=\"revealed\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-muted-foreground\">Scroll me into view...</li></ul>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<!-- \"revealed\" only watches the window scroll, so it never fires\n\t\t\t     inside this overflow container — intersect observes correctly --> <ul class=\"divide-y divide-border max-h-48 overflow-y-auto\" aria-label=\"Infinite scroll demo\"><li hx-get=\"/patterns/api/scroll?page=1\" hx-trigger=\"intersect once\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-muted-foreground\">Scroll me into view...</li></ul>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -568,7 +568,7 @@ func patternDemo(slug string) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(`{"type": "success"}`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 191, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 193, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -581,7 +581,7 @@ func patternDemo(slug string) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(`{"type": "warning"}`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 192, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 194, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -594,7 +594,7 @@ func patternDemo(slug string) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(`{"type": "error"}`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 193, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 195, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -632,7 +632,7 @@ func patternDemo(slug string) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 228, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 230, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -645,7 +645,7 @@ func patternDemo(slug string) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 229, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 231, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -683,7 +683,7 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "confirm-delete":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<div><button hx-post=\"/patterns/api/confirm\" hx-confirm=\"Delete this demo item?\" hx-disabled-elt=\"this\" hx-target=\"closest div\" hx-swap=\"innerHTML\" class=\"btn btn-danger\">Delete item</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<!-- htmx:confirm pauses the request; the styled dialog resumes it\n\t\t\t     via issueRequest(true). hx-confirm stays on as the no-Alpine\n\t\t\t     fallback (native confirm) — with the intercept it never fires. --> <div x-data=\"{ open: false, issue: null }\" @htmx:confirm.prevent=\"issue = $event.detail.issueRequest; open = true\"><div id=\"confirm-demo-target\"><button hx-post=\"/patterns/api/confirm\" hx-confirm=\"Delete this demo item?\" hx-disabled-elt=\"this\" hx-target=\"#confirm-demo-target\" hx-swap=\"innerHTML\" class=\"btn btn-danger\">Delete item</button></div><template x-teleport=\"body\"><div x-show=\"open\" x-cloak @keydown.escape.window=\"open = false\" class=\"fixed inset-0 z-50 flex items-center justify-center p-4\"><div @click=\"open = false\" class=\"absolute inset-0 bg-night/60\" aria-hidden=\"true\"></div><div role=\"alertdialog\" aria-modal=\"true\" aria-labelledby=\"confirm-demo-title\" x-show=\"open\" x-transition class=\"relative bg-surface text-foreground rounded-lg shadow-lg p-6 max-w-sm w-full\"><h3 id=\"confirm-demo-title\" class=\"text-lg font-semibold mb-2\">Delete this demo item?</h3><p class=\"text-sm text-muted-foreground mb-4\">The request is paused on the htmx:confirm event — Delete resumes it, Cancel drops it.</p><div class=\"flex justify-end gap-2\"><button @click=\"open = false\" class=\"btn btn-secondary\">Cancel</button> <button @click=\"open = false; issue(true)\" class=\"btn btn-danger\">Delete</button></div></div></div></template></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

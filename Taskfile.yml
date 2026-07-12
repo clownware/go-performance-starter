@@ -69,6 +69,11 @@ tasks:
     cmds:
       - go run ./scripts/agentsmd check
 
+  versions:check:
+    desc: Fail if versions.json has drifted from the repo's actual pins (ADR-030)
+    cmds:
+      - go run ./scripts/checkversions
+
   ci:
     desc: Halt-on-violation quality gate — run before claiming a change is complete (ADR-021)
     cmds:
@@ -76,6 +81,7 @@ tasks:
       - task: lint
       - go test -race -covermode=atomic -coverprofile=coverage.txt ./...
       - task: agents:check
+      - task: versions:check
       - task: test:binary-size
       - task: test:asset-budgets
       - task: scan:vuln
@@ -127,6 +133,25 @@ tasks:
     desc: Force set the database migration version (use with caution)
     cmds:
       - migrate -database "${DATABASE_URL}" -path migrations force {{.VERSION}}
+
+  # Demo operations (ADR-031). Both targets refuse to run unless DEMO_MODE=1,
+  # so they cannot be pointed at a real deployment by accident.
+  demo:seed:
+    desc: Load demo fixtures (idempotent; requires DEMO_MODE=1)
+    preconditions:
+      - sh: '[ "$DEMO_MODE" = "1" ]'
+        msg: 'Refusing: demo:seed only runs against a demo database. Set DEMO_MODE=1 to confirm (ADR-031).'
+    cmds:
+      - psql "${DATABASE_URL}" -v ON_ERROR_STOP=1 -f sql/demo/seed.sql
+
+  demo:reset:
+    desc: Reset demo data (purge anonymous guests' content, re-seed; requires DEMO_MODE=1)
+    preconditions:
+      - sh: '[ "$DEMO_MODE" = "1" ]'
+        msg: 'Refusing: demo:reset only runs against a demo database. Set DEMO_MODE=1 to confirm (ADR-031).'
+    cmds:
+      - psql "${DATABASE_URL}" -v ON_ERROR_STOP=1 -f sql/demo/reset.sql
+      - task: demo:seed
 
   # Test tasks
   test:

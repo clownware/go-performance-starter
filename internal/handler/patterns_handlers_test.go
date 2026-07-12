@@ -63,6 +63,15 @@ func TestPatternsPage(t *testing.T) {
 			t.Errorf("GET /patterns missing section anchor id=%q", slug)
 		}
 	}
+	// Confirm-delete must intercept htmx:confirm with the styled dialog —
+	// the native window.confirm popup renders at the top of the browser.
+	if !strings.Contains(body, "@htmx:confirm.prevent") {
+		t.Error("confirm-delete demo should intercept htmx:confirm with the styled Alpine dialog")
+	}
+	// Inline validation must wait for blur before flagging the field.
+	if !strings.Contains(body, `@blur="touched = true"`) {
+		t.Error("inline-validation demo should only show the error after the field is touched (blur)")
+	}
 }
 
 func TestPatternsAPI(t *testing.T) {
@@ -72,6 +81,7 @@ func TestPatternsAPI(t *testing.T) {
 		target        string
 		wantStatus    int
 		wantContains  []string
+		wantEmptyBody bool // empty fragment expected (clears the swap target)
 		wantHXTrigger bool // response must carry an HX-Trigger header
 	}{
 		{
@@ -85,6 +95,27 @@ func TestPatternsAPI(t *testing.T) {
 			method:     http.MethodGet,
 			target:     "/patterns/api/search?q=a",
 			wantStatus: http.StatusOK,
+		},
+		{
+			name:         "live search reports a miss with the query echoed",
+			method:       http.MethodGet,
+			target:       "/patterns/api/search?q=zzzz",
+			wantStatus:   http.StatusOK,
+			wantContains: []string{"No matches"},
+		},
+		{
+			name:          "live search with an empty query clears the results",
+			method:        http.MethodGet,
+			target:        "/patterns/api/search?q=",
+			wantStatus:    http.StatusOK,
+			wantEmptyBody: true,
+		},
+		{
+			name:          "typeahead with a blank query clears the results",
+			method:        http.MethodGet,
+			target:        "/patterns/api/typeahead?q=%20",
+			wantStatus:    http.StatusOK,
+			wantEmptyBody: true,
 		},
 		{
 			name:         "click-to-edit fetch returns a form",
@@ -110,6 +141,9 @@ func TestPatternsAPI(t *testing.T) {
 			method:     http.MethodGet,
 			target:     "/patterns/api/scroll?page=2",
 			wantStatus: http.StatusOK,
+			// "revealed" never fires inside the demo's overflow container;
+			// the sentinel must observe intersection instead.
+			wantContains: []string{`hx-trigger="intersect once"`},
 		},
 		{
 			name:       "typeahead results",
@@ -195,7 +229,11 @@ func TestPatternsAPI(t *testing.T) {
 			}
 			if tt.wantStatus == http.StatusOK {
 				body := w.Body.String()
-				if len(strings.TrimSpace(body)) == 0 {
+				if tt.wantEmptyBody {
+					if len(strings.TrimSpace(body)) != 0 {
+						t.Errorf("%s %s should render an empty fragment to clear its target, got %q", tt.method, tt.target, body)
+					}
+				} else if len(strings.TrimSpace(body)) == 0 {
 					t.Errorf("%s %s rendered an empty fragment", tt.method, tt.target)
 				}
 				if strings.Contains(body, "<!doctype") || strings.Contains(body, "<!DOCTYPE") {

@@ -157,7 +157,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 
 ```bash
 task dev               # hot-reload dev server (air); watches .go, .templ
-task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + binary-size + vuln
+task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + binary-size + vuln
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
@@ -170,6 +170,9 @@ task test:performance  # performance budget tests + binary size
 task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
 task agents:check      # CI gate: fail if AGENTS.md drifts from sources
+task versions:check    # CI gate: fail if versions.json drifts from repo pins (ADR-030)
+task demo:seed         # load demo fixtures (refuses without DEMO_MODE=1, ADR-031)
+task demo:reset        # purge guests' demo content + re-seed (refuses without DEMO_MODE=1)
 ```
 
 ### Performance Budgets (ADR-000)
@@ -203,12 +206,15 @@ Budgets are enforced in CI via `task test:performance` / `task test:binary-size`
 - **ADR-024:** Demo application direction (explainer + /patterns + quiz/flashcards, anonymous guest auth)
 - **ADR-025:** Deployment target (stateless container behind Cloudflare; supersedes ADR-001 §5)
 - **ADR-026:** Logging standardized on `log/slog` (supersedes ADR-001 §3)
+- **ADR-030:** `versions.json` public manifest — CI-checked against repo pins, `template` stamped by release
+- **ADR-031:** Public demo operations (deploy-on-merge, `DEMO_MODE`-gated seed/reset, nightly reset workflow)
 
 ### Deployment
 
 - **Default port:** `4000` (`HTTP_PORT`, see `internal/config/config.go`)
 - **Build:** `task build` → `./dist/app` (stripped). Multi-stage Dockerfile (Node→Tailwind, Go→templ+build, Alpine runtime).
-- **Release:** pushing a `v*` tag runs `.github/workflows/release.yml` — ghcr.io image (30MB budget gate), migrations before deploy, secret-gated Fly deploy. `fly.toml` at repo root is the ADR-025 worked example. `db-migrate.yml` validates migrations on a fresh Postgres before applying to production.
+- **Release:** pushing a `v*` tag runs `.github/workflows/release.yml` — ghcr.io image (30MB budget gate), `versions.json` template stamp (ADR-030), migrations before deploy, secret-gated Fly deploy. `fly.toml` at repo root is the ADR-025 worked example. `db-migrate.yml` validates migrations on a fresh Postgres before applying to production.
+- **Continuous demo deploy (ADR-031):** merges to the default branch run `.github/workflows/deploy.yml` (secret-gated on `FLY_API_TOKEN` via a gate job; skips cleanly on clones). `demo-reset.yml` resets demo data nightly, double-gated on the `SUPABASE_DATABASE_URL` secret and the `DEMO_MODE=1` repo variable.
 - **Target (ADR-025):** single stateless container on a container host (Fly.io as the worked example) behind the Cloudflare proxy, which terminates TLS and serves as CDN. Cloudflare Workers is not an application runtime. Sessions are stateless (JWT cookies); backups are delegated to Supabase managed Postgres; production migrations are forward-only and run before deploy.
 
 ### Cross-tool spine

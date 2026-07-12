@@ -1,0 +1,54 @@
+# Nightly demo reset (ADR-031): purge anonymous guests' content and re-assert
+# the seed fixtures, so the public demo cannot be permanently vandalized.
+#
+# Double-gated so it is impossible to point at a real deployment by accident:
+#   1. This workflow only runs when the repo variable DEMO_MODE is "1" AND the
+#      SUPABASE_DATABASE_URL secret is set (secret presence goes through a
+#      gate job because the secrets context is unavailable in job-level `if:`).
+#   2. `task demo:reset` itself refuses without DEMO_MODE=1 in its environment.
+# A clone without the variable/secret sees a skipped job, not a failure.
+name: Demo Reset
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # nightly, 07:00 UTC
+  workflow_dispatch:
+
+jobs:
+  gate:
+    name: Check demo secrets
+    runs-on: ubuntu-latest
+    outputs:
+      has-db-url: ${{ steps.check.outputs.has-db-url }}
+    steps:
+      - name: Detect SUPABASE_DATABASE_URL
+        id: check
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          if [ -n "$DATABASE_URL" ]; then
+            echo "has-db-url=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-db-url=false" >> "$GITHUB_OUTPUT"
+            echo "SUPABASE_DATABASE_URL not set — demo reset will be skipped."
+          fi
+
+  reset:
+    name: Reset demo data
+    runs-on: ubuntu-latest
+    needs: gate
+    if: needs.gate.outputs.has-db-url == 'true' && vars.DEMO_MODE == '1'
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      DEMO_MODE: ${{ vars.DEMO_MODE }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Task
+        run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Reset and re-seed
+        run: task demo:reset

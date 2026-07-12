@@ -112,7 +112,11 @@ var patternsCatalog = []view.PatternSection{
   hx-get="/patterns/api/search"
   hx-trigger="keyup changed delay:300ms"
   hx-target="#search-results"/>`,
-		HandlerSource: `q := r.URL.Query().Get("q")
+		HandlerSource: `q := strings.TrimSpace(r.URL.Query().Get("q"))
+if q == "" { // cleared input clears the results
+  w.WriteHeader(http.StatusOK)
+  return
+}
 results := filterStubData(q)
 view.Render(w, r, http.StatusOK,
   partials.PatternSearchResults(props))`,
@@ -137,12 +141,14 @@ view.Render(w, r, http.StatusOK,
 		Slug:           "inline-validation",
 		Category:       "forms-actions",
 		Title:          "Inline validation",
-		Summary:        "Alpine validates as you type; the server re-checks on submit and returns field errors into the same markup.",
+		Summary:        "Alpine flags the field once you leave it (not on the first keystroke), then clears live as you fix it; the server re-checks on submit and returns field errors into the same markup.",
 		HTMXFeatures:   []string{"hx-post", "hx-target"},
-		AlpineFeatures: []string{"x-data", "x-model", "x-show"},
-		TemplSource: `<form x-data="{ email: '' }">
-  <input type="email" x-model="email"/>
-  <p x-show="email && !email.includes('@')">
+		AlpineFeatures: []string{"x-data", "x-model", "x-show", "@blur"},
+		TemplSource: `<form x-data="{ email: '', touched: false }">
+  <input type="email" x-model="email"
+    @blur="touched = true"/>
+  <p x-show="touched && email
+      && !email.includes('@')">
     That doesn't look like an email.
   </p>
 </form>`,
@@ -172,10 +178,10 @@ view.Render(w, r, http.StatusOK,
 		Slug:         "infinite-scroll",
 		Category:     "search-lists",
 		Title:        "Infinite scroll",
-		Summary:      "Scroll to the bottom and the next page loads automatically; the sentinel row replaces itself with each new page.",
-		HTMXFeatures: []string{"hx-get", `hx-trigger="revealed"`, `hx-swap="outerHTML"`},
+		Summary:      "Scroll to the bottom and the next page loads automatically; the sentinel row replaces itself with each new page. Inside a scrollable container the trigger is intersect, not revealed — revealed only watches the window scroll.",
+		HTMXFeatures: []string{"hx-get", `hx-trigger="intersect once"`, `hx-swap="outerHTML"`},
 		TemplSource: `<li hx-get="/patterns/api/scroll?page=2"
-  hx-trigger="revealed" hx-swap="outerHTML">
+  hx-trigger="intersect once" hx-swap="outerHTML">
   Loading more...
 </li>`,
 		HandlerSource: `page, _ := strconv.Atoi(r.URL.Query().Get("page"))
@@ -310,17 +316,24 @@ view.Render(w, r, http.StatusOK,
     partials.PatternCounterProps{Count: count + 1}))`,
 	},
 	{
-		Slug:         "confirm-delete",
-		Category:     "forms-actions",
-		Title:        "Confirm + disabled button",
-		Summary:      "hx-confirm gates the request behind a native confirm dialog; hx-disabled-elt holds the button while the request runs.",
-		HTMXFeatures: []string{"hx-confirm", `hx-disabled-elt="this"`, "hx-post"},
-		TemplSource: `<button hx-post="/patterns/api/confirm"
-  hx-confirm="Delete this demo item?"
-  hx-disabled-elt="this"
-  hx-target="closest div">Delete item</button>`,
+		Slug:           "confirm-delete",
+		Category:       "forms-actions",
+		Title:          "Confirm + disabled button",
+		Summary:        "The htmx:confirm event pauses the request while a styled Alpine dialog asks — no native window.confirm popup — and hx-disabled-elt holds the button while it runs. hx-confirm stays on as the no-Alpine fallback.",
+		HTMXFeatures:   []string{"htmx:confirm", "hx-confirm", `hx-disabled-elt="this"`},
+		AlpineFeatures: []string{"x-data", "x-teleport", "x-show"},
+		TemplSource: `<div x-data="{ open: false, issue: null }"
+  @htmx:confirm.prevent="issue =
+    $event.detail.issueRequest; open = true">
+  <button hx-post="/patterns/api/confirm"
+    hx-confirm="Delete this demo item?"
+    hx-disabled-elt="this">Delete item</button>
+  <!-- styled dialog; Delete resumes with
+       issue(true), Cancel just closes -->
+</div>`,
 		HandlerSource: `// The interesting part happens client-side
-// before this runs.
+// before this runs: htmx:confirm pauses the
+// request until issueRequest(true) resumes it.
 view.Render(w, r, http.StatusOK,
   partials.PatternConfirmResult())`,
 	},
@@ -416,17 +429,28 @@ func PatternSwap(w http.ResponseWriter, r *http.Request) {
 	renderPattern(w, r, "swap", partials.PatternSwapResult())
 }
 
-// PatternSearch serves the live-search demo results.
+// PatternSearch serves the live-search demo results. An empty query returns
+// an empty fragment so clearing the input clears the results, rather than
+// leaving stale matches or a `No matches for ""` message behind.
 func PatternSearch(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query().Get("q")
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	props := partials.PatternSearchProps{Query: q, Results: filterPatternStubData(q)}
 	renderPattern(w, r, "search", partials.PatternSearchResults(props))
 }
 
 // PatternTypeahead serves the typeahead demo results (same server shape as
-// live search; the loading indicator is client wiring).
+// live search, including the clear-on-empty contract; the loading indicator
+// is client wiring).
 func PatternTypeahead(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query().Get("q")
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	props := partials.PatternSearchProps{Query: q, Results: filterPatternStubData(q)}
 	renderPattern(w, r, "typeahead", partials.PatternSearchResults(props))
 }

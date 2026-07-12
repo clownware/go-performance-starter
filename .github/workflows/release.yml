@@ -69,6 +69,35 @@ jobs:
         with:
           generate_release_notes: true
 
+  stamp:
+    name: Stamp versions.json
+    runs-on: ubuntu-latest
+    needs: image
+    steps:
+      # Stamp the manifest's "template" field on the default branch — the ref
+      # external consumers read (ADR-030) — so it can never drift from tags.
+      # The other keys are CI-verified against repo pins by `task versions:check`.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Update template field to the released tag
+        run: |
+          jq --arg tag "${{ github.ref_name }}" '.template = $tag' versions.json > versions.json.tmp
+          mv versions.json.tmp versions.json
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet versions.json; then
+            echo "versions.json already stamped ${{ github.ref_name }} — nothing to do."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add versions.json
+          git commit -m "chore(release): stamp versions.json ${{ github.ref_name }}"
+          git push origin "${{ github.event.repository.default_branch }}"
+
   migrate:
     name: Apply Migrations
     runs-on: ubuntu-latest

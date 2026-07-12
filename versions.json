@@ -1,0 +1,16 @@
+{
+  "template": "v0.8.0",
+  "go": "1.26.5",
+  "go-minimum": "1.25.0",
+  "chi": "5.3.1",
+  "templ": "0.3.1020",
+  "pgx": "5.10.0",
+  "gotrue-go": "1.2.1",
+  "supabase-go": "0.0.4",
+  "htmx": "1.9.10",
+  "alpine": "3.13.3",
+  "tailwindcss": "4.3.2",
+  "sqlc": "1.31.1",
+  "golang-migrate": "4.19.1",
+  "node": "20"
+}
