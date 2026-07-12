@@ -1,0 +1,126 @@
+package partials
+
+import (
+	"fmt"
+	"github.com/clownware/go-performance-starter/internal/view/components"
+)
+
+// FlashcardProps holds data for one saved flashcard (ADR-024).
+type FlashcardProps struct {
+	ID      string
+	Front   string
+	Back    string
+	IsKnown bool
+}
+
+// FlashcardListProps holds the review list.
+type FlashcardListProps struct {
+	Cards []FlashcardProps
+}
+
+func flashcardKnownAction(id string) string {
+	return fmt.Sprintf("/learn/flashcards/%s/known", id)
+}
+
+func flashcardDeleteAction(id string) string {
+	return fmt.Sprintf("/learn/flashcards/%s/delete", id)
+}
+
+// FlashcardList renders the saved cards, or the empty state. A standalone
+// fragment for HTMX swaps.
+templ FlashcardList(props FlashcardListProps) {
+	if len(props.Cards) == 0 {
+		@FlashcardsEmptyState()
+	} else {
+		<ul class="grid gap-4 sm:grid-cols-2" aria-label="Saved flashcards">
+			for _, card := range props.Cards {
+				@FlashcardCard(card)
+			}
+		</ul>
+	}
+}
+
+// FlashcardCard renders one card: Alpine flips front/back client-side; the
+// mark-known and delete mutations are plain POST forms enhanced by HTMX.
+templ FlashcardCard(props FlashcardProps) {
+	<li
+		data-testid="flashcard"
+		data-known={ fmt.Sprintf("%t", props.IsKnown) }
+		x-data="{ flipped: false }"
+		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-5 flex flex-col gap-3 list-none"
+	>
+		<button
+			type="button"
+			@click="flipped = !flipped"
+			:aria-pressed="flipped.toString()"
+			class="text-left focus:outline-hidden focus:ring-2 focus:ring-primary rounded"
+			title="Flip card"
+		>
+			<span x-show="!flipped" class="font-medium">{ props.Front }</span>
+			<span x-show="flipped" x-cloak class="text-gray-600 dark:text-gray-300">{ props.Back }</span>
+			<span class="block mt-2 text-xs text-gray-400">Click to flip</span>
+		</button>
+		<div class="flex items-center justify-between gap-2 mt-auto">
+			<form
+				method="post"
+				action={ templ.SafeURL(flashcardKnownAction(props.ID)) }
+				hx-post={ flashcardKnownAction(props.ID) }
+				hx-target="closest li"
+				hx-swap="outerHTML"
+			>
+				@components.CSRFField()
+				<input type="hidden" name="known" value={ fmt.Sprintf("%t", !props.IsKnown) }/>
+				if props.IsKnown {
+					<button type="submit" class="btn btn-primary text-sm" aria-pressed="true">&#10003; Known</button>
+				} else {
+					<button type="submit" class="btn btn-secondary text-sm" aria-pressed="false">Mark known</button>
+				}
+			</form>
+			<form
+				method="post"
+				action={ templ.SafeURL(flashcardDeleteAction(props.ID)) }
+				hx-post={ flashcardDeleteAction(props.ID) }
+				hx-target="closest li"
+				hx-swap="outerHTML swap:200ms"
+			>
+				@components.CSRFField()
+				<button type="submit" class="btn btn-danger text-sm" aria-label={ "Delete flashcard: " + props.Front }>Delete</button>
+			</form>
+		</div>
+	</li>
+}
+
+// FlashcardsEmptyState renders when the user has no saved cards.
+templ FlashcardsEmptyState() {
+	<div
+		data-testid="flashcards-empty"
+		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400"
+	>
+		<p class="mb-2">No flashcards yet.</p>
+		<p class="text-sm">
+			Miss a question on the
+			<a href="/learn/quiz" class="text-primary underline">architecture quiz</a>
+			and save it here to review later.
+		</p>
+	</div>
+}
+
+// FlashcardSaved is the confirmation that replaces the quiz result's
+// save-flashcard offer after a successful HTMX save.
+templ FlashcardSaved() {
+	<div
+		data-testid="flashcard-saved"
+		class="mt-4 p-4 rounded-md border border-primary text-sm"
+		role="status"
+	>
+		Saved — review it any time on
+		<a href="/learn/flashcards" class="text-primary underline">your flashcards</a>.
+	</div>
+}
+
+// FlashcardSaveError renders a save-validation failure in place of the offer.
+templ FlashcardSaveError(message string) {
+	<div class="mt-4 p-4 rounded-md border border-danger text-sm text-danger" role="alert">
+		{ message }
+	</div>
+}
