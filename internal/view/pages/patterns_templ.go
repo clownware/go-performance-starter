@@ -363,7 +363,7 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "inline-validation":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<form x-data=\"{ email: '' }\" class=\"space-y-2\" @submit.prevent=\"\"><label for=\"inline-validation-email\" class=\"block text-sm\">Email</label> <input id=\"inline-validation-email\" type=\"email\" x-model=\"email\" class=\"input w-full\" placeholder=\"you@example.com\"><p x-show=\"email.length > 0 && !email.includes('@')\" class=\"text-danger text-sm\" role=\"alert\">That doesn't look like an email address.</p><p class=\"text-xs text-gray-500 dark:text-gray-400\">Alpine checks as you type; the same rules run server-side on submit (see the home page form).</p></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<form x-data=\"{ email: '' }\" class=\"space-y-2\" @submit.prevent=\"\"><label for=\"inline-validation-email\" class=\"block text-sm\">Email</label> <input id=\"inline-validation-email\" type=\"email\" x-model=\"email\" class=\"input w-full\" placeholder=\"you@example.com\"><p x-show=\"email.length > 0 && !email.includes('@')\" class=\"text-danger text-sm\" role=\"alert\">That doesn't look like an email address.</p><p class=\"text-xs text-gray-500 dark:text-gray-400\">Alpine checks as you type; the same rules run server-side on submit (the profile form is the full round trip).</p></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

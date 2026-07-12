@@ -176,3 +176,41 @@ func TestServer_NavAndBrand(t *testing.T) {
 		}
 	}
 }
+
+// TestServer_HomeDirectoryAndBrand pins the brand/home rework: the home page
+// is a landing with a directory of the demo surfaces (not the old
+// form-validation stub), the brand mark (the project's own bolt-in-brackets
+// SVG — NOT the Pezza emblem) appears only in brand placements, and the
+// lockup link is accessibly labelled.
+func TestServer_HomeDirectoryAndBrand(t *testing.T) {
+	srv := newTestServer(t, "development")
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET / status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+
+	if !strings.Contains(body, `data-testid="surface-directory"`) {
+		t.Error("home page missing the surface directory")
+	}
+	if got := strings.Count(body, `data-testid="surface-card"`); got != 4 {
+		t.Errorf("surface directory has %d cards, want 4 (patterns, quiz, flashcards, dashboard)", got)
+	}
+	if strings.Contains(body, `name="test_field"`) {
+		t.Error("home page still renders the form-validation stub")
+	}
+	if !strings.Contains(body, `aria-label="Go Performance Starter`) {
+		t.Error("brand lockup link missing its accessible label")
+	}
+	// The mark appears in exactly two places on the landing page: the header
+	// lockup and the hero. A third occurrence means a functional control
+	// (e.g. the theme toggle) is wearing the brand again.
+	if got := strings.Count(body, "data-brand-mark"); got != 2 {
+		t.Errorf("brand mark rendered %d times, want exactly 2 (header lockup + hero — controls must not wear the brand)", got)
+	}
+	// The Pezza emblem is a different brand and must never reappear here.
+	if strings.Contains(body, "emblem-") {
+		t.Error("page references the retired Pezza emblem assets")
+	}
+}
