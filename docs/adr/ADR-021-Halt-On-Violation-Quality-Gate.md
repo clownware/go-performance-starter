@@ -17,10 +17,12 @@ Accepted
 Define a single halt-on-violation gate, `task ci`, that an agent must run before claiming any change complete (Constitution rule 9). It chains:
 
 ```
-fmt:check → lint → go test -race -cover ./... → agents:check → test:binary-size → scan:vuln
+fmt:check → lint → go test -race -cover ./... → agents:check → test:binary-size → test:asset-budgets → scan:vuln
 ```
 
-If it exits non-zero, the agent halts and fixes the failure. It must not lower a threshold, exclude files, or bypass git hooks with `--no-verify`. The GitHub Actions workflow runs the same checks (across its `test`, `agents`, and `performance` jobs) so local and CI verdicts match.
+If it exits non-zero, the agent halts and fixes the failure. It must not lower a threshold, exclude files, or bypass git hooks with `--no-verify`.
+
+**2026-07 Amendment**: the GitHub Actions workflow originally re-implemented these checks as parallel jobs, and they drifted (`fmt:check` ran locally but never in CI). The workflow now installs the environment (Postgres, toolchain, Task) and invokes `task ci` itself — the same single-source-of-truth fix ADR-022 applied to AGENTS.md. If the gate needs a new check, add it to the `ci` task; the workflow inherits it.
 
 ## Consequences
 
