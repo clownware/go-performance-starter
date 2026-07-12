@@ -14,14 +14,20 @@ import (
 //
 // With no trusted CIDRs it never trusts a forwarded header — a request hitting
 // the app directly cannot spoof its client IP to evade the rate limiter or
-// poison logs. A single trusted hop is assumed; the left-most XFF entry wins.
+// poison logs. X-Forwarded-For is resolved right-to-left, skipping trusted
+// proxy addresses: edge proxies (Fly, Cloudflare) APPEND the peer they saw to
+// any client-supplied value, so the left-most entry is attacker-controlled
+// and the right-most untrusted entry is the real client (ADR-027, amended
+// 2026-07-12).
 func RealIP(trustedProxyCIDRs []string) func(http.Handler) http.Handler {
 	trusted := parseCIDRs(trustedProxyCIDRs)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip := hostOnly(r.RemoteAddr)
-			if forwarded := forwardedClientIP(r); forwarded != "" && peerIsTrusted(ip, trusted) {
-				ip = forwarded
+			if peerIsTrusted(ip, trusted) {
+				if forwarded := forwardedClientIP(r, trusted); forwarded != "" {
+					ip = forwarded
+				}
 			}
 			r.RemoteAddr = ip
 			next.ServeHTTP(w, r)
@@ -68,13 +74,24 @@ func peerIsTrusted(peer string, trusted []*net.IPNet) bool {
 	return false
 }
 
-// forwardedClientIP returns the left-most X-Forwarded-For entry, falling back
-// to X-Real-IP then True-Client-IP. Callers must only trust the result when the
-// direct peer is a trusted proxy (ADR-027).
-func forwardedClientIP(r *http.Request) string {
+// forwardedClientIP resolves X-Forwarded-For right-to-left — skipping trusted
+// proxy addresses and invalid entries — and returns the first remaining IP:
+// the nearest hop that is not our own infrastructure. An XFF consisting only
+// of trusted/invalid entries yields "" (callers fall back to the direct peer,
+// failing closed). Falls back to X-Real-IP then True-Client-IP, which are
+// single-valued headers set by the trusted peer. Callers must only trust the
+// result when the direct peer is a trusted proxy (ADR-027).
+func forwardedClientIP(r *http.Request, trusted []*net.IPNet) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		if first := strings.TrimSpace(strings.Split(xff, ",")[0]); first != "" {
-			return first
+		entries := strings.Split(xff, ",")
+		for i := len(entries) - 1; i >= 0; i-- {
+			entry := strings.TrimSpace(entries[i])
+			if net.ParseIP(entry) == nil {
+				continue
+			}
+			if !peerIsTrusted(entry, trusted) {
+				return entry
+			}
 		}
 	}
 	if xr := strings.TrimSpace(r.Header.Get("X-Real-IP")); xr != "" {
