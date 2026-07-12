@@ -4,7 +4,7 @@
 
 ## Status
 
-Accepted (amends ADR-014 §4; refines ADR-025 §2)
+Accepted (amends ADR-014 §4; refines ADR-025 §2). **Amended 2026-07-12:** X-Forwarded-For resolution changed from left-most to right-most-untrusted — see the dated note in the Decision section.
 
 ## Context
 
@@ -21,7 +21,9 @@ Replace the unconditional `RealIP` with a **trusted-proxy-gated** resolver:
 - A new middleware `RealIP(trustedProxyCIDRs []string)` normalizes `r.RemoteAddr` to a bare IP (stripping the port so the rate-limiter key is per-IP, not per-connection), and honors the forwarded client-IP headers **only when the direct peer's address falls inside one of the configured trusted-proxy CIDRs.**
 - Configuration is `TRUSTED_PROXY_CIDRS` (ADR-015): a comma-separated CIDR list, **default empty**. Empty means *trust no forwarded headers* — the direct peer IP is used verbatim. This is the safe default: a misconfigured deployment under-counts distinct clients (fails closed toward more limiting), never over-trusts a spoofed header.
 - Deployments that terminate at a trusted proxy set `TRUSTED_PROXY_CIDRS` to that proxy's egress ranges (Cloudflare's published ranges, or the Fly private `fdaa::/16` / edge range when fronted by Fly). Documented in `.env.example` and the deployment guide.
-- We assume a **single** trusted hop and read the left-most forwarded entry. Multi-hop proxy chains are out of scope; revisit if a second trusted layer is introduced.
+- ~~We assume a **single** trusted hop and read the left-most forwarded entry. Multi-hop proxy chains are out of scope; revisit if a second trusted layer is introduced.~~
+  **Amendment (2026-07-12, issue #72):** live verification on Fly falsified the left-most assumption. Edge proxies (Fly, Cloudflare) **append** the peer they saw to any client-supplied `X-Forwarded-For` rather than stripping it, so the left-most entry is attacker-controlled the moment a trusted CIDR is configured — a client sending `X-Forwarded-For: 6.6.6.6` would land every request in a fresh rate-limit bucket, recreating the exact spoofing vector this ADR exists to close. The resolver now walks XFF **right-to-left, skipping trusted-proxy addresses and invalid entries, and takes the first remaining IP** (the nearest hop that is not our own infrastructure). An XFF consisting only of trusted entries falls back to the direct peer (fails closed). This also handles multi-hop chains (e.g. Cloudflare → Fly with both ranges trusted). The trusted-peer gate is unchanged: with `TRUSTED_PROXY_CIDRS` empty, no forwarded header is ever honored.
+  Verified values for Fly: the app's direct peer is fly-proxy at a private `172.16.0.0/12` address (observed `172.19.9.185`), so the demo sets `TRUSTED_PROXY_CIDRS=172.16.0.0/12` in `fly.toml`.
 
 ## Consequences
 
