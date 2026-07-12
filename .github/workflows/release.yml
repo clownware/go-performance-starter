@@ -105,6 +105,32 @@ jobs:
         if: env.FLY_API_TOKEN != ''
         uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
 
+      # Fly can only pull public images or its own registry. GHCR packages
+      # default to private (and stay private on forks), so deploying straight
+      # from ghcr.io fails with "Authentication required" — v0.3.0 and v0.4.0
+      # both died here. Mirror the exact image that passed the budget check
+      # into registry.fly.io and deploy that; GHCR remains the published
+      # artifact of record.
+      - name: Log in to GHCR
+        if: env.FLY_API_TOKEN != ''
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Mirror image to the Fly registry
+        if: env.FLY_API_TOKEN != ''
+        run: |
+          APP=$(sed -n 's/^app *= *"\(.*\)"/\1/p' fly.toml)
+          SRC="ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
+          DST="registry.fly.io/${APP}:${{ github.ref_name }}"
+          docker pull "$SRC"
+          docker tag "$SRC" "$DST"
+          flyctl auth docker
+          docker push "$DST"
+          echo "DEPLOY_IMAGE=$DST" >> "$GITHUB_ENV"
+
       - name: Deploy
         if: env.FLY_API_TOKEN != ''
-        run: flyctl deploy --remote-only --image ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        run: flyctl deploy --image "$DEPLOY_IMAGE"
