@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-12
+
+Guest mode goes live and the view layer gets one design language.
+
+### Added
+- **Guest mode enabled** (`GUEST_MODE_ENABLED = "true"` in fly.toml):
+  anonymous sign-ins are on in Supabase, so visitors to /learn get a real
+  anonymous identity server-side — quiz and flashcards with zero signup
+  friction, RLS-scoped, TTL-reaped (ADR-024 complete)
+- **ADR-029 role-based design tokens**, mirroring the astro starter's
+  ADR-047: one token source in `input.css`, dark mode flips role variables,
+  components never write `dark:` color variants or raw grays — enforced by
+  a templ-source scan in `task ci`
+
+### Changed
+- Toasts redesigned to surface + status border (readable in both modes);
+  status feedback everywhere is tint + role text per ADR-029 §4
+- Auth forms rebuilt on the shared `.input`/`.btn` components with the
+  double-spacing collapsed and labels de-bolded
+
+### Removed
+- `semantic-colors.css` (was loaded twice) and the stale committed
+  `output.css`; the fake `primary-500/600` scale — CSS shrinks to 7.3KB
+  gzipped
+
+### Fixed
+- An explicit light-mode choice now overrides a dark OS preference (the
+  old init ORed the stored choice with `matchMedia`, so light never won)
+- Dead `Reset password` link removed from the login card
+- `HX-Trigger` toast text kept ASCII — HTTP headers are latin-1, so the
+  em-dash rendered as mojibake
+- Focus-visible rings on home directory cards and the patterns pill nav
+
 ## [0.5.2] - 2026-07-12
 
 ### Fixed
