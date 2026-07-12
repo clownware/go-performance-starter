@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view"
 )
 
 // ItemsListProps holds data for the items list partial.

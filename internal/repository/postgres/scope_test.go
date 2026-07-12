@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 // scopeFakeQuerier lets unit tests observe which querier inScope hands to fn.

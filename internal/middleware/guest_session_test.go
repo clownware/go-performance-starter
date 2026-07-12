@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/auth"
+	"github.com/clownware/go-performance-starter/internal/auth"
 )
 
 type fakeSigner struct {

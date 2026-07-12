@@ -29,5 +29,5 @@ document.addEventListener('htmx:afterSwap', (event) => {
 
 // Log when the app is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Alpine Go Performance Starter loaded');
+  console.log('Go Performance Starter loaded');
 });

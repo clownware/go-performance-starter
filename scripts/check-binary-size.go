@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/performance"
+	"github.com/clownware/go-performance-starter/internal/performance"
 )
 
 func main() {

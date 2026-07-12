@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/auth"
+	"github.com/clownware/go-performance-starter/internal/auth"
 )
 
 // anonSigner is the slice of AuthClient GuestSession needs; an interface so

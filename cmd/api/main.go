@@ -13,12 +13,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/config"
-	_ "github.com/clownware/alpine-go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
-	"github.com/clownware/alpine-go-performance-starter/internal/jobs"
-	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository/postgres"
-	"github.com/clownware/alpine-go-performance-starter/internal/server"
+	"github.com/clownware/go-performance-starter/internal/config"
+	_ "github.com/clownware/go-performance-starter/internal/database" // Keep for sqlc generated types, alias not needed directly here
+	"github.com/clownware/go-performance-starter/internal/jobs"
+	"github.com/clownware/go-performance-starter/internal/middleware"
+	"github.com/clownware/go-performance-starter/internal/repository/postgres"
+	"github.com/clownware/go-performance-starter/internal/server"
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
@@ -45,7 +45,7 @@ func main() {
 	// Structured logging per ADR-026: JSON in production, text otherwise,
 	// level from LOG_LEVEL (default info)
 	setupLogger(os.Getenv("ENV"), os.Getenv("LOG_LEVEL"))
-	slog.Info("Starting Alpine Go Performance Starter", "version", version)
+	slog.Info("Starting Go Performance Starter", "version", version)
 
 	// Create context that listens for termination signals
 	ctx, cancel := context.WithCancel(context.Background())

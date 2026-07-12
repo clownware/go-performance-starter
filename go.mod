@@ -1,4 +1,4 @@
-module github.com/clownware/alpine-go-performance-starter
+module github.com/clownware/go-performance-starter
 
 go 1.25.0
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/database"
 )
 
 // QuizRepository defines data access for the architecture quiz (ADR-024).

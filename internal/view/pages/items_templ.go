@@ -9,9 +9,9 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/layouts"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
 // ItemsPageProps holds data for the items page.

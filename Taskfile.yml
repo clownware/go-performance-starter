@@ -161,7 +161,7 @@ tasks:
   docker:build:
     desc: Build Docker image
     cmds:
-      - docker build -t go-alpine-saas-starter .
+      - docker build -t go-performance-starter .
 
   db:migrate:create:
     desc: Create a new migration file

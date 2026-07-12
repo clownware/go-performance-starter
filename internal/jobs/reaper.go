@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/database"
 )
 
 // ReaperStore deletes expired anonymous users (implemented by

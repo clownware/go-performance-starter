@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 // csrfHxHeaders builds the hx-headers JSON so every HTMX request carries the
@@ -80,7 +80,7 @@ func toastInit() string {
 
 // footerCopyright returns the copyright string with the year.
 func footerCopyright(year int) string {
-	return fmt.Sprintf("© %d Alpine Go Performance Starter. All rights reserved.", year)
+	return fmt.Sprintf("© %d Go Performance Starter. All rights reserved.", year)
 }
 
 func Base(props view.BaseProps) templ.Component {
@@ -104,7 +104,7 @@ func Base(props view.BaseProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\" content=\"Alpine Go Performance Starter\"><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\" content=\"Go Performance Starter\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

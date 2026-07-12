@@ -1,4 +1,4 @@
-# Constitution — Alpine Go Performance Starter
+# Constitution — Go Performance Starter
 
 These rules apply with halt-on-violation force. If a rule fires and you cannot satisfy it, halt and report the conflict — do not work around it.
 

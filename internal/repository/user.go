@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/database"
 )
 
 // UserRepository defines the interface for user data access operations.
