@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-07-12
+
+### Fixed
+- Static assets are cached for a year but shipped unversioned URLs, so
+  every deploy stranded returning browsers on stale CSS/JS (the cause of
+  three separate misrenders during the 0.5.x design work). Asset references
+  now carry a `?v=` stamp — the build version in releases, a process-start
+  stamp in dev — implementing the versioned-asset assumption ADR-016 was
+  built on
+
 ## [0.5.1] - 2026-07-12
 
 ### Fixed

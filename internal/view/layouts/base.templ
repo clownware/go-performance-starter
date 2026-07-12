@@ -84,16 +84,16 @@ templ Base(props view.BaseProps) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<meta name="description" content="Go Performance Starter"/>
 			<title>{ props.Title }</title>
-			<!-- CSS -->
-			<link rel="stylesheet" href="/static/css/app.css"/>
-			<link rel="stylesheet" href="/static/css/semantic-colors.css"/>
+			<!-- CSS: AssetURL stamps ?v= so the 1-year cache busts per release (ADR-016) -->
+			<link rel="stylesheet" href={ view.AssetURL("/static/css/app.css") }/>
+			<link rel="stylesheet" href={ view.AssetURL("/static/css/semantic-colors.css") }/>
 			<!-- Favicon: the mark glyph (bolt on teal); SVG first, PNG fallback -->
-			<link rel="icon" type="image/svg+xml" href="/static/img/mark.svg"/>
-			<link rel="icon" type="image/png" href="/static/img/favicon.png"/>
+			<link rel="icon" type="image/svg+xml" href={ view.AssetURL("/static/img/mark.svg") }/>
+			<link rel="icon" type="image/png" href={ view.AssetURL("/static/img/favicon.png") }/>
 			<!-- HTMX -->
-			<script src="/static/js/htmx.min.js" defer></script>
+			<script src={ view.AssetURL("/static/js/htmx.min.js") } defer></script>
 			<!-- Alpine.js -->
-			<script src="/static/js/alpine.min.js" defer></script>
+			<script src={ view.AssetURL("/static/js/alpine.min.js") } defer></script>
 		</head>
 		<body
 			x-data={ darkModeData() }
@@ -115,7 +115,7 @@ templ Base(props view.BaseProps) {
 			@footer(props)
 			<!-- App scripts: all behavior lives in external files or Alpine
 			     attributes; inline script blocks are CSP-forbidden (ADR-028) -->
-			<script src="/static/js/app.js" defer></script>
+			<script src={ view.AssetURL("/static/js/app.js") } defer></script>
 			@htmxLoadingIndicator()
 			@toastNotifications()
 		</body>

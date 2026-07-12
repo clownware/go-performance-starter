@@ -214,3 +214,23 @@ func TestServer_HomeDirectoryAndBrand(t *testing.T) {
 		t.Error("page references the retired Pezza emblem assets")
 	}
 }
+
+// TestServer_AssetCacheBusting proves rendered pages reference static assets
+// through version-stamped URLs: /static ships a 1-year Cache-Control, so an
+// unstamped reference strands every returning browser on stale CSS/JS after
+// a deploy (ADR-016 assumed versioned assets; this pins the implementation).
+func TestServer_AssetCacheBusting(t *testing.T) {
+	srv := newTestServer(t, "development")
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET / status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+
+	for _, asset := range []string{"app.css", "semantic-colors.css", "htmx.min.js", "alpine.min.js", "app.js"} {
+		if !strings.Contains(body, asset+"?v=") {
+			t.Errorf("asset %s referenced without a cache-busting ?v= stamp", asset)
+		}
+	}
+}

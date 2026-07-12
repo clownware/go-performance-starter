@@ -19,6 +19,7 @@ import (
 	"github.com/clownware/go-performance-starter/internal/middleware"
 	"github.com/clownware/go-performance-starter/internal/repository/postgres"
 	"github.com/clownware/go-performance-starter/internal/server"
+	"github.com/clownware/go-performance-starter/internal/view"
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
@@ -46,6 +47,10 @@ func main() {
 	// level from LOG_LEVEL (default info)
 	setupLogger(os.Getenv("ENV"), os.Getenv("LOG_LEVEL"))
 	slog.Info("Starting Go Performance Starter", "version", version)
+
+	// Stamp static asset URLs with the build version so each release busts
+	// the 1-year asset cache (ADR-016); dev builds keep a process-start stamp.
+	view.SetAssetVersion(version)
 
 	// Create context that listens for termination signals
 	ctx, cancel := context.WithCancel(context.Background())
