@@ -179,9 +179,9 @@ func TestServer_NavAndBrand(t *testing.T) {
 
 // TestServer_HomeDirectoryAndBrand pins the brand/home rework: the home page
 // is a landing with a directory of the demo surfaces (not the old
-// form-validation stub), the header carries the emblem mark exactly once
-// (the dark-mode toggle must wear functional sun/moon icons, not the brand),
-// and the mark has accessible alt text.
+// form-validation stub), the brand mark (the project's own bolt-in-brackets
+// SVG — NOT the Pezza emblem) appears only in brand placements, and the
+// lockup link is accessibly labelled.
 func TestServer_HomeDirectoryAndBrand(t *testing.T) {
 	srv := newTestServer(t, "development")
 	rec := httptest.NewRecorder()
@@ -200,15 +200,17 @@ func TestServer_HomeDirectoryAndBrand(t *testing.T) {
 	if strings.Contains(body, `name="test_field"`) {
 		t.Error("home page still renders the form-validation stub")
 	}
-	if !strings.Contains(body, `alt="Go Performance Starter"`) {
-		t.Error("header mark missing accessible alt text")
+	if !strings.Contains(body, `aria-label="Go Performance Starter`) {
+		t.Error("brand lockup link missing its accessible label")
 	}
 	// The mark appears in exactly two places on the landing page: the header
 	// lockup and the hero. A third occurrence means a functional control
 	// (e.g. the theme toggle) is wearing the brand again.
-	for _, asset := range []string{"emblem-black.svg", "emblem-white.svg"} {
-		if got := strings.Count(body, asset); got != 2 {
-			t.Errorf("%s referenced %d times, want exactly 2 (header lockup + hero — controls must not wear the brand mark)", asset, got)
-		}
+	if got := strings.Count(body, "data-brand-mark"); got != 2 {
+		t.Errorf("brand mark rendered %d times, want exactly 2 (header lockup + hero — controls must not wear the brand)", got)
+	}
+	// The Pezza emblem is a different brand and must never reappear here.
+	if strings.Contains(body, "emblem-") {
+		t.Error("page references the retired Pezza emblem assets")
 	}
 }

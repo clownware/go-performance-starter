@@ -1,0 +1,21 @@
+package components
+
+// BrandMark is the go-performance-starter mark: a lightning bolt between
+// angle brackets — fast hypermedia, rendered server-side. It draws in
+// currentColor so it themes with its context (no light/dark asset pair),
+// and data-brand-mark lets tests pin where the brand may appear: brand
+// placements only, never on functional controls.
+templ BrandMark(class string) {
+	<svg
+		data-brand-mark
+		class={ class }
+		viewBox="0 0 32 32"
+		fill="none"
+		xmlns="http://www.w3.org/2000/svg"
+		aria-hidden="true"
+	>
+		<path d="M11 7 4 16l7 9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+		<path d="M21 7l7 9-7 9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+		<path d="M18 5 12 17.5h3.5L14 27l6-12.5h-3.5L18 5Z" fill="currentColor"></path>
+	</svg>
+}

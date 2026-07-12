@@ -2,6 +2,7 @@ package pages
 
 import (
 	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/components"
 	"github.com/clownware/go-performance-starter/internal/view/layouts"
 )
 
@@ -48,8 +49,9 @@ func homeSurfaces() []surface {
 templ HomePage(props HomePageProps) {
 	@layouts.Base(props.BaseProps) {
 		<section class="max-w-3xl mx-auto text-center py-8">
-			<img src="/static/img/emblem-black.svg" alt="" aria-hidden="true" class="h-16 w-auto mx-auto mb-6 dark:hidden" width="145" height="162"/>
-			<img src="/static/img/emblem-white.svg" alt="" aria-hidden="true" class="h-16 w-auto mx-auto mb-6 hidden dark:block" width="145" height="162"/>
+			<div class="flex justify-center mb-6">
+				@components.BrandMark("h-16 w-16 text-primary-600")
+			</div>
 			<h1 class="text-3xl font-bold mb-3">Go Performance Starter</h1>
 			<p class="text-gray-500 dark:text-gray-400 mb-6 max-w-xl mx-auto">
 				A server-rendered Go + HTMX starter that proves its own architecture:

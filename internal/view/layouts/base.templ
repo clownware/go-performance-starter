@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/components"
 	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
@@ -86,7 +87,8 @@ templ Base(props view.BaseProps) {
 			<!-- CSS -->
 			<link rel="stylesheet" href="/static/css/app.css"/>
 			<link rel="stylesheet" href="/static/css/semantic-colors.css"/>
-			<!-- Favicon -->
+			<!-- Favicon: the mark glyph (bolt on teal); SVG first, PNG fallback -->
+			<link rel="icon" type="image/svg+xml" href="/static/img/mark.svg"/>
 			<link rel="icon" type="image/png" href="/static/img/favicon.png"/>
 			<!-- HTMX -->
 			<script src="/static/js/htmx.min.js" defer></script>
@@ -129,8 +131,7 @@ templ header(props view.BaseProps) {
 					     phones). The mark appears here and nowhere else in the chrome —
 					     controls use functional icons, the footer uses the wordmark. -->
 					<a href="/" class="flex items-center gap-2" aria-label="Go Performance Starter — home">
-						<img src="/static/img/emblem-black.svg" alt="Go Performance Starter" class="h-7 w-auto dark:hidden" width="145" height="162"/>
-						<img src="/static/img/emblem-white.svg" alt="" aria-hidden="true" class="h-7 w-auto hidden dark:block" width="145" height="162"/>
+						@components.BrandMark("h-7 w-7 text-primary-600")
 						<span class="text-xl font-bold text-primary-600 whitespace-nowrap hidden sm:inline">
 							Go Performance Starter
 						</span>

@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/components"
 	"github.com/clownware/go-performance-starter/internal/view/layouts"
 )
 
@@ -86,56 +87,64 @@ func HomePage(props HomePageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"max-w-3xl mx-auto text-center py-8\"><img src=\"/static/img/emblem-black.svg\" alt=\"\" aria-hidden=\"true\" class=\"h-16 w-auto mx-auto mb-6 dark:hidden\" width=\"145\" height=\"162\"> <img src=\"/static/img/emblem-white.svg\" alt=\"\" aria-hidden=\"true\" class=\"h-16 w-auto mx-auto mb-6 hidden dark:block\" width=\"145\" height=\"162\"><h1 class=\"text-3xl font-bold mb-3\">Go Performance Starter</h1><p class=\"text-gray-500 dark:text-gray-400 mb-6 max-w-xl mx-auto\">A server-rendered Go + HTMX starter that proves its own architecture: typed templates, RLS-scoped data access, and performance budgets enforced in CI — demonstrated live by the surfaces below.</p><div class=\"flex flex-wrap justify-center gap-3 mb-12\"><a href=\"/patterns\" class=\"btn btn-primary inline-block\">Explore the patterns</a> <a href=\"https://github.com/clownware/go-performance-starter\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"btn btn-secondary inline-block\">View on GitHub</a></div></section><section data-testid=\"surface-directory\" aria-label=\"Demo surfaces\" class=\"max-w-3xl mx-auto grid gap-4 sm:grid-cols-2 pb-8\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"max-w-3xl mx-auto text-center py-8\"><div class=\"flex justify-center mb-6\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.BrandMark("h-16 w-16 text-primary-600").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><h1 class=\"text-3xl font-bold mb-3\">Go Performance Starter</h1><p class=\"text-gray-500 dark:text-gray-400 mb-6 max-w-xl mx-auto\">A server-rendered Go + HTMX starter that proves its own architecture: typed templates, RLS-scoped data access, and performance budgets enforced in CI — demonstrated live by the surfaces below.</p><div class=\"flex flex-wrap justify-center gap-3 mb-12\"><a href=\"/patterns\" class=\"btn btn-primary inline-block\">Explore the patterns</a> <a href=\"https://github.com/clownware/go-performance-starter\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"btn btn-secondary inline-block\">View on GitHub</a></div></section><section data-testid=\"surface-directory\" aria-label=\"Demo surfaces\" class=\"max-w-3xl mx-auto grid gap-4 sm:grid-cols-2 pb-8\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, s := range homeSurfaces() {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a data-testid=\"surface-card\" href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a data-testid=\"surface-card\" href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 68, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 70, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"block bg-surface dark:bg-surface-dark rounded-lg shadow-md p-5 hover:shadow-lg border border-transparent hover:border-primary transition-shadow\"><h2 class=\"text-lg font-semibold mb-1 text-primary-600\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"block bg-surface dark:bg-surface-dark rounded-lg shadow-md p-5 hover:shadow-lg border border-transparent hover:border-primary transition-shadow\"><h2 class=\"text-lg font-semibold mb-1 text-primary-600\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 71, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 73, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h2><p class=\"text-sm text-gray-500 dark:text-gray-400\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h2><p class=\"text-sm text-gray-500 dark:text-gray-400\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(s.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 72, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 74, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></a>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</p></a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</section>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
