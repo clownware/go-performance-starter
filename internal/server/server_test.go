@@ -237,4 +237,10 @@ func TestServer_AssetCacheBusting(t *testing.T) {
 	if strings.Contains(body, "semantic-colors.css") {
 		t.Error("page still references the retired semantic-colors.css")
 	}
+	// No global loading overlay: it flashed the full screen on every HTMX
+	// fragment swap. In-flight feedback is per-element (.htmx-request,
+	// hx-indicator, hx-disabled-elt).
+	if strings.Contains(body, "global-loading") {
+		t.Error("page still renders the retired full-screen loading overlay")
+	}
 }

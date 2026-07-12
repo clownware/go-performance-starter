@@ -192,5 +192,84 @@ templ patternDemo(slug string) {
 				</button>
 				<div id="bulk-demo-result" aria-live="polite"></div>
 			</form>
+		case "polling":
+			<div hx-get="/patterns/api/time" hx-trigger="load, every 5s" hx-swap="innerHTML" aria-live="off">
+				<span class="text-sm text-muted-foreground">Fetching server time...</span>
+			</div>
+		case "oob-swap":
+			<div class="flex items-center justify-between gap-4">
+				@partials.PatternCounterButton(partials.PatternCounterProps{Count: 0})
+				@partials.PatternCounterBadge(0, false)
+			</div>
+			<p class="mt-3 text-xs text-muted-foreground">
+				The badge is a separate region — it updates via hx-swap-oob in the button's response.
+			</p>
+		case "confirm-delete":
+			<div>
+				<button
+					hx-post="/patterns/api/confirm"
+					hx-confirm="Delete this demo item?"
+					hx-disabled-elt="this"
+					hx-target="closest div"
+					hx-swap="innerHTML"
+					class="btn btn-danger"
+				>
+					Delete item
+				</button>
+			</div>
+		case "view-transitions":
+			<div id="vt-card">
+				@partials.PatternTransitionCard(0)
+			</div>
+		case "loading-states":
+			<div class="flex items-center gap-3">
+				<button
+					hx-get="/patterns/api/slow"
+					hx-indicator="#slow-spin"
+					hx-disabled-elt="this"
+					hx-target="#slow-out"
+					class="btn btn-primary"
+				>
+					Load slowly
+				</button>
+				<span id="slow-spin" class="htmx-indicator text-sm text-muted-foreground">Working...</span>
+			</div>
+			<div id="slow-out" class="mt-3" aria-live="polite"></div>
+		case "modal":
+			<div x-data="{ open: false }">
+				<button @click="open = true" class="btn btn-primary">Open modal</button>
+				<template x-teleport="body">
+					<div x-show="open" x-cloak @keydown.escape.window="open = false" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+						<div @click="open = false" class="absolute inset-0 bg-night/60" aria-hidden="true"></div>
+						<div
+							role="dialog"
+							aria-modal="true"
+							aria-labelledby="demo-modal-title"
+							x-show="open"
+							x-transition
+							class="relative bg-surface text-foreground rounded-lg shadow-lg p-6 max-w-sm w-full"
+						>
+							<h3 id="demo-modal-title" class="text-lg font-semibold mb-2">Teleported modal</h3>
+							<p class="text-sm text-muted-foreground mb-4">
+								This dialog lives at the end of <code>&lt;body&gt;</code> via x-teleport,
+								so no ancestor stacking context can clip it. Escape or the backdrop closes it.
+							</p>
+							<button @click="open = false" class="btn btn-secondary">Close</button>
+						</div>
+					</div>
+				</template>
+			</div>
+		case "global-store":
+			<div class="flex items-center justify-between gap-4">
+				<div x-data="{}">
+					<button @click="$store.demo.inc()" class="btn btn-primary">+1 from component A</button>
+				</div>
+				<div x-data="{}" class="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary tabular-nums">
+					Component B sees: <span x-text="$store.demo.count"></span>
+				</div>
+			</div>
+			<p class="mt-3 text-xs text-muted-foreground">
+				Two unrelated x-data islands sharing one Alpine.store registered in app.js.
+			</p>
 	}
 }

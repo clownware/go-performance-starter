@@ -108,6 +108,17 @@
   }
 }
 
+/* Per-element in-flight feedback: htmx adds .htmx-request to the triggering
+   element for the duration of the request. This replaces the removed global
+   overlay, which flashed the whole screen on every fragment swap. */
+@layer components {
+  button.htmx-request,
+  form.htmx-request button[type="submit"] {
+    opacity: 0.65;
+    cursor: progress;
+  }
+}
+
 /* Custom utilities */
 @utility text-shadow {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

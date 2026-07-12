@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -35,6 +38,11 @@ func PatternsRoutes(r chi.Router) {
 		api.Get("/skeleton", PatternSkeleton)
 		api.Get("/tab/{name}", PatternTab)
 		api.Post("/bulk", PatternBulk)
+		api.Get("/time", PatternTime)             // polling tick
+		api.Post("/counter", PatternCounter)      // out-of-band swap
+		api.Post("/confirm", PatternConfirm)      // hx-confirm + hx-disabled-elt
+		api.Get("/transition", PatternTransition) // View Transitions swap
+		api.Get("/slow", PatternSlow)             // hx-indicator + hx-disabled-elt
 	})
 }
 
@@ -235,6 +243,110 @@ count := len(r.Form["selected"])
 view.Render(w, r, http.StatusOK,
   partials.PatternBulkResult(count))`,
 	},
+	{
+		Slug:         "polling",
+		Title:        "Polling",
+		Summary:      "A live server value without WebSockets: the element re-fetches itself on a fixed interval — the whole real-time stack is one attribute.",
+		HTMXFeatures: []string{`hx-trigger="load, every 5s"`, "hx-get"},
+		TemplSource: `<div hx-get="/patterns/api/time"
+  hx-trigger="load, every 5s"
+  hx-swap="innerHTML">...</div>`,
+		HandlerSource: `now := time.Now().Format("15:04:05")
+view.Render(w, r, http.StatusOK,
+  partials.PatternTimeTick(now, load))`,
+	},
+	{
+		Slug:         "oob-swap",
+		Title:        "Out-of-band swap",
+		Summary:      "One response updates two regions: the button replaces itself, and a badge elsewhere updates via hx-swap-oob riding the same payload.",
+		HTMXFeatures: []string{"hx-swap-oob", "hx-vals", `hx-swap="outerHTML"`},
+		TemplSource: `<!-- response contains BOTH: -->
+<button id="oob-counter-btn" ...>Add item</button>
+<span id="oob-total" hx-swap-oob="true">
+  3 added
+</span>`,
+		HandlerSource: `count, _ := strconv.Atoi(r.FormValue("count"))
+view.Render(w, r, http.StatusOK,
+  partials.PatternCounterResponse(
+    partials.PatternCounterProps{Count: count + 1}))`,
+	},
+	{
+		Slug:         "confirm-delete",
+		Title:        "Confirm + disabled button",
+		Summary:      "hx-confirm gates the request behind a native confirm dialog; hx-disabled-elt holds the button while the request runs.",
+		HTMXFeatures: []string{"hx-confirm", `hx-disabled-elt="this"`, "hx-post"},
+		TemplSource: `<button hx-post="/patterns/api/confirm"
+  hx-confirm="Delete this demo item?"
+  hx-disabled-elt="this"
+  hx-target="closest div">Delete item</button>`,
+		HandlerSource: `// The interesting part happens client-side
+// before this runs.
+view.Render(w, r, http.StatusOK,
+  partials.PatternConfirmResult())`,
+	},
+	{
+		Slug:         "view-transitions",
+		Title:        "View Transitions",
+		Summary:      "transition:true on the swap animates it through the browser's View Transitions API — cross-fade with zero animation code, instant fallback elsewhere.",
+		HTMXFeatures: []string{`hx-swap="innerHTML transition:true"`},
+		TemplSource: `<button hx-get="/patterns/api/transition?step=1"
+  hx-target="#vt-card"
+  hx-swap="innerHTML transition:true">
+  Next card
+</button>`,
+		HandlerSource: `step, _ := strconv.Atoi(r.URL.Query().Get("step"))
+view.Render(w, r, http.StatusOK,
+  partials.PatternTransitionCard(step))`,
+	},
+	{
+		Slug:         "loading-states",
+		Title:        "Loading states",
+		Summary:      "The right way to show in-flight work: a per-element spinner (hx-indicator) and a disabled trigger (hx-disabled-elt) — never a full-screen overlay.",
+		HTMXFeatures: []string{"hx-indicator", `hx-disabled-elt="this"`},
+		TemplSource: `<button hx-get="/patterns/api/slow"
+  hx-indicator="#slow-spin"
+  hx-disabled-elt="this"
+  hx-target="#slow-out">Load slowly</button>
+<span id="slow-spin" class="htmx-indicator">
+  Working...
+</span>`,
+		HandlerSource: `// Deliberate delay so there is something
+// to indicate (capped at 1.5s).
+time.Sleep(delay)
+view.Render(w, r, http.StatusOK,
+  partials.PatternSlowContent())`,
+	},
+	{
+		Slug:           "modal",
+		Title:          "Modal (teleport)",
+		Summary:        "An accessible Alpine modal: x-teleport lifts it to <body> so no ancestor clips it, Escape and backdrop close it, focus lands inside.",
+		AlpineFeatures: []string{"x-teleport", "x-show", "@keydown.escape.window", "x-transition"},
+		TemplSource: `<button @click="open = true">Open modal</button>
+<template x-teleport="body">
+  <div x-show="open" @keydown.escape.window="open = false">
+    <div @click="open = false" class="backdrop"></div>
+    <div role="dialog" aria-modal="true">...</div>
+  </div>
+</template>`,
+		HandlerSource: `// No handler — entirely client-side.
+// Server-rendered pages still work without
+// it: the modal content is enhancement.`,
+	},
+	{
+		Slug:           "global-store",
+		Title:          "Global store",
+		Summary:        "Alpine.store shares state across unrelated components: two separate x-data islands read and write one store registered in app.js.",
+		AlpineFeatures: []string{"Alpine.store", "$store", "x-text"},
+		TemplSource: `<!-- two unrelated components: -->
+<button @click="$store.demo.inc()">+1</button>
+...
+<span x-text="$store.demo.count"></span>`,
+		HandlerSource: `// app.js, at alpine:init:
+Alpine.store("demo", {
+  count: 0,
+  inc() { this.count++ },
+})`,
+	},
 }
 
 // patternTabs is the content served by the server-loaded tabs demo.
@@ -363,6 +475,57 @@ func PatternBulk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderPattern(w, r, "bulk", partials.PatternBulkResult(len(r.Form["selected"])))
+}
+
+// PatternTime serves one polling tick (client re-requests every 5s).
+func PatternTime(w http.ResponseWriter, r *http.Request) {
+	now := time.Now().Format("15:04:05")
+	load := fmt.Sprintf("goroutines: %d", runtime.NumGoroutine())
+	renderPattern(w, r, "time", partials.PatternTimeTick(now, load))
+}
+
+// PatternCounter answers with the incremented button AND an out-of-band
+// badge update — one response, two swapped regions. State rides in hx-vals
+// so the endpoint stays stateless like the favorite toggle.
+func PatternCounter(w http.ResponseWriter, r *http.Request) {
+	count, _ := strconv.Atoi(r.FormValue("count"))
+	if count < 0 || count > 1_000_000 {
+		count = 0
+	}
+	renderPattern(w, r, "counter", partials.PatternCounterResponse(partials.PatternCounterProps{Count: count + 1}))
+}
+
+// PatternConfirm serves the post-confirmation state; the interesting part
+// (hx-confirm, hx-disabled-elt) happens client-side before this runs.
+func PatternConfirm(w http.ResponseWriter, r *http.Request) {
+	renderPattern(w, r, "confirm", partials.PatternConfirmResult())
+}
+
+// PatternTransition serves the next card for the View Transitions demo.
+func PatternTransition(w http.ResponseWriter, r *http.Request) {
+	step, _ := strconv.Atoi(r.URL.Query().Get("step"))
+	if step < 0 {
+		step = 0
+	}
+	renderPattern(w, r, "transition", partials.PatternTransitionCard(step))
+}
+
+// PatternSlow delays server-side so hx-indicator/hx-disabled-elt have
+// something to indicate. The delay is capped and overridable (tests pass 0).
+func PatternSlow(w http.ResponseWriter, r *http.Request) {
+	delay := 800
+	if d, err := strconv.Atoi(r.URL.Query().Get("delay")); err == nil && d >= 0 {
+		delay = d
+	}
+	if delay > 1500 {
+		delay = 1500
+	}
+	select {
+	case <-time.After(time.Duration(delay) * time.Millisecond):
+	case <-r.Context().Done():
+		return
+	}
+	renderPattern(w, r, "slow", partials.PatternSlowContent())
 }
 
 // renderPattern renders a demo fragment, logging render failures like every

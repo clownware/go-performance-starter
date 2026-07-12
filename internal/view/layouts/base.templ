@@ -96,6 +96,11 @@ templ Base(props view.BaseProps) {
 			<link rel="icon" type="image/png" href={ view.AssetURL("/static/img/favicon.png") }/>
 			<!-- HTMX -->
 			<script src={ view.AssetURL("/static/js/htmx.min.js") } defer></script>
+			<!-- App scripts BEFORE Alpine: with defer, Alpine starts the moment
+			     it executes and fires alpine:init immediately — app.js must have
+			     its listener (Alpine.data/store registrations) in place first.
+			     Inline scripts stay CSP-forbidden (ADR-028). -->
+			<script src={ view.AssetURL("/static/js/app.js") } defer></script>
 			<!-- Alpine.js -->
 			<script src={ view.AssetURL("/static/js/alpine.min.js") } defer></script>
 		</head>
@@ -117,10 +122,10 @@ templ Base(props view.BaseProps) {
 				</div>
 			</main>
 			@footer(props)
-			<!-- App scripts: all behavior lives in external files or Alpine
-			     attributes; inline script blocks are CSP-forbidden (ADR-028) -->
-			<script src={ view.AssetURL("/static/js/app.js") } defer></script>
-			@htmxLoadingIndicator()
+			<!-- app.js loads in <head> before Alpine (registration ordering).
+			     No global loading overlay here either: a full-screen flash on
+			     every fragment swap is an HTMX anti-pattern — in-flight feedback
+			     is per-element (.htmx-request, hx-indicator, hx-disabled-elt). -->
 			@toastNotifications()
 		</body>
 	</html>
@@ -252,15 +257,6 @@ templ footer(props view.BaseProps) {
 			</div>
 		</div>
 	</footer>
-}
-
-// htmxLoadingIndicator is the overlay app.js toggles on htmx:beforeRequest /
-// htmx:afterRequest (the listeners live there — inline scripts are
-// CSP-forbidden per ADR-028).
-templ htmxLoadingIndicator() {
-	<div id="global-loading" class="hidden fixed inset-0 bg-night/50 flex items-center justify-center z-50">
-		<div class="text-white font-semibold">Loading...</div>
-	</div>
 }
 
 templ toastNotifications() {
