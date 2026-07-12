@@ -214,6 +214,7 @@ func (s *Server) setupRoutes() {
 			// limiter (ADR-024 accompanying constraints).
 			learn.Use(mw.RateLimiter(30.0/60.0, 20))
 			handler.QuizRoutes(learn, postgres.NewQuizRepo(s.db, database.New(s.db)))
+			handler.FlashcardRoutes(learn, postgres.NewFlashcardRepo(s.db, database.New(s.db)))
 		})
 	}
 
