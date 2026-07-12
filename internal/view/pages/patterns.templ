@@ -148,23 +148,25 @@ templ patternDemo(slug string) {
 				@partials.PatternEditDisplay(partials.PatternEditProps{ID: "1", Value: "Click me, then save your edit"})
 			</div>
 		case "inline-validation":
-			<form x-data="{ email: '' }" class="space-y-2" @submit.prevent="">
+			<form x-data="{ email: '', touched: false }" class="space-y-2" @submit.prevent="">
 				<label for="inline-validation-email" class="block text-sm">Email</label>
-				<input id="inline-validation-email" type="email" x-model="email" class="input w-full" placeholder="you@example.com"/>
-				<p x-show="email.length > 0 && !email.includes('@')" class="text-danger text-sm" role="alert">
+				<input id="inline-validation-email" type="email" x-model="email" @blur="touched = true" class="input w-full" placeholder="you@example.com"/>
+				<p x-show="touched && email.length > 0 && !email.includes('@')" x-cloak class="text-danger text-sm" role="alert">
 					That doesn't look like an email address.
 				</p>
 				<p class="text-xs text-muted-foreground">
-					Alpine checks as you type; the same rules run server-side on submit (the profile form is the full round trip).
+					Alpine flags the field after you leave it — not on the first keystroke — and the error clears live as you fix it. The same rules run server-side on submit (the profile form is the full round trip).
 				</p>
 			</form>
 		case "optimistic-ui":
 			@partials.PatternFavoriteButton(partials.PatternFavoriteProps{ID: "1", Favorited: false})
 		case "infinite-scroll":
+			<!-- "revealed" only watches the window scroll, so it never fires
+			     inside this overflow container — intersect observes correctly -->
 			<ul class="divide-y divide-border max-h-48 overflow-y-auto" aria-label="Infinite scroll demo">
 				<li
 					hx-get="/patterns/api/scroll?page=1"
-					hx-trigger="revealed"
+					hx-trigger="intersect once"
 					hx-swap="outerHTML"
 					class="py-2 text-center text-muted-foreground"
 				>
@@ -247,17 +249,47 @@ templ patternDemo(slug string) {
 				The badge is a separate region — it updates via hx-swap-oob in the button's response.
 			</p>
 		case "confirm-delete":
-			<div>
-				<button
-					hx-post="/patterns/api/confirm"
-					hx-confirm="Delete this demo item?"
-					hx-disabled-elt="this"
-					hx-target="closest div"
-					hx-swap="innerHTML"
-					class="btn btn-danger"
-				>
-					Delete item
-				</button>
+			<!-- htmx:confirm pauses the request; the styled dialog resumes it
+			     via issueRequest(true). hx-confirm stays on as the no-Alpine
+			     fallback (native confirm) — with the intercept it never fires. -->
+			<div
+				x-data="{ open: false, issue: null }"
+				@htmx:confirm.prevent="issue = $event.detail.issueRequest; open = true"
+			>
+				<div id="confirm-demo-target">
+					<button
+						hx-post="/patterns/api/confirm"
+						hx-confirm="Delete this demo item?"
+						hx-disabled-elt="this"
+						hx-target="#confirm-demo-target"
+						hx-swap="innerHTML"
+						class="btn btn-danger"
+					>
+						Delete item
+					</button>
+				</div>
+				<template x-teleport="body">
+					<div x-show="open" x-cloak @keydown.escape.window="open = false" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+						<div @click="open = false" class="absolute inset-0 bg-night/60" aria-hidden="true"></div>
+						<div
+							role="alertdialog"
+							aria-modal="true"
+							aria-labelledby="confirm-demo-title"
+							x-show="open"
+							x-transition
+							class="relative bg-surface text-foreground rounded-lg shadow-lg p-6 max-w-sm w-full"
+						>
+							<h3 id="confirm-demo-title" class="text-lg font-semibold mb-2">Delete this demo item?</h3>
+							<p class="text-sm text-muted-foreground mb-4">
+								The request is paused on the htmx:confirm event — Delete resumes it, Cancel drops it.
+							</p>
+							<div class="flex justify-end gap-2">
+								<button @click="open = false" class="btn btn-secondary">Cancel</button>
+								<button @click="open = false; issue(true)" class="btn btn-danger">Delete</button>
+							</div>
+						</div>
+					</div>
+				</template>
 			</div>
 		case "view-transitions":
 			<div id="vt-card">

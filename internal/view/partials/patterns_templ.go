@@ -426,7 +426,7 @@ func PatternScrollPage(props PatternScrollProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" hx-trigger=\"revealed\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-muted-foreground\">Loading more...</li>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" hx-trigger=\"intersect once\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-muted-foreground\">Loading more...</li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -808,7 +808,7 @@ func PatternConfirmResult() templ.Component {
 			templ_7745c5c3_Var34 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<div class=\"p-3 rounded-md bg-success/10 text-success text-sm\" role=\"status\">Deleted - hx-confirm gated the request and hx-disabled-elt held the button while it ran.</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<div class=\"p-3 rounded-md bg-success/10 text-success text-sm\" role=\"status\">Deleted - the htmx:confirm dialog gated the request and hx-disabled-elt held the button while it ran.</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

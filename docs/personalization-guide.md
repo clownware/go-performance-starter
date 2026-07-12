@@ -68,6 +68,10 @@ The manifest is this template's public consumption contract ([ADR-030](adr/ADR-0
 
 "Go Performance Starter" renders in `internal/view/layouts/base.templ` (page title, meta description, header, footer) and the logo mark lives in `internal/view/components/brand.templ`. Change them, then `task templ:generate`.
 
+### Brand colors (one file)
+
+The palette is a role-based token system ([design-system.md](design-system.md)): swap the five base color values in `input.css`'s `@theme` block and every component follows — no view-layer edits, and `task ci` catches anything that bypassed the tokens.
+
 ### Demo surfaces
 
 `/patterns`, the explainer, and the quiz/flashcards exist to prove the stack ([ADR-024](adr/ADR-024-Demo-Application-Direction.md)); the README's [load-bearing table](../README.md#whats-load-bearing-vs-removable) marks them **replaceable**. The quiz/flashcard handlers are the reference implementation for RLS-scoped CRUD — read them before deleting them.

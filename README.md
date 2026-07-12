@@ -14,6 +14,7 @@ A Go + HTMX SaaS starter built for **agent-assisted development** — a layered 
 - **Type-safe templates** -- templ compiles HTML to Go; typed props, no `map[string]interface{}` (see [ADR-017](docs/adr/ADR-017-Templ-Adoption.md))
 - **Type-safe SQL** -- sqlc code generation with repository pattern
 - **Performance budgets** -- CI-enforced binary size, gzipped asset budgets, and memory limits
+- **Role-based design system** -- semantic tokens (`bg-surface`, `text-muted-foreground`, ...) with dark mode flipping tokens instead of components, CI-enforced against raw grays and `dark:` drift; restyle the whole app from one `@theme` block ([docs/design-system.md](docs/design-system.md), [ADR-029](docs/adr/ADR-029-Role-Based-Design-Tokens.md))
 - **Agentic discipline** -- a layered AI constitution and halt-on-violation quality gate (see below)
 - **Observability** -- Prometheus metrics, structured logging (log/slog), health checks
 - **Developer experience** -- Hot reload (air), Taskfile automation, golangci-lint, CI/CD
