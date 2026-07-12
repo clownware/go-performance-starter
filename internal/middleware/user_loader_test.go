@@ -45,6 +45,9 @@ func (f *fakeUserRepo) List(ctx context.Context, limit, offset int32) ([]databas
 func (f *fakeUserRepo) Update(ctx context.Context, params database.UpdateUserParams) (*database.User, error) {
 	return nil, repository.ErrNotFound
 }
+func (f *fakeUserRepo) UpdateName(ctx context.Context, id uuid.UUID, name string) (*database.User, error) {
+	return nil, repository.ErrNotFound
+}
 func (f *fakeUserRepo) Delete(ctx context.Context, id uuid.UUID) error { return nil }
 func (f *fakeUserRepo) SetLastLogin(ctx context.Context, id uuid.UUID, loginTime time.Time) error {
 	return nil

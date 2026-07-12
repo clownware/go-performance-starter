@@ -60,6 +60,10 @@ type Querier interface {
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (Organization, error)
 	UpdateOrganizationMember(ctx context.Context, arg UpdateOrganizationMemberParams) (OrganizationMember, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	// Profile self-service rename (#70). Deliberately narrow — the generic
+	// UpdateUser's COALESCE params make a name-only change thread every other
+	// column through untouched.
+	UpdateUserName(ctx context.Context, arg UpdateUserNameParams) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

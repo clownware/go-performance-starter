@@ -109,6 +109,23 @@ func (r *UserRepo) Update(ctx context.Context, params database.UpdateUserParams)
 	return &user, nil
 }
 
+// UpdateName sets the user's display name (profile self-service, #70).
+func (r *UserRepo) UpdateName(ctx context.Context, id uuid.UUID, name string) (*database.User, error) {
+	user, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.User, error) {
+		return q.UpdateUserName(ctx, database.UpdateUserNameParams{
+			ID:   id,
+			Name: pgtype.Text{String: name, Valid: true},
+		})
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, repository.ErrNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 // Delete soft-deletes a user by setting is_active to false.
 func (r *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (struct{}, error) {

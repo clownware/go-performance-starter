@@ -54,6 +54,15 @@ WHERE id = $1;
 DELETE FROM users
 WHERE id = $1;
 
+-- name: UpdateUserName :one
+-- Profile self-service rename (#70). Deliberately narrow — the generic
+-- UpdateUser's COALESCE params make a name-only change thread every other
+-- column through untouched.
+UPDATE users
+SET name = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous;
+
 -- name: SetUserFirstRunComplete :exec
 UPDATE users
 SET first_run_complete = $2, updated_at = NOW()

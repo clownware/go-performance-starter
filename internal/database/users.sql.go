@@ -302,3 +302,37 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	)
 	return i, err
 }
+
+const updateUserName = `-- name: UpdateUserName :one
+UPDATE users
+SET name = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
+`
+
+type UpdateUserNameParams struct {
+	ID   uuid.UUID   `json:"id"`
+	Name pgtype.Text `json:"name"`
+}
+
+// Profile self-service rename (#70). Deliberately narrow — the generic
+// UpdateUser's COALESCE params make a name-only change thread every other
+// column through untouched.
+func (q *Queries) UpdateUserName(ctx context.Context, arg UpdateUserNameParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserName, arg.ID, arg.Name)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.AvatarUrl,
+		&i.AuthID,
+		&i.IsActive,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.FirstRunComplete,
+		&i.IsAnonymous,
+	)
+	return i, err
+}
