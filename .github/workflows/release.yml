@@ -36,6 +36,8 @@ jobs:
           context: .
           load: true
           tags: local/app:budget-check
+          build-args: |
+            VERSION=${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -58,6 +60,8 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
           cache-from: type=gha
 
       - name: Create GitHub release

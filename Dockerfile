@@ -47,8 +47,12 @@ RUN templ generate
 # -s: strip symbol table
 # -w: strip DWARF debug info
 # -trimpath: remove file system paths from executable
+# VERSION comes from the build arg (.git is dockerignored, so git describe
+# can't run in this context); the release workflow passes the tag, local
+# builds keep the fallback and the app stamps assets from process start.
+ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo 'dev')" \
+    -ldflags="-s -w -X main.version=${VERSION}" \
     -trimpath \
     -o app \
     ./cmd/api
