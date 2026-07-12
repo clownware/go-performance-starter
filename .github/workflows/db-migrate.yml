@@ -30,7 +30,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Bootstrap auth stub (vanilla Postgres lacks Supabase's auth schema)
         run: |
@@ -52,7 +52,7 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Skip when no database secret is configured
         if: env.DATABASE_URL == ''
