@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-12
+
+Identity for the project and a browse-first front door: an original brand
+mark, a real landing page, a proper auth card, and previews that explain the
+sign-in instead of demanding it.
+
+### Added
+- **Original brand mark** — a lightning bolt between angle brackets (fast
+  hypermedia, server-rendered) as a `currentColor` templ component; bolt-on-
+  teal favicon (SVG + PNG). Brand rules pinned by test: lockup in the header
+  (mark-only on phones), mark + wordmark in the hero, wordmark in the footer,
+  and never on functional controls
+- **Home landing page**: hero with tagline and CTAs plus a four-card
+  directory of the demo surfaces — the navigational spine until the full
+  ADR-024 explainer lands
+- **Signed-out teasers** for `/learn/quiz` and `/learn/flashcards`: new
+  `OptionalAuth`/`OptionalUserLoader` middlewares pass anonymous GETs
+  through so the pages can preview what's inside and why it needs an
+  identity (RLS-scoped per-user rows) with sign-in CTAs; mutations still
+  redirect
+
+### Changed
+- Auth page is a single tabbed card (login default, signup one tab away);
+  the active tab is server-rendered via `?mode` links so it works without
+  JS, with Alpine upgrading the switch
+- Dark-mode toggle wears sun/moon icons reflecting the current mode — it
+  previously dressed the brand emblem in a pill, reading as a second logo
+- Redundant "Home" nav item removed (the brand lockup is the home link)
+
+### Fixed
+- The auth forms posted into `#auth-messages`, which didn't exist; the
+  region now lives in the card
+- The form-validation stub is retired from the home page (the profile form
+  is the server-validation reference)
+
+### Removed
+- The Pezza emblem assets — that mark belongs to a different brand
+
 ## [0.4.1] - 2026-07-12
 
 ### Fixed
