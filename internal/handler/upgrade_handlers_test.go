@@ -56,6 +56,12 @@ func (f *fakeUserRepo) SetAnonymous(_ context.Context, id uuid.UUID, anonymous b
 	return nil
 }
 
+// Update records the email sync that replaces the guest placeholder (#68).
+func (f *fakeUserRepo) Update(_ context.Context, params database.UpdateUserParams) (*database.User, error) {
+	f.updatedEmails = append(f.updatedEmails, params.Email)
+	return &database.User{ID: params.ID, Email: params.Email}, nil
+}
+
 func upgradeRequest(t *testing.T, form string, user *database.User, repo *fakeUserRepo, withCookies bool) *http.Request {
 	t.Helper()
 	req := formRequest("/learn/upgrade", form)
@@ -248,6 +254,12 @@ func TestUpgradeSubmit(t *testing.T) {
 			gotFlip := len(repo.anonymousFlipIDs) == 1 && repo.anonymousFlipIDs[0] == userID
 			if gotFlip != tt.wantAnonFlip {
 				t.Errorf("row promotion = %v (%v), want %v", gotFlip, repo.anonymousFlipIDs, tt.wantAnonFlip)
+			}
+			if tt.wantAnonFlip {
+				// Promotion must also replace the guest placeholder email.
+				if len(repo.updatedEmails) != 1 || repo.updatedEmails[0] != tt.upgrader.gotEmail {
+					t.Errorf("email sync = %v, want [%q]", repo.updatedEmails, tt.upgrader.gotEmail)
+				}
 			}
 			var gotAccess string
 			for _, c := range w.Result().Cookies() {

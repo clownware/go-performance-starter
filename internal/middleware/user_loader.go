@@ -83,6 +83,13 @@ func provisionUser(r *http.Request, repo repository.UserRepository, claims webut
 			params.Name = pgtype.Text{String: name, Valid: true}
 		}
 	}
+	// Anonymous identities carry no email, and users.email is NOT NULL
+	// UNIQUE — a shared "" collides on the second guest ever (live 500s,
+	// 2026-07-12). Use a per-identity placeholder on the reserved .invalid
+	// TLD; the upgrade flow (#68) replaces it with the real address.
+	if params.Email == "" {
+		params.Email = sub + "@guest.invalid"
+	}
 	slog.Info("Provisioning users row for first authenticated request", "sub", sub)
 	return repo.Create(r.Context(), params)
 }

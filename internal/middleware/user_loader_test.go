@@ -72,6 +72,7 @@ func TestUserLoader(t *testing.T) {
 		wantUserEmail string
 		wantCreated   int
 		wantAnonFlip  bool
+		wantEmail     string // email the provisioned row must carry
 	}{
 		{
 			name:       "no claims: unauthorized",
@@ -92,6 +93,17 @@ func TestUserLoader(t *testing.T) {
 			repo:        &fakeUserRepo{byAuthID: map[string]*database.User{}},
 			wantStatus:  http.StatusOK,
 			wantCreated: 1,
+		},
+		{
+			// Anonymous identities have no email, and users.email is NOT
+			// NULL UNIQUE — a shared "" collides on the second guest ever
+			// (live 500s, 2026-07-12). Provision a per-identity placeholder.
+			name:        "anonymous provision gets a unique placeholder email",
+			claims:      &webutil.AuthClaims{Sub: "guest-sub-2", Role: webutil.RoleAuthenticated, IsAnonymous: true},
+			repo:        &fakeUserRepo{byAuthID: map[string]*database.User{}},
+			wantStatus:  http.StatusOK,
+			wantCreated: 1,
+			wantEmail:   "guest-sub-2@guest.invalid",
 		},
 		{
 			// Upgrade self-heal (#68): a non-anonymous token with a stale
@@ -148,6 +160,11 @@ func TestUserLoader(t *testing.T) {
 				}
 				if got := tt.repo.created[0].AuthID.String; got != tt.claims.Sub {
 					t.Errorf("provisioned auth_id = %q, want claims sub %q", got, tt.claims.Sub)
+				}
+				if tt.wantEmail != "" {
+					if got := tt.repo.created[0].Email; got != tt.wantEmail {
+						t.Errorf("provisioned email = %q, want %q", got, tt.wantEmail)
+					}
 				}
 			}
 			if tt.wantAnonFlip {

@@ -27,6 +27,7 @@ type fakeUserRepo struct {
 	updateNameSeen   bool
 	gotName          string
 	anonymousFlipIDs []uuid.UUID
+	updatedEmails    []string
 }
 
 func (f *fakeUserRepo) UpdateFirstRunComplete(_ context.Context, id uuid.UUID, complete bool) error {
