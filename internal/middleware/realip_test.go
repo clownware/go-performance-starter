@@ -10,11 +10,50 @@ func TestRealIP(t *testing.T) {
 	tests := []struct {
 		name       string
 		trusted    []string
+		ipHeader   string            // CLIENT_IP_HEADER config value
+		headers    map[string]string // extra request headers
 		remoteAddr string
 		xff        string
 		xRealIP    string
 		want       string
 	}{
+		{
+			name: "configured client-IP header wins over XFF from a trusted peer",
+			// Fly appends its own edge IP to XFF, so the right-most
+			// untrusted entry is the edge, not the client — Fly-Client-IP
+			// is the authoritative value (ADR-027 amendment, issue #72).
+			trusted:    []string{"172.16.0.0/12"},
+			ipHeader:   "Fly-Client-IP",
+			headers:    map[string]string{"Fly-Client-IP": "72.251.219.37"},
+			remoteAddr: "172.19.9.185:39154",
+			xff:        "72.251.219.37, 66.241.125.15",
+			want:       "72.251.219.37",
+		},
+		{
+			name:       "configured header from an untrusted peer is ignored",
+			trusted:    []string{"172.16.0.0/12"},
+			ipHeader:   "Fly-Client-IP",
+			headers:    map[string]string{"Fly-Client-IP": "6.6.6.6"},
+			remoteAddr: "203.0.113.7:5555",
+			want:       "203.0.113.7",
+		},
+		{
+			name:       "missing configured header falls back to XFF resolution",
+			trusted:    []string{"172.16.0.0/12"},
+			ipHeader:   "Fly-Client-IP",
+			remoteAddr: "172.19.9.185:39154",
+			xff:        "203.0.113.9",
+			want:       "203.0.113.9",
+		},
+		{
+			name:       "garbage in configured header falls back to XFF resolution",
+			trusted:    []string{"172.16.0.0/12"},
+			ipHeader:   "Fly-Client-IP",
+			headers:    map[string]string{"Fly-Client-IP": "not-an-ip"},
+			remoteAddr: "172.19.9.185:39154",
+			xff:        "203.0.113.9",
+			want:       "203.0.113.9",
+		},
 		{
 			name:       "no trusted proxies ignores forwarded header",
 			trusted:    nil,
@@ -92,7 +131,7 @@ func TestRealIP(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got string
-			h := RealIP(tt.trusted)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			h := RealIP(tt.trusted, tt.ipHeader)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 				got = r.RemoteAddr
 			}))
 
@@ -103,6 +142,9 @@ func TestRealIP(t *testing.T) {
 			}
 			if tt.xRealIP != "" {
 				req.Header.Set("X-Real-IP", tt.xRealIP)
+			}
+			for k, v := range tt.headers {
+				req.Header.Set(k, v)
 			}
 
 			h.ServeHTTP(httptest.NewRecorder(), req)

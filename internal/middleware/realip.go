@@ -19,13 +19,21 @@ import (
 // any client-supplied value, so the left-most entry is attacker-controlled
 // and the right-most untrusted entry is the real client (ADR-027, amended
 // 2026-07-12).
-func RealIP(trustedProxyCIDRs []string) func(http.Handler) http.Handler {
+//
+// clientIPHeader (CLIENT_IP_HEADER) optionally names the edge's authoritative
+// client-IP header — Fly-Client-IP, CF-Connecting-IP — consulted first, still
+// only from a trusted peer. XFF alone cannot recover the client when the
+// edge's own hop IPs aren't enumerable as trusted CIDRs (Fly's anycast edge
+// ranges are undocumented), which live verification on Fly confirmed.
+func RealIP(trustedProxyCIDRs []string, clientIPHeader string) func(http.Handler) http.Handler {
 	trusted := parseCIDRs(trustedProxyCIDRs)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip := hostOnly(r.RemoteAddr)
 			if peerIsTrusted(ip, trusted) {
-				if forwarded := forwardedClientIP(r, trusted); forwarded != "" {
+				if configured := configuredClientIP(r, clientIPHeader); configured != "" {
+					ip = configured
+				} else if forwarded := forwardedClientIP(r, trusted); forwarded != "" {
 					ip = forwarded
 				}
 			}
@@ -33,6 +41,19 @@ func RealIP(trustedProxyCIDRs []string) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// configuredClientIP returns the value of the operator-configured client-IP
+// header when it parses as an IP, "" otherwise (fall back to XFF resolution).
+func configuredClientIP(r *http.Request, header string) string {
+	if header == "" {
+		return ""
+	}
+	v := strings.TrimSpace(r.Header.Get(header))
+	if v == "" || net.ParseIP(v) == nil {
+		return ""
+	}
+	return v
 }
 
 // parseCIDRs converts CIDR strings to networks, skipping blanks. Entries are

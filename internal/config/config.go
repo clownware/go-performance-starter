@@ -25,6 +25,12 @@ type Config struct {
 	// with no token, /metrics is open in dev and hidden in production.
 	MetricsToken string `envconfig:"METRICS_TOKEN"`
 
+	// ClientIPHeader names the edge proxy's authoritative client-IP header
+	// (Fly-Client-IP, CF-Connecting-IP), consulted before X-Forwarded-For —
+	// and still only when the direct peer is a trusted proxy (ADR-027,
+	// amended 2026-07-12). Empty (default) resolves via X-Forwarded-For.
+	ClientIPHeader string `envconfig:"CLIENT_IP_HEADER"`
+
 	// TrustedProxyCIDRs lists the proxy networks whose X-Forwarded-For /
 	// X-Real-IP headers are honored for client-IP resolution (ADR-027).
 	// Empty (default) trusts no forwarded headers — the direct peer IP is
