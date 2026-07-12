@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/clownware/go-performance-starter/internal/auth"
+	"github.com/clownware/go-performance-starter/internal/database"
 	mw "github.com/clownware/go-performance-starter/internal/middleware"
 	"github.com/clownware/go-performance-starter/internal/validate"
 	"github.com/clownware/go-performance-starter/internal/view"
@@ -110,12 +111,16 @@ func UpgradeSubmit(upgrader anonUpgrader, secureCookie bool) http.HandlerFunc {
 			return
 		}
 
-		// Promote the row so the reaper can't touch it. Best-effort: the
-		// loader's claims-sync heals a miss on the next request, after the
-		// session below is refreshed to non-anonymous claims.
+		// Promote the row so the reaper can't touch it, and replace the
+		// guest placeholder email with the real one. Best-effort: the
+		// loader's claims-sync heals a missed promotion on the next request,
+		// after the session below is refreshed to non-anonymous claims.
 		if repo := webutil.GetUserRepoFromContext(r.Context()); repo != nil {
 			if err := repo.SetAnonymous(r.Context(), user.ID, false); err != nil {
 				slog.Error("Failed to promote upgraded users row (loader will heal)", "user_id", user.ID, "error", err)
+			}
+			if _, err := repo.Update(r.Context(), database.UpdateUserParams{ID: user.ID, Email: email}); err != nil {
+				slog.Error("Failed to sync upgraded email to users row", "user_id", user.ID, "error", err)
 			}
 		}
 
