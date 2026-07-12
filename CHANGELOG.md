@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-12
+
+The ADR-024 demo application, live end to end: the visible product finally
+exercises the stack the starter exists to prove — plus the design-review
+fixes that made the client layer actually work in a browser.
+
+### Added
+- **`/patterns` showcase** (ADR-024 surface 2): twelve HTMX/Alpine patterns,
+  each a live demo panel with tabbed templ|handler source; self-contained
+  stub endpoints under `/patterns/api`, no database or auth required
+- **Architecture quiz** at `/learn/quiz` (ADR-024 surface 3): questions
+  served through the RLS-scoped `QuizRepository`, running score, progressive
+  enhancement (full no-JS flow, HTMX card swaps when available)
+- **Flashcards** at `/learn/flashcards`: wrong quiz answers offer a
+  save-as-flashcard; review with flip, mark-known, and idempotent delete —
+  every row RLS-scoped to its owner
+- Migration `000007` seeds ten quiz questions, two per explainer topic,
+  idempotent by slug
+- Primary navigation to the demo surfaces, and a mobile disclosure menu —
+  small screens previously had no navigation at all
+- **ADR-028**: CSP compatibility with Alpine — `script-src` gains
+  `'unsafe-eval'` (Alpine 3's expression engine requires it; every Alpine
+  behavior failed silently before); inline scripts remain forbidden and a
+  server test now pins that
+
+### Changed
+- README repositioned: leads with agent-assisted development and proven RLS
+  multi-tenancy; new "Supabase Is a Committed Bet" and "What's Load-Bearing
+  vs. Removable" sections (pointer added to ADR-019)
+- Unauthenticated browser navigation to protected pages redirects to the
+  login page instead of a plain-text 401 (HTMX keeps 401 + `HX-Redirect`)
+- Header brand corrected to "Go Performance Starter"
+
+### Removed
+- The pre-ADR-024 stubs: the in-memory Items demo (handlers, map store,
+  views) and the hardcoded `/api` JSON handlers ("Stub User", org1/org2) —
+  a routing test pins `/items` and `/api/*` as retired
+
+### Fixed
+- `[x-cloak]` CSS rule added — the attribute was used but never defined, so
+  hidden panels flashed on load
+- Base layout's inline scripts moved to `app.js` (they were CSP-blocked)
+
 ## [0.3.1] - 2026-07-11
 
 First release deployed against hosted Supabase: security-audit fixes, the
