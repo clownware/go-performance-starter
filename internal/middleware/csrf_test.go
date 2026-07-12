@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 // okHandler records that it ran and exposes the CSRF token from context.

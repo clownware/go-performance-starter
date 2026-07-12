@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/auth"
+	"github.com/clownware/go-performance-starter/internal/auth"
 )
 
 // newFakeGoTrue stands up an httptest server faking the GoTrue REST API and

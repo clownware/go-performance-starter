@@ -8,7 +8,7 @@ import (
 
 	"github.com/supabase-community/gotrue-go/types"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
+	"github.com/clownware/go-performance-starter/internal/middleware"
 )
 
 // withAuthUser stores a gotrue user in the request context the way

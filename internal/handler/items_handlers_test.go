@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -54,6 +56,30 @@ func TestItemToggle(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestItemToggleConcurrent(t *testing.T) {
+	// Regression guard for the itemStore data race: handlers mutate and read
+	// the package-global map from concurrent requests, so toggles and list
+	// renders must be safe under -race.
+	const workers = 8
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			id := "race-" + strconv.Itoa(n%2) // force key contention
+			req := withURLParam(httptest.NewRequest(http.MethodPost, "/items/"+id+"/toggle", nil), "id", id)
+			ItemToggle(httptest.NewRecorder(), req)
+
+			ItemsList(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/items?page=1", nil))
+		}(i)
+	}
+	wg.Wait()
+
+	for n := 0; n < 2; n++ {
+		delete(itemStore, "race-"+strconv.Itoa(n))
 	}
 }
 

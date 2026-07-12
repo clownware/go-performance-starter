@@ -74,9 +74,10 @@ tasks:
     cmds:
       - task: fmt:check
       - task: lint
-      - go test -race -cover ./...
+      - go test -race -covermode=atomic -coverprofile=coverage.txt ./...
       - task: agents:check
       - task: test:binary-size
+      - task: test:asset-budgets
       - task: scan:vuln
 
   # Templ tasks
@@ -144,12 +145,21 @@ tasks:
     cmds:
       - go test -v ./internal/performance/...
       - task: test:binary-size
+      - task: test:asset-budgets
 
   test:binary-size:
     desc: Check binary size against budget
     cmds:
       - go build -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o ./dist/app ./cmd/api
       - go run scripts/check-binary-size.go ./dist/app
+
+  test:asset-budgets:
+    desc: Check gzipped JS/CSS sizes against the ADR-000 frontend budgets
+    # app.css is a build artifact (gitignored); build it fresh so the check
+    # measures what production ships, not a stale local copy.
+    deps: [css:build]
+    cmds:
+      - go run ./scripts/check-asset-budgets
 
   test:memory-profile:
     desc: Run memory profiling tests
@@ -161,7 +171,7 @@ tasks:
   docker:build:
     desc: Build Docker image
     cmds:
-      - docker build -t go-alpine-saas-starter .
+      - docker build -t go-performance-starter .
 
   db:migrate:create:
     desc: Create a new migration file
@@ -175,9 +185,9 @@ tasks:
 
   # CSS tasks
   css:build:
-    desc: Build CSS files with Tailwind
+    desc: Build CSS files with Tailwind (minified — same recipe as the Dockerfile)
     cmds:
-      - npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css
+      - npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css --minify
 
   css:watch:
     desc: Watch and build CSS files with Tailwind
@@ -196,7 +206,7 @@ tasks:
     cmds:
       - rm -rf ./dist
       - rm -rf ./tmp
-      - rm -f app coverage.out
+      - rm -f app coverage.out coverage.txt
 
   # Default task
   default:

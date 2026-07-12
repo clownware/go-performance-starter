@@ -12,14 +12,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/auth"
-	"github.com/clownware/alpine-go-performance-starter/internal/config"
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/handler"
-	mw "github.com/clownware/alpine-go-performance-starter/internal/middleware"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository/postgres"
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
+	"github.com/clownware/go-performance-starter/internal/auth"
+	"github.com/clownware/go-performance-starter/internal/config"
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/handler"
+	mw "github.com/clownware/go-performance-starter/internal/middleware"
+	"github.com/clownware/go-performance-starter/internal/repository/postgres"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/pages"
 )
 
 // Server represents the main application server.

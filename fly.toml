@@ -7,7 +7,7 @@
 # Secrets (DATABASE_URL, SUPABASE_*, METRICS_TOKEN) go through
 # `fly secrets set` — never in this file (ADR-015).
 
-app = "alpine-go-performance-starter"
+app = "go-performance-starter"
 primary_region = "ewr"
 
 [build]
@@ -16,6 +16,9 @@ primary_region = "ewr"
 [env]
   ENV = "production"
   HTTP_PORT = "4000"
+  # Non-secret tuning lives here, versioned — not in `fly secrets` where it
+  # becomes invisible and gets lost on app migrations.
+  DB_MAX_CONNS = "10"
 
 [http_service]
   internal_port = 4000

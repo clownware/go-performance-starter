@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository"
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/repository"
 )
 
 // seedUserWithAuth creates a user and returns both its id and its auth_id, so a

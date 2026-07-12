@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/database"
 )
 
 // FlashcardRepository defines data access for user-owned flashcards (ADR-024).

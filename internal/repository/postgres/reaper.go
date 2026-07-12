@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/database"
 )
 
 // ReaperRepo performs system-job deletions of expired anonymous users

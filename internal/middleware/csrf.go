@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 const (

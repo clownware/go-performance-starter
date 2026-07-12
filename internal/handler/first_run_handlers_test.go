@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository"
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/repository"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 // fakeUserRepo implements only the UserRepository method the first-run flow

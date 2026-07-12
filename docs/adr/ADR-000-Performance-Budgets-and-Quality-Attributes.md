@@ -14,34 +14,38 @@ This ADR establishes hard performance budgets that will be enforced in CI/CD, gu
 
 ### 1. Performance Budgets
 
-We establish the following **hard performance budgets** that MUST be enforced in CI:
+We establish the following performance budgets. Each group is classified (2026-07 amendment) by how it is actually verified today:
 
-#### Response Time Budgets
+- **Enforced** — CI fails on violation.
+- **Monitored** — measured by the Prometheus metrics middleware; no production baseline yet, so violations inform rather than gate.
+- **Aspirational** — no measurement exists; retained as design targets. Promoting one to Enforced requires building the measurement first.
+
+#### Response Time Budgets — Monitored
 - **P50 Response Time**: < 50ms (median request)
 - **P95 Response Time**: < 100ms (95th percentile)
 - **P99 Response Time**: < 200ms (99th percentile)
 - **Database Query Time**: < 10ms (P95 for single queries)
 
 #### Resource Budgets
-- **Binary Size**: < 20MB (compiled Go binary)
-- **Docker Image Size**: < 30MB (Alpine-based image)
-- **Memory Usage (RSS)**: < 128MB (steady state under normal load)
-- **Memory Usage (Peak)**: < 256MB (under high load)
-- **Startup Time**: < 500ms (application ready to serve requests)
+- **Binary Size**: < 20MB (compiled Go binary) — Enforced (`task test:binary-size`)
+- **Docker Image Size**: < 30MB (Alpine-based image) — Enforced (ci.yml docker job, release.yml)
+- **Memory Usage (RSS)**: < 128MB (steady state under normal load) — Monitored
+- **Memory Usage (Peak)**: < 256MB (under high load) — Monitored
+- **Startup Time**: < 500ms (application ready to serve requests) — Monitored
 
 #### Bundle Size Budgets (Frontend)
-- **JavaScript Bundle**: < 50KB (compressed)
-- **CSS Bundle**: < 30KB (compressed)
-- **Total Page Weight**: < 500KB (including HTML, CSS, JS, fonts)
-- **Critical Path Resources**: < 150KB (above-the-fold assets)
+- **JavaScript Bundle**: < 50KB gzipped — Enforced (`task test:asset-budgets`)
+- **CSS Bundle**: < 30KB gzipped — Enforced (`task test:asset-budgets`)
+- **Total Page Weight**: < 500KB (including HTML, CSS, JS, fonts) — Aspirational
+- **Critical Path Resources**: < 150KB (above-the-fold assets) — Aspirational
 
-#### Core Web Vitals
+#### Core Web Vitals — Aspirational
 - **Largest Contentful Paint (LCP)**: < 2.5s
 - **First Input Delay (FID)**: < 100ms
 - **Cumulative Layout Shift (CLS)**: < 0.1
 - **Time to First Byte (TTFB)**: < 200ms
 
-#### Scalability Targets
+#### Scalability Targets — Aspirational
 - **Concurrent Connections**: 10,000+ simultaneous connections
 - **Requests per Second**: 5,000+ RPS on single instance
 - **Cold Start Time**: < 100ms (relevant for serverless deployments)
@@ -63,13 +67,10 @@ We establish the following **hard performance budgets** that MUST be enforced in
 ### 3. Enforcement Strategy
 
 #### CI/CD Integration
-```yaml
-# Performance test suite runs on every PR
-- name: Performance Budget Tests
-  run: |
-    task test:performance
-    task test:binary-size
-    task test:memory-profile
+The Enforced budgets run inside the single quality gate (ADR-021):
+
+```bash
+task ci   # includes test:binary-size and test:asset-budgets
 ```
 
 #### Automated Monitoring
@@ -141,29 +142,17 @@ We establish the following **hard performance budgets** that MUST be enforced in
 
 ## Implementation Notes
 
-### Phase 1: Baseline Measurement (Week 1)
-1. Instrument existing application with Prometheus metrics
-2. Run load tests to establish current performance baseline
-3. Document actual P50/P95/P99 response times
-
-### Phase 2: Budget Definition (Week 2)
-4. Define budgets based on baseline + 20% headroom
-5. Implement performance test suite in `internal/performance/`
-6. Add CI checks to Taskfile and GitHub Actions
-
-### Phase 3: Enforcement (Week 3)
-7. Make performance tests mandatory for PR approval
-8. Add automated PR comments with performance delta
-9. Document budget violation process in CONTRIBUTING.md
-
-### Phase 4: Continuous Improvement (Ongoing)
-10. Review budgets quarterly based on production metrics
-11. Adjust thresholds via ADR amendments
-12. Share learnings in team retrospectives
+The original version of this ADR sketched a four-phase rollout (baseline load
+testing, budget calibration, mandatory gates, quarterly review) that was never
+executed; it predated the demo-first scope settled in ADR-024. The budget
+classification in §1 replaces it: Enforced budgets are gated by `task ci`
+today, Monitored budgets graduate to Enforced when production baselines exist
+to calibrate them, and Aspirational targets graduate only if their measurement
+(load testing, Lighthouse CI) is ever built.
 
 ## References
 
-- [Astro Performance Starter Template ADRs](https://github.com/example/astro-perf) - Inspiration for budget-first approach
+- [Astro Performance Starter](https://github.com/clownware/astro-performance-starter) - Sibling template; inspiration for the budget-first approach
 - [Web Performance Budget Calculator](https://perf-budget-calculator.firebaseapp.com/)
 - [Google Web Vitals](https://web.dev/vitals/)
 - [Go Performance Tips](https://github.com/dgryski/go-perfbook)
@@ -180,6 +169,8 @@ This ADR should be reviewed quarterly to ensure budgets remain aligned with:
 - Industry benchmarks
 
 **2026-04 Note**: Budgets have not yet been validated against real production measurements. Binary size and Docker image budgets are enforced in CI. Response time and memory budgets are tracked via Prometheus metrics middleware but lack baseline data from production load.
+
+**2026-07 Note**: Every budget is now explicitly classified in §1 as Enforced, Monitored, or Aspirational — the ADR previously claimed all budgets "MUST be enforced in CI" while only binary and image size were. The frontend JS/CSS budgets joined the Enforced tier: `task test:asset-budgets` (wired into `task ci`) fails if the assets shipped by the base layout exceed the budgets gzipped, using the constants in `internal/performance` as the single source of truth. The unexecuted phase plan in Implementation Notes was replaced with the graduation rule, and the placeholder reference URL was corrected to the real sibling repo.
 
 ---
 

@@ -6,18 +6,37 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/pages"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
 const itemsPerPage = 5
 
-// itemStore simulates a data store for favorite status (replace with real DB later)
-var itemStore = make(map[string]bool)
+// itemStore simulates a data store for favorite status (replace with real DB
+// later). Handlers run concurrently, so all access goes through the
+// mutex-guarded accessors below.
+var (
+	itemStoreMu sync.RWMutex
+	itemStore   = make(map[string]bool)
+)
+
+func itemFavorite(id string) bool {
+	itemStoreMu.RLock()
+	defer itemStoreMu.RUnlock()
+	return itemStore[id]
+}
+
+func itemToggleFavorite(id string) bool {
+	itemStoreMu.Lock()
+	defer itemStoreMu.Unlock()
+	itemStore[id] = !itemStore[id]
+	return itemStore[id]
+}
 
 // ItemsPage renders the items page, which will load the list via HTMX
 func ItemsPage(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +49,7 @@ func ItemsPage(w http.ResponseWriter, r *http.Request) {
 		items = append(items, view.Item{
 			ID:         strconv.Itoa(id),
 			Name:       fmt.Sprintf("Item %d", id),
-			IsFavorite: itemStore[strconv.Itoa(id)],
+			IsFavorite: itemFavorite(strconv.Itoa(id)),
 		})
 	}
 	props := pages.ItemsPageProps{
@@ -55,7 +74,7 @@ func ItemsList(w http.ResponseWriter, r *http.Request) {
 				results = append(results, view.Item{
 					ID:         strconv.Itoa(id),
 					Name:       name,
-					IsFavorite: itemStore[strconv.Itoa(id)],
+					IsFavorite: itemFavorite(strconv.Itoa(id)),
 				})
 			}
 		}
@@ -80,7 +99,7 @@ func ItemsList(w http.ResponseWriter, r *http.Request) {
 		items = append(items, view.Item{
 			ID:         strconv.Itoa(id),
 			Name:       fmt.Sprintf("Item %d", id),
-			IsFavorite: itemStore[strconv.Itoa(id)],
+			IsFavorite: itemFavorite(strconv.Itoa(id)),
 		})
 	}
 
@@ -115,8 +134,7 @@ func ItemToggle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Toggle favorite status in our stub store
-	itemStore[itemID] = !itemStore[itemID]
-	isFavorite := itemStore[itemID]
+	isFavorite := itemToggleFavorite(itemID)
 
 	item := view.Item{
 		ID:         itemID,

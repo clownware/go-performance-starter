@@ -1,4 +1,4 @@
-# WindsurfRules — Alpine Go Performance Starter
+# WindsurfRules — Go Performance Starter
 
 The canonical agent context for this repo lives in [`AGENTS.md`](AGENTS.md) at the
 repo root — read it. It is generated from `CLAUDE.md` and the `.claude/*.md` layers

@@ -1,0 +1,22 @@
+# Local development database (task db:up / db:down). Not deployment infra —
+# production runs against Supabase (ADR-025); this exists so the server and
+# integration tests can run against a vanilla Postgres locally.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: alpine_saas
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  db-data:

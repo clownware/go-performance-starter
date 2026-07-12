@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/pages"
 )
 
 // DashboardPage renders the dashboard page.

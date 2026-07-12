@@ -1,8 +1,12 @@
 package performance
 
 import (
+	"bytes"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -55,7 +59,7 @@ func TestCheckBinarySize(t *testing.T) {
 			}
 
 			if err != nil && tt.errContains != "" {
-				if err.Error() == "" || !contains(err.Error(), tt.errContains) {
+				if !strings.Contains(err.Error(), tt.errContains) {
 					t.Errorf("CheckBinarySize() error = %v, want error containing %q", err, tt.errContains)
 				}
 			}
@@ -242,23 +246,79 @@ func TestBudgetViolationError(t *testing.T) {
 	// Check error message contains key information
 	expectedParts := []string{"Test Budget", "100ms", "200ms", "Test message"}
 	for _, part := range expectedParts {
-		if !contains(errMsg, part) {
+		if !strings.Contains(errMsg, part) {
 			t.Errorf("BudgetViolation.Error() = %q, want to contain %q", errMsg, part)
 		}
 	}
 }
 
-// Helper function to check if string contains substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		(len(s) > 0 && len(substr) > 0 && hasSubstring(s, substr)))
-}
-
-func hasSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
+func TestCheckGzippedAssetSize(t *testing.T) {
+	tmpDir := t.TempDir()
+	writeAsset := func(t *testing.T, name string, data []byte) string {
+		t.Helper()
+		path := filepath.Join(tmpDir, name)
+		if err := os.WriteFile(path, data, 0o644); err != nil {
+			t.Fatalf("failed to write test asset: %v", err)
 		}
+		return path
 	}
-	return false
+
+	// Compresses to a few hundred bytes regardless of raw size.
+	compressible := bytes.Repeat([]byte("a"), 64*1024)
+	// Random data barely compresses, so gzipped size ~= raw size.
+	incompressible := make([]byte, 64*1024)
+	rand.New(rand.NewSource(1)).Read(incompressible)
+
+	tests := []struct {
+		name        string
+		files       [][]byte
+		budget      int64
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name:    "compressible file within budget",
+			files:   [][]byte{compressible},
+			budget:  1024,
+			wantErr: false,
+		},
+		{
+			name:        "single file exceeds budget",
+			files:       [][]byte{incompressible},
+			budget:      1024,
+			wantErr:     true,
+			errContains: "exceeds budget",
+		},
+		{
+			name:        "files individually within budget but sum exceeds it",
+			files:       [][]byte{incompressible, incompressible},
+			budget:      100 * 1024,
+			wantErr:     true,
+			errContains: "exceeds budget",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			paths := make([]string, len(tt.files))
+			for i, data := range tt.files {
+				paths[i] = writeAsset(t, strconv.Itoa(i)+".asset", data)
+			}
+
+			err := CheckGzippedAssetSize("Test Bundle", tt.budget, paths...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckGzippedAssetSize() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err != nil && tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("CheckGzippedAssetSize() error = %v, want error containing %q", err, tt.errContains)
+			}
+		})
+	}
+
+	t.Run("missing file is an error", func(t *testing.T) {
+		err := CheckGzippedAssetSize("Test Bundle", 1024, filepath.Join(tmpDir, "does-not-exist.js"))
+		if err == nil {
+			t.Error("CheckGzippedAssetSize() = nil, want error for missing file")
+		}
+	})
 }

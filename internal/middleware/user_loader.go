@@ -7,9 +7,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository"
-	"github.com/clownware/alpine-go-performance-starter/internal/webutil"
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/repository"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 // UserLoader resolves the authenticated identity to its application users row

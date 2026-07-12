@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/config"
-	mw "github.com/clownware/alpine-go-performance-starter/internal/middleware"
+	"github.com/clownware/go-performance-starter/internal/config"
+	mw "github.com/clownware/go-performance-starter/internal/middleware"
 )
 
 func newTestServer(t *testing.T, env string) *Server {

@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/database"
-	"github.com/clownware/alpine-go-performance-starter/internal/repository"
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/repository"
 )
 
 func TestUserRepoIntegration(t *testing.T) {

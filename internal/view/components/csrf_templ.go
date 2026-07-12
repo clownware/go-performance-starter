@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/clownware/alpine-go-performance-starter/internal/webutil"
+import "github.com/clownware/go-performance-starter/internal/webutil"
 
 // CSRFField renders the hidden CSRF token input for POST forms (ADR-014 §3).
 // The token comes from the request context (set by the CSRF middleware);

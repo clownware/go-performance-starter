@@ -1,4 +1,4 @@
-# Alpine Go Performance Starter
+# Go Performance Starter
 
 An opinionated, performance-first SaaS starter kit built with Go, templ, HTMX, Alpine.js, and Tailwind CSS. Designed for solo developers and small teams who want production-ready infrastructure without the bloat.
 
@@ -28,8 +28,8 @@ An opinionated, performance-first SaaS starter kit built with Go, templ, HTMX, A
 ## Quick Start
 
 ```bash
-git clone https://github.com/clownware/alpine-go-performance-starter.git
-cd alpine-go-performance-starter
+git clone https://github.com/clownware/go-performance-starter.git
+cd go-performance-starter
 
 cp .env.example .env
 # Edit .env with your Supabase credentials and DATABASE_URL

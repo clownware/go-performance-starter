@@ -9,10 +9,10 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/components"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/layouts"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/components"
+	"github.com/clownware/go-performance-starter/internal/view/layouts"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
 // ProfilePageProps holds data for the profile page.

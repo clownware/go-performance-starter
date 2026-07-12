@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/clownware/alpine-go-performance-starter/internal/middleware"
-	"github.com/clownware/alpine-go-performance-starter/internal/view"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/pages"
-	"github.com/clownware/alpine-go-performance-starter/internal/view/partials"
+	"github.com/clownware/go-performance-starter/internal/middleware"
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/pages"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
 // userNameFromContext extracts the display name from the authenticated user context.
