@@ -53,3 +53,44 @@ document.addEventListener('DOMContentLoaded', () => {
 // swap. In-flight feedback is per-element — htmx puts .htmx-request on the
 // triggering element (styled in input.css); hx-indicator and hx-disabled-elt
 // handle explicit spinners and disabled submit buttons.
+
+// Scroll-spy for the /patterns sidebar TOC: highlight the pattern section
+// currently in view. Progressive enhancement — without JS the TOC is still
+// a working anchor list.
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.querySelector('[data-testid="patterns-nav"]');
+  if (!nav || !('IntersectionObserver' in window)) return;
+
+  const links = new Map();
+  nav.querySelectorAll('a[href^="#"]').forEach((a) => {
+    links.set(a.getAttribute('href').slice(1), a);
+  });
+
+  const activate = (id) => {
+    links.forEach((a, key) => {
+      if (key === id) {
+        a.setAttribute('aria-current', 'location');
+        a.classList.add('text-link', 'font-medium');
+        a.classList.remove('text-muted-foreground');
+      } else {
+        a.removeAttribute('aria-current');
+        a.classList.remove('text-link', 'font-medium');
+        a.classList.add('text-muted-foreground');
+      }
+    });
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) activate(e.target.id);
+      });
+    },
+    // Fire when a section crosses the upper-middle band of the viewport.
+    { rootMargin: '-15% 0px -70% 0px' }
+  );
+  links.forEach((_, id) => {
+    const section = document.getElementById(id);
+    if (section) observer.observe(section);
+  });
+});
