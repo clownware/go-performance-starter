@@ -165,21 +165,16 @@ func (s *Server) setupRoutes() {
 	s.router.With(mw.MetricsGuard(s.cfg.MetricsToken, s.cfg.IsProduction())).
 		Handle("/metrics", promhttp.Handler())
 
-	// Profile page (HTMX-enabled, requires auth)
-	if s.authClient != nil {
+	// Profile page (HTMX-enabled, requires auth). Profile and first-run both
+	// need the DB users row loaded (and JIT-provisioned) from the
+	// authenticated identity — profile writes the name to that row (#70).
+	if s.authClient != nil && s.db != nil {
 		r.Group(func(protectedRouter chi.Router) {
 			protectedRouter.Use(mw.AuthMiddleware(s.authClient, s.cfg.IsProduction()))
+			protectedRouter.Use(mw.UserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
 			protectedRouter.Get("/profile", handler.ProfileView)
 			protectedRouter.Post("/profile", handler.ProfileUpdate)
-
-			// First-run onboarding needs the DB user row loaded (and
-			// JIT-provisioned) from the authenticated identity.
-			if s.db != nil {
-				protectedRouter.Group(func(firstRun chi.Router) {
-					firstRun.Use(mw.UserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
-					handler.FirstRunHandlers(firstRun)
-				})
-			}
+			handler.FirstRunHandlers(protectedRouter)
 		})
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view"
 	"github.com/clownware/go-performance-starter/internal/view/pages"
 	"github.com/clownware/go-performance-starter/internal/view/partials"
+	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
 // userNameFromContext extracts the display name from the authenticated user context.
@@ -30,9 +31,19 @@ func userNameFromContext(r *http.Request) string {
 	return "User"
 }
 
+// profileDisplayName prefers the persisted users row (the write target of
+// ProfileUpdate, #70) and falls back to token metadata for identities whose
+// row has no name yet.
+func profileDisplayName(r *http.Request) string {
+	if u := webutil.GetUserFromContext(r.Context()); u != nil && u.Name.Valid && u.Name.String != "" {
+		return u.Name.String
+	}
+	return userNameFromContext(r)
+}
+
 // ProfileView renders the profile page (full page or fragment fallback).
 func ProfileView(w http.ResponseWriter, r *http.Request) {
-	userName := userNameFromContext(r)
+	userName := profileDisplayName(r)
 	baseProps := view.NewBaseProps("Profile")
 	baseProps.UserName = userName
 	props := pages.ProfilePageProps{
@@ -50,9 +61,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		JSONError(w, http.StatusBadRequest, err)
 		return
 	}
-	name := r.FormValue("name")
+	name := strings.TrimSpace(r.FormValue("name"))
 	errors := make(map[string]string)
-	if strings.TrimSpace(name) == "" {
+	if name == "" {
 		errors["name"] = "Name cannot be empty"
 	}
 
@@ -81,7 +92,25 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Stub update successful
+	// Persist to the users row — UserLoader put it (and UserRepoMiddleware
+	// the repo) in context; without a row there is nothing to update.
+	user := webutil.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
+		return
+	}
+	repo := webutil.GetUserRepoFromContext(r.Context())
+	if repo == nil {
+		slog.Error("Profile update without a user repository in context")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if _, err := repo.UpdateName(r.Context(), user.ID, name); err != nil {
+		slog.Error("Failed to persist profile name", "user_id", user.ID, "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	if view.IsHTMXRequest(r) {
 		view.SetHXTrigger(w, "Profile updated successfully!")
 		formProps := partials.ProfileFormProps{

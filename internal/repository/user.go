@@ -31,6 +31,9 @@ type UserRepository interface {
 	// Update modifies an existing user
 	Update(ctx context.Context, params database.UpdateUserParams) (*database.User, error)
 
+	// UpdateName sets the user's display name (profile self-service, #70)
+	UpdateName(ctx context.Context, id uuid.UUID, name string) (*database.User, error)
+
 	// Delete soft-deletes a user by setting is_active to false
 	Delete(ctx context.Context, id uuid.UUID) error
 

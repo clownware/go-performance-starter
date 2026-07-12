@@ -54,6 +54,20 @@ func TestUserRepoIntegration(t *testing.T) {
 	if _, err := repo.GetByEmail(ctx, "missing-"+uuid.NewString()+"@example.com"); err != repository.ErrNotFound {
 		t.Errorf("GetByEmail(missing) err = %v, want ErrNotFound", err)
 	}
+
+	renamed, err := repo.UpdateName(ctx, created.ID, "Ada Lovelace")
+	if err != nil {
+		t.Fatalf("UpdateName: %v", err)
+	}
+	if !renamed.Name.Valid || renamed.Name.String != "Ada Lovelace" {
+		t.Errorf("UpdateName name = %+v, want Ada Lovelace", renamed.Name)
+	}
+	if renamed.Email != email {
+		t.Errorf("UpdateName must not touch email: got %q, want %q", renamed.Email, email)
+	}
+	if _, err := repo.UpdateName(ctx, uuid.New(), "Nobody"); err != repository.ErrNotFound {
+		t.Errorf("UpdateName(missing) err = %v, want ErrNotFound", err)
+	}
 }
 
 // TestUserRLSIsolation proves the users_self_access policy: an authenticated
