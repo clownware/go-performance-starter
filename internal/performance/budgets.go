@@ -1,6 +1,8 @@
 package performance
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"os"
 	"runtime"
@@ -57,6 +59,47 @@ func CheckBinarySize(binaryPath string) error {
 		}
 	}
 
+	return nil
+}
+
+// GzippedTotal returns the summed gzip-compressed size of the given files.
+// Budgets are stated in gzipped terms (ADR-000) because that is what actually
+// crosses the wire.
+func GzippedTotal(paths ...string) (int64, error) {
+	var total int64
+	for _, path := range paths {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return 0, fmt.Errorf("failed to read asset: %w", err)
+		}
+		var buf bytes.Buffer
+		zw := gzip.NewWriter(&buf)
+		if _, err := zw.Write(data); err != nil {
+			return 0, fmt.Errorf("failed to compress %s: %w", path, err)
+		}
+		if err := zw.Close(); err != nil {
+			return 0, fmt.Errorf("failed to compress %s: %w", path, err)
+		}
+		total += int64(buf.Len())
+	}
+	return total, nil
+}
+
+// CheckGzippedAssetSize verifies the summed gzipped size of the given files
+// is within budget.
+func CheckGzippedAssetSize(budgetName string, budget int64, paths ...string) error {
+	total, err := GzippedTotal(paths...)
+	if err != nil {
+		return err
+	}
+	if total > budget {
+		return BudgetViolation{
+			Budget:   budgetName,
+			Expected: formatBytes(budget),
+			Actual:   formatBytes(total),
+			Message:  "Gzipped asset size exceeds budget. Trim the asset or open an ADR to raise the budget.",
+		}
+	}
 	return nil
 }
 

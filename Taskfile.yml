@@ -77,6 +77,7 @@ tasks:
       - go test -race -cover ./...
       - task: agents:check
       - task: test:binary-size
+      - task: test:asset-budgets
       - task: scan:vuln
 
   # Templ tasks
@@ -144,12 +145,18 @@ tasks:
     cmds:
       - go test -v ./internal/performance/...
       - task: test:binary-size
+      - task: test:asset-budgets
 
   test:binary-size:
     desc: Check binary size against budget
     cmds:
       - go build -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o ./dist/app ./cmd/api
       - go run scripts/check-binary-size.go ./dist/app
+
+  test:asset-budgets:
+    desc: Check gzipped JS/CSS sizes against the ADR-000 frontend budgets
+    cmds:
+      - go run ./scripts/check-asset-budgets
 
   test:memory-profile:
     desc: Run memory profiling tests
