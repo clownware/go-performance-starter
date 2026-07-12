@@ -33,7 +33,7 @@ func AuthMessage(kind string, message string) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if kind == "success" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div role=\"status\" class=\"mb-2 p-3 rounded bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-100 text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div role=\"status\" class=\"mb-2 p-3 rounded bg-success/10 text-success text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -51,7 +51,7 @@ func AuthMessage(kind string, message string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div role=\"alert\" class=\"mb-2 p-3 rounded bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-100 text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div role=\"alert\" class=\"mb-2 p-3 rounded bg-danger/10 text-danger text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

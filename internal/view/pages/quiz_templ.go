@@ -61,7 +61,7 @@ func QuizPage(props QuizPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold mb-2\">Architecture Quiz</h1><p class=\"text-gray-500 dark:text-gray-400 mb-4\">Questions drawn from this starter's own architecture — every answer you save is a real row behind Row Level Security.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold mb-2\">Architecture Quiz</h1><p class=\"text-muted-foreground mb-4\">Questions drawn from this starter's own architecture — every answer you save is a real row behind Row Level Security.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -25,9 +25,9 @@ func quizAnswerAction(slug string) string {
 templ QuizQuestionCard(props QuizQuestionProps) {
 	<div
 		data-testid="quiz-question"
-		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6"
+		class="bg-surface rounded-lg shadow-md p-6"
 	>
-		<p class="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{ props.Topic }</p>
+		<p class="text-sm uppercase tracking-wide text-muted-foreground mb-2">{ props.Topic }</p>
 		<h2 class="text-xl font-semibold mb-4">{ props.Prompt }</h2>
 		if props.Error != "" {
 			<p class="text-danger mb-3" role="alert">{ props.Error }</p>
@@ -43,7 +43,7 @@ templ QuizQuestionCard(props QuizQuestionProps) {
 			<fieldset class="space-y-2 mb-4">
 				<legend class="sr-only">Choose an answer</legend>
 				for i, choice := range props.Choices {
-					<label class="flex items-center gap-3 p-3 rounded-md border border-gray-200 dark:border-gray-800 hover:border-primary cursor-pointer">
+					<label class="flex items-center gap-3 p-3 rounded-md border border-border hover:border-primary cursor-pointer">
 						<input
 							type="radio"
 							name="choice"
@@ -64,7 +64,7 @@ templ QuizQuestionCard(props QuizQuestionProps) {
 templ QuizEmptyState() {
 	<div
 		data-testid="quiz-empty"
-		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400"
+		class="bg-surface rounded-lg shadow-md p-6 text-center text-muted-foreground"
 	>
 		<p>No quiz questions yet — seed the database to take the architecture quiz.</p>
 	</div>

@@ -330,7 +330,9 @@ func PatternToast(w http.ResponseWriter, r *http.Request) {
 	default:
 		toastType = "success"
 	}
-	view.SetHXTrigger(w, "Toast from the server — no client toast library involved.")
+	// HX-Trigger rides an HTTP header (latin-1): keep the message ASCII or
+	// browsers render mojibake.
+	view.SetHXTrigger(w, "Toast from the server - no client toast library involved.")
 	w.Header().Set("HX-Toast-Type", toastType)
 	renderPattern(w, r, "toast", partials.PatternToastResult())
 }

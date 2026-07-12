@@ -42,14 +42,14 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if errMsg, ok := props.Errors["name"]; ok {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-red-600 text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-danger text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 14, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/profile_form.templ`, Line: 14, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -66,7 +66,7 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label for=\"name\" class=\"block text-sm font-medium text-gray-700\">Name</label> <input type=\"text\" name=\"name\" id=\"name\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label for=\"name\" class=\"block text-sm font-medium text-foreground\">Name</label> <input type=\"text\" name=\"name\" id=\"name\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -79,7 +79,7 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"mt-1 block w-full border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500\"><div class=\"mt-2\"><button type=\"submit\" class=\"px-4 py-2 bg-primary-600 text-white rounded\" hx-indicator=\".indicator\">Save</button> <span class=\"indicator hidden text-gray-500 ml-2\">Saving...</span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"mt-1 block w-full border-border rounded-md focus:ring-primary focus:border-primary\"><div class=\"mt-2\"><button type=\"submit\" class=\"px-4 py-2 bg-teal text-white rounded\" hx-indicator=\".indicator\">Save</button> <span class=\"indicator hidden text-muted-foreground ml-2\">Saving...</span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

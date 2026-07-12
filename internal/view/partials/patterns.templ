@@ -36,15 +36,15 @@ type PatternTabProps struct {
 }
 
 templ PatternSwapResult() {
-	<div class="p-4 rounded-md bg-surface dark:bg-surface-dark border border-primary text-sm">
+	<div class="p-4 rounded-md bg-surface border border-primary text-sm">
 		This fragment was rendered by the server and swapped in by HTMX — no page reload, no client templating.
 	</div>
 }
 
 templ PatternSearchResults(props PatternSearchProps) {
-	<ul class="divide-y divide-gray-200 dark:divide-gray-800" aria-live="polite">
+	<ul class="divide-y divide-border" aria-live="polite">
 		if len(props.Results) == 0 {
-			<li class="py-2 text-gray-500 dark:text-gray-400">No matches for "{ props.Query }"</li>
+			<li class="py-2 text-muted-foreground">No matches for "{ props.Query }"</li>
 		}
 		for _, result := range props.Results {
 			<li class="py-2">{ result }</li>
@@ -79,7 +79,7 @@ templ PatternEditDisplay(props PatternEditProps) {
 	<div
 		hx-get={ patternEditURL(props.ID) }
 		hx-swap="outerHTML"
-		class="p-3 rounded-md border border-dashed border-gray-300 dark:border-gray-700 cursor-pointer"
+		class="p-3 rounded-md border border-dashed border-border cursor-pointer"
 		role="button"
 		tabindex="0"
 		title="Click to edit"
@@ -124,7 +124,7 @@ templ PatternScrollPage(props PatternScrollProps) {
 			hx-get={ fmt.Sprintf("/patterns/api/scroll?page=%d", props.NextPage) }
 			hx-trigger="revealed"
 			hx-swap="outerHTML"
-			class="py-2 text-center text-gray-500 dark:text-gray-400"
+			class="py-2 text-center text-muted-foreground"
 		>
 			Loading more...
 		</li>
@@ -132,15 +132,15 @@ templ PatternScrollPage(props PatternScrollProps) {
 }
 
 templ PatternToastResult() {
-	<span class="text-sm text-gray-500 dark:text-gray-400">
+	<span class="text-sm text-muted-foreground">
 		Toast fired via the HX-Trigger response header — the body payload stays tiny.
 	</span>
 }
 
 templ PatternSkeletonContent() {
-	<div class="p-4 rounded-md bg-surface dark:bg-surface-dark border border-gray-200 dark:border-gray-800">
+	<div class="p-4 rounded-md bg-surface border border-border">
 		<h4 class="font-medium mb-1">Loaded content</h4>
-		<p class="text-sm text-gray-500 dark:text-gray-400">
+		<p class="text-sm text-muted-foreground">
 			The skeleton you just saw was pure CSS rendered instantly; this content arrived on a delayed HTMX load.
 		</p>
 	</div>

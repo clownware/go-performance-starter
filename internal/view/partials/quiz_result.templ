@@ -32,7 +32,7 @@ func quizNextURL(slug string) string {
 templ QuizResult(props QuizResultProps) {
 	<div
 		data-testid="quiz-result"
-		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6"
+		class="bg-surface rounded-lg shadow-md p-6"
 	>
 		if props.Correct {
 			<h2 class="text-xl font-semibold text-primary mb-2">Correct!</h2>
@@ -48,7 +48,7 @@ templ QuizResult(props QuizResultProps) {
 				action="/learn/flashcards"
 				hx-post="/learn/flashcards"
 				hx-swap="outerHTML"
-				class="mt-4 p-4 rounded-md border border-gray-200 dark:border-gray-800"
+				class="mt-4 p-4 rounded-md border border-border"
 			>
 				@components.CSRFField()
 				<input type="hidden" name="front" value={ props.FlashcardFront }/>
@@ -80,7 +80,7 @@ templ QuizResult(props QuizResultProps) {
 
 // QuizScoreBadge renders the running score ("N of M").
 templ QuizScoreBadge(score view.QuizScore) {
-	<p data-testid="quiz-score" class="text-sm text-gray-500 dark:text-gray-400">
+	<p data-testid="quiz-score" class="text-sm text-muted-foreground">
 		{ fmt.Sprintf("%d of %d", score.Correct, score.Total) } answered correctly
 	</p>
 }

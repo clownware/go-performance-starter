@@ -51,14 +51,14 @@ func QuizQuestionCard(props QuizQuestionProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-testid=\"quiz-question\" class=\"bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6\"><p class=\"text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-testid=\"quiz-question\" class=\"bg-surface rounded-lg shadow-md p-6\"><p class=\"text-sm uppercase tracking-wide text-muted-foreground mb-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(props.Topic)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/quiz_question.templ`, Line: 30, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/quiz_question.templ`, Line: 30, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -139,7 +139,7 @@ func QuizQuestionCard(props QuizQuestionProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for i, choice := range props.Choices {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<label class=\"flex items-center gap-3 p-3 rounded-md border border-gray-200 dark:border-gray-800 hover:border-primary cursor-pointer\"><input type=\"radio\" name=\"choice\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<label class=\"flex items-center gap-3 p-3 rounded-md border border-border hover:border-primary cursor-pointer\"><input type=\"radio\" name=\"choice\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -200,7 +200,7 @@ func QuizEmptyState() templ.Component {
 			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div data-testid=\"quiz-empty\" class=\"bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400\"><p>No quiz questions yet — seed the database to take the architecture quiz.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div data-testid=\"quiz-empty\" class=\"bg-surface rounded-lg shadow-md p-6 text-center text-muted-foreground\"><p>No quiz questions yet — seed the database to take the architecture quiz.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

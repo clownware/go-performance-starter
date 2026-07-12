@@ -5,7 +5,7 @@ func cardClass(props CardProps) string {
 	if props.Class != "" {
 		return props.Class
 	}
-	return "bg-white rounded-lg shadow-md p-6"
+	return "bg-surface rounded-lg shadow-md p-6"
 }
 
 templ Card(props CardProps) {
@@ -18,9 +18,9 @@ templ Card(props CardProps) {
 	>
 		if props.Title != "" {
 			<div class="mb-4">
-				<h3 class="text-lg font-medium text-gray-900">{ props.Title }</h3>
+				<h3 class="text-lg font-medium text-foreground">{ props.Title }</h3>
 				if props.Subtitle != "" {
-					<p class="text-sm text-gray-500">{ props.Subtitle }</p>
+					<p class="text-sm text-muted-foreground">{ props.Subtitle }</p>
 				}
 			</div>
 		}
@@ -28,7 +28,7 @@ templ Card(props CardProps) {
 			{ children... }
 		</div>
 		if props.Footer != nil {
-			<div class="mt-4 pt-4 border-t border-gray-200">
+			<div class="mt-4 pt-4 border-t border-border">
 				@props.Footer
 			</div>
 		}

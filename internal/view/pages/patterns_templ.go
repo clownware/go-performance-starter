@@ -53,7 +53,7 @@ func PatternsPage(props PatternsPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1 class=\"text-2xl font-semibold mb-2\">Pattern Showcase</h1><p class=\"text-gray-500 dark:text-gray-400 mb-6 max-w-2xl\">Every HTMX and Alpine.js pattern this starter supports, live. Each demo is the real thing — the source shown next to it is what serves it.</p><nav aria-label=\"Patterns\" class=\"mb-10 flex flex-wrap gap-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1 class=\"text-2xl font-semibold mb-2\">Pattern Showcase</h1><p class=\"text-muted-foreground mb-6 max-w-2xl\">Every HTMX and Alpine.js pattern this starter supports, live. Each demo is the real thing — the source shown next to it is what serves it.</p><nav aria-label=\"Patterns\" class=\"mb-10 flex flex-wrap gap-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -71,7 +71,7 @@ func PatternsPage(props PatternsPageProps) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"px-3 py-1 rounded-full text-sm bg-surface dark:bg-surface-dark border border-gray-200 dark:border-gray-800 hover:border-primary\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"px-3 py-1 rounded-full text-sm bg-surface border border-border hover:border-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -182,14 +182,14 @@ func patternSection(s view.PatternSection) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</h2><p class=\"text-gray-500 dark:text-gray-400 mb-3 max-w-2xl\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</h2><p class=\"text-muted-foreground mb-3 max-w-2xl\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(s.Summary)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 38, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 38, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -219,14 +219,14 @@ func patternSection(s view.PatternSection) templ.Component {
 			}
 		}
 		for _, f := range s.AlpineFeatures {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<code class=\"text-xs px-2 py-1 rounded bg-accent/30 text-text dark:text-text-dark\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<code class=\"text-xs px-2 py-1 rounded bg-accent/30 text-foreground\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(f)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 44, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 44, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -237,7 +237,7 @@ func patternSection(s view.PatternSection) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><div class=\"grid lg:grid-cols-2 gap-4 items-start\"><div class=\"bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><div class=\"grid lg:grid-cols-2 gap-4 items-start\"><div class=\"bg-surface rounded-lg shadow-md p-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -282,7 +282,7 @@ func patternSource(s view.PatternSection) templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div x-data=\"{ tab: 'templ' }\" class=\"rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800\"><div role=\"tablist\" class=\"flex border-b border-gray-200 dark:border-gray-800 text-sm\"><button role=\"tab\" @click=\"tab = 'templ'\" :aria-selected=\"(tab === 'templ').toString()\" :class=\"tab === 'templ' ? 'bg-surface dark:bg-surface-dark font-medium' : 'text-gray-500'\" class=\"px-4 py-2\">Template</button> <button role=\"tab\" @click=\"tab = 'handler'\" :aria-selected=\"(tab === 'handler').toString()\" :class=\"tab === 'handler' ? 'bg-surface dark:bg-surface-dark font-medium' : 'text-gray-500'\" class=\"px-4 py-2\">Handler</button></div><pre x-show=\"tab === 'templ'\" class=\"p-4 text-xs overflow-x-auto\"><code>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div x-data=\"{ tab: 'templ' }\" class=\"rounded-lg overflow-hidden border border-border\"><div role=\"tablist\" class=\"flex border-b border-border text-sm\"><button role=\"tab\" @click=\"tab = 'templ'\" :aria-selected=\"(tab === 'templ').toString()\" :class=\"tab === 'templ' ? 'bg-surface font-medium' : 'text-muted-foreground'\" class=\"px-4 py-2\">Template</button> <button role=\"tab\" @click=\"tab = 'handler'\" :aria-selected=\"(tab === 'handler').toString()\" :class=\"tab === 'handler' ? 'bg-surface font-medium' : 'text-muted-foreground'\" class=\"px-4 py-2\">Handler</button></div><pre x-show=\"tab === 'templ'\" class=\"p-4 text-xs overflow-x-auto\"><code>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -340,7 +340,7 @@ func patternDemo(slug string) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch slug {
 		case "partial-swap":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button hx-get=\"/patterns/api/swap\" hx-target=\"#swap-demo\" hx-swap=\"innerHTML\" class=\"btn btn-primary mb-3\">Swap this fragment</button><div id=\"swap-demo\" class=\"text-sm text-gray-500 dark:text-gray-400\">Click the button — the server replaces this text.</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button hx-get=\"/patterns/api/swap\" hx-target=\"#swap-demo\" hx-swap=\"innerHTML\" class=\"btn btn-primary mb-3\">Swap this fragment</button><div id=\"swap-demo\" class=\"text-sm text-muted-foreground\">Click the button — the server replaces this text.</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -363,7 +363,7 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "inline-validation":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<form x-data=\"{ email: '' }\" class=\"space-y-2\" @submit.prevent=\"\"><label for=\"inline-validation-email\" class=\"block text-sm\">Email</label> <input id=\"inline-validation-email\" type=\"email\" x-model=\"email\" class=\"input w-full\" placeholder=\"you@example.com\"><p x-show=\"email.length > 0 && !email.includes('@')\" class=\"text-danger text-sm\" role=\"alert\">That doesn't look like an email address.</p><p class=\"text-xs text-gray-500 dark:text-gray-400\">Alpine checks as you type; the same rules run server-side on submit (the profile form is the full round trip).</p></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<form x-data=\"{ email: '' }\" class=\"space-y-2\" @submit.prevent=\"\"><label for=\"inline-validation-email\" class=\"block text-sm\">Email</label> <input id=\"inline-validation-email\" type=\"email\" x-model=\"email\" class=\"input w-full\" placeholder=\"you@example.com\"><p x-show=\"email.length > 0 && !email.includes('@')\" class=\"text-danger text-sm\" role=\"alert\">That doesn't look like an email address.</p><p class=\"text-xs text-muted-foreground\">Alpine checks as you type; the same rules run server-side on submit (the profile form is the full round trip).</p></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -373,12 +373,12 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "infinite-scroll":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<ul class=\"divide-y divide-gray-200 dark:divide-gray-800 max-h-48 overflow-y-auto\" aria-label=\"Infinite scroll demo\"><li hx-get=\"/patterns/api/scroll?page=1\" hx-trigger=\"revealed\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-gray-500 dark:text-gray-400\">Scroll me into view...</li></ul>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<ul class=\"divide-y divide-border max-h-48 overflow-y-auto\" aria-label=\"Infinite scroll demo\"><li hx-get=\"/patterns/api/scroll?page=1\" hx-trigger=\"revealed\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-muted-foreground\">Scroll me into view...</li></ul>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "typeahead":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<label for=\"typeahead-input\" class=\"sr-only\">Typeahead search</label> <input id=\"typeahead-input\" type=\"search\" name=\"q\" placeholder=\"Type to look ahead...\" hx-get=\"/patterns/api/typeahead\" hx-trigger=\"keyup changed delay:200ms\" hx-target=\"#typeahead-results\" hx-indicator=\"#typeahead-indicator\" class=\"input w-full mb-1\"> <span id=\"typeahead-indicator\" class=\"htmx-indicator text-xs text-gray-500\">Searching...</span><div id=\"typeahead-results\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<label for=\"typeahead-input\" class=\"sr-only\">Typeahead search</label> <input id=\"typeahead-input\" type=\"search\" name=\"q\" placeholder=\"Type to look ahead...\" hx-get=\"/patterns/api/typeahead\" hx-trigger=\"keyup changed delay:200ms\" hx-target=\"#typeahead-results\" hx-indicator=\"#typeahead-indicator\" class=\"input w-full mb-1\"> <span id=\"typeahead-indicator\" class=\"htmx-indicator text-xs text-muted-foreground\">Searching...</span><div id=\"typeahead-results\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -427,17 +427,17 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "dark-mode":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"text-sm text-gray-500 dark:text-gray-400\">The toggle in the header is this pattern: Alpine state persisted to localStorage, seeded from the system preference, applied as a class on the root element. This panel restyles with it — try it.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"text-sm text-muted-foreground\">The toggle in the header is this pattern: Alpine state persisted to localStorage, seeded from the system preference, applied as a class on the root element. This panel restyles with it — try it.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "skeleton-loading":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div hx-get=\"/patterns/api/skeleton\" hx-trigger=\"load delay:1.5s\" hx-swap=\"innerHTML\"><div class=\"animate-pulse space-y-2\" aria-hidden=\"true\"><div class=\"h-4 rounded bg-gray-200 dark:bg-gray-800 w-1/3\"></div><div class=\"h-3 rounded bg-gray-200 dark:bg-gray-800 w-full\"></div><div class=\"h-3 rounded bg-gray-200 dark:bg-gray-800 w-2/3\"></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div hx-get=\"/patterns/api/skeleton\" hx-trigger=\"load delay:1.5s\" hx-swap=\"innerHTML\"><div class=\"animate-pulse space-y-2\" aria-hidden=\"true\"><div class=\"h-4 rounded bg-border w-1/3\"></div><div class=\"h-3 rounded bg-border w-full\"></div><div class=\"h-3 rounded bg-border w-2/3\"></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "tabs":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div x-data=\"{}\" role=\"tablist\" class=\"flex gap-2 mb-2\"><button role=\"tab\" hx-get=\"/patterns/api/tab/templ\" hx-target=\"#tab-demo-panel\" class=\"btn btn-secondary\">templ</button> <button role=\"tab\" hx-get=\"/patterns/api/tab/htmx\" hx-target=\"#tab-demo-panel\" class=\"btn btn-secondary\">HTMX</button> <button role=\"tab\" hx-get=\"/patterns/api/tab/alpine\" hx-target=\"#tab-demo-panel\" class=\"btn btn-secondary\">Alpine</button></div><div id=\"tab-demo-panel\" class=\"border border-gray-200 dark:border-gray-800 rounded-md min-h-16\"><div class=\"p-4 text-sm text-gray-500 dark:text-gray-400\">Pick a tab — its panel is rendered server-side.</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div x-data=\"{}\" role=\"tablist\" class=\"flex gap-2 mb-2\"><button role=\"tab\" hx-get=\"/patterns/api/tab/templ\" hx-target=\"#tab-demo-panel\" class=\"btn btn-secondary\">templ</button> <button role=\"tab\" hx-get=\"/patterns/api/tab/htmx\" hx-target=\"#tab-demo-panel\" class=\"btn btn-secondary\">HTMX</button> <button role=\"tab\" hx-get=\"/patterns/api/tab/alpine\" hx-target=\"#tab-demo-panel\" class=\"btn btn-secondary\">Alpine</button></div><div id=\"tab-demo-panel\" class=\"border border-border rounded-md min-h-16\"><div class=\"p-4 text-sm text-muted-foreground\">Pick a tab — its panel is rendered server-side.</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -5,11 +5,11 @@ package partials
 // never appears to do nothing. kind is "error" or "success".
 templ AuthMessage(kind string, message string) {
 	if kind == "success" {
-		<div role="status" class="mb-2 p-3 rounded bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-100 text-sm">
+		<div role="status" class="mb-2 p-3 rounded bg-success/10 text-success text-sm">
 			{ message }
 		</div>
 	} else {
-		<div role="alert" class="mb-2 p-3 rounded bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-100 text-sm">
+		<div role="alert" class="mb-2 p-3 rounded bg-danger/10 text-danger text-sm">
 			{ message }
 		</div>
 	}

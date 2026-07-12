@@ -144,11 +144,11 @@ templ FormValidation(props FormValidationProps) {
 		if props.Label != "" {
 			<label
 				for={ props.ID }
-				class="block text-sm font-medium text-gray-700 mb-1"
+				class="block text-sm font-medium text-foreground mb-1"
 			>
 				{ props.Label }
 				if props.Required {
-					<span class="text-red-500">*</span>
+					<span class="text-danger">*</span>
 				}
 			</label>
 		}
@@ -157,10 +157,10 @@ templ FormValidation(props FormValidationProps) {
 			name={ props.Name }
 			type={ formValidationType(props) }
 			placeholder={ props.Placeholder }
-			class="input focus:outline-hidden focus:ring-primary-500 focus:border-primary-500"
+			class="input focus:outline-hidden focus:ring-primary focus:border-primary"
 			x-model="value"
 			@blur="touched = true"
-			:class="{ 'border-red-300': serverError || (!isValid && touched) }"
+			:class="{ 'border-danger': serverError || (!isValid && touched) }"
 			if props.Required {
 				required
 			}
@@ -179,14 +179,14 @@ templ FormValidation(props FormValidationProps) {
 		<div
 			x-show="serverError || (!isValid && touched)"
 			x-cloak
-			class="mt-1 text-sm text-red-600"
+			class="mt-1 text-sm text-danger"
 			id={ props.ID + "-error" }
 			role="alert"
 		>
 			<span x-text="displayMessage"></span>
 		</div>
 		if props.HelperText != "" {
-			<p class="mt-1 text-xs text-gray-500">
+			<p class="mt-1 text-xs text-muted-foreground">
 				{ props.HelperText }
 			</p>
 		}

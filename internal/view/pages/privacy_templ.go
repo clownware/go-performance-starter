@@ -46,7 +46,7 @@ func PrivacyPage(props view.BaseProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6 mt-12\"><h1 class=\"text-2xl font-bold\">Privacy Policy</h1><p>This is a placeholder for your SaaS Privacy Policy. Please update this content.</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto bg-surface text-foreground rounded shadow p-6 mt-12\"><h1 class=\"text-2xl font-bold\">Privacy Policy</h1><p>This is a placeholder for your SaaS Privacy Policy. Please update this content.</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

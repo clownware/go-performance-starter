@@ -8,16 +8,16 @@ package partials
 templ QuizTeaser() {
 	<div
 		data-testid="quiz-teaser"
-		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6"
+		class="bg-surface rounded-lg shadow-md p-6"
 	>
 		<h2 class="text-xl font-semibold mb-2">Ten questions about the machine you're standing in</h2>
-		<p class="mb-3 text-gray-600 dark:text-gray-300">
+		<p class="mb-3 text-muted-foreground">
 			The quiz covers this starter's own architecture — routing and middleware,
 			handlers, the RLS-scoped data layer, the templ/HTMX frontend, and the
 			performance budgets. Every answer you submit is written as a real row,
 			scoped to you by Postgres Row Level Security.
 		</p>
-		<p class="mb-5 text-gray-600 dark:text-gray-300">
+		<p class="mb-5 text-muted-foreground">
 			That's why it asks you to sign in: your score, your attempts, and the
 			flashcards you save are per-user data on the same multi-tenant path a
 			production app would use — not a cookie full of JSON.
@@ -33,15 +33,15 @@ templ QuizTeaser() {
 templ FlashcardsTeaser() {
 	<div
 		data-testid="flashcards-teaser"
-		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6"
+		class="bg-surface rounded-lg shadow-md p-6"
 	>
 		<h2 class="text-xl font-semibold mb-2">Your wrong answers, working for you</h2>
-		<p class="mb-3 text-gray-600 dark:text-gray-300">
+		<p class="mb-3 text-muted-foreground">
 			Miss a question on the <a href="/learn/quiz" class="text-primary underline">architecture quiz</a>
 			and you can save it as a flashcard — then review, flip, mark what you
 			know, and delete what you don't need.
 		</p>
-		<p class="mb-5 text-gray-600 dark:text-gray-300">
+		<p class="mb-5 text-muted-foreground">
 			Each card is a row that belongs to you, enforced by Row Level Security
 			at the database — which is why this page needs to know who you are.
 		</p>

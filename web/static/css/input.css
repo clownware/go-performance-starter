@@ -9,56 +9,74 @@
 /* Content sources for templ files (HTML/JS auto-detected) */
 @source "../../../internal/view/**/*.templ";
 
-/* Theme: color palette from Alpine SaaS design */
+/*
+ * Design tokens (ADR-029): role-based semantic layer over the base palette,
+ * mirroring astro-performance-starter ADR-047. Components use ONLY role
+ * utilities (bg-surface, text-muted-foreground, border-border, ...); dark
+ * mode flips the role variables in the .dark block below, so components
+ * never write dark: color variants. Enforced by view/tokens_test.go.
+ */
 @theme {
-  /* Palette */
+  /* Base palette */
   --color-teal: #468189;
+  --color-teal-strong: #3a6b6f;
+  --color-teal-soft: #8fc0c7;
   --color-bittersweet: #bf4342;
+  --color-bittersweet-strong: #a63a39;
+  --color-bittersweet-soft: #e08583;
   --color-night: #0c0c0c;
   --color-nyanza: #f0ffce;
   --color-sage: #d2cca1;
 
-  /* Component colors */
-  --color-primary: #468189;
-  --color-primary-500: #468189;
-  --color-primary-600: #468189;
-  --color-primary-700: #3a6b6f;
-  --color-primary-dark: #3a6b6f;
-  --color-danger: #bf4342;
-  --color-danger-dark: #bf4342;
-
-  /* Semantic colors for light/dark themes */
-  --color-background: #f0ffce;
-  --color-background-dark: #0c0c0c;
+  /* Role tokens — light values; the .dark block overrides at runtime */
+  --color-background: var(--color-nyanza);
   --color-surface: #ffffff;
-  --color-surface-dark: #181818;
-  --color-text: #0c0c0c;
-  --color-text-dark: #f0ffce;
-  --color-accent: #d2cca1;
-  --color-accent-dark: #fffad1;
-  --color-muted: #d2cca1;
-  --color-muted-dark: #e6e6b3;
+  --color-surface-hover: #f3f4f6;
+  --color-foreground: var(--color-night);
+  --color-muted-foreground: #4b5563;
+  --color-border: #e5e7eb;
+  --color-primary: var(--color-teal);
+  --color-primary-strong: var(--color-teal-strong);
+  --color-accent: var(--color-sage);
+  --color-link: var(--color-teal-strong);
+  --color-danger: var(--color-bittersweet);
+  --color-success: #15803d;
+  --color-warning: #b45309;
 }
 
-/* Semantic color CSS variables (dark mode switching) */
-@import "./semantic-colors.css";
-
-/* Alpine.js: hide x-cloak elements until Alpine initializes — without this
-   rule the attribute does nothing and hidden panels flash on load. */
-@layer base {
-  [x-cloak] {
-    display: none !important;
-  }
+/*
+ * Dark mode: flip the roles, not the components (ADR-029 §1). Values are
+ * chosen for the night background — lightened link/status colors keep AA.
+ */
+.dark {
+  --color-background: var(--color-night);
+  --color-surface: #1a1a1a;
+  --color-surface-hover: #262626;
+  --color-foreground: var(--color-nyanza);
+  --color-muted-foreground: #9ca3af;
+  --color-border: #2e2e2e;
+  --color-link: var(--color-teal-soft);
+  --color-danger: var(--color-bittersweet-soft);
+  --color-success: #4ade80;
+  --color-warning: #f59e0b;
 }
 
-/* Restore v3 default border color behavior */
+/* Restore v3 default border color behavior, on the role token */
 @layer base {
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-border, currentColor);
+  }
+}
+
+/* Alpine.js: hide x-cloak elements until Alpine initializes — without this
+   rule, panels meant to start hidden flash on load (ADR-028 review) */
+@layer base {
+  [x-cloak] {
+    display: none !important;
   }
 }
 
@@ -69,19 +87,24 @@
     padding-right: 1rem;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
+  /* Solid buttons ride brand constants — readable with white text in both
+     modes; text and tints ride the flipped role tokens (ADR-029 §3). */
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply bg-teal text-white hover:bg-teal-strong focus:ring-primary;
   }
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500;
+    @apply border border-border bg-surface text-foreground hover:bg-surface-hover focus:ring-primary;
+  }
+  .btn-danger {
+    @apply bg-bittersweet text-white hover:bg-bittersweet-strong focus:ring-danger;
   }
   .input {
-    @apply w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+    @apply w-full rounded-md border-border bg-surface text-foreground shadow-sm focus:border-primary focus:ring-primary;
   }
 }
 

@@ -64,7 +64,7 @@ func PatternSwapResult() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 rounded-md bg-surface dark:bg-surface-dark border border-primary text-sm\">This fragment was rendered by the server and swapped in by HTMX — no page reload, no client templating.</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 rounded-md bg-surface border border-primary text-sm\">This fragment was rendered by the server and swapped in by HTMX — no page reload, no client templating.</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -93,19 +93,19 @@ func PatternSearchResults(props PatternSearchProps) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<ul class=\"divide-y divide-gray-200 dark:divide-gray-800\" aria-live=\"polite\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<ul class=\"divide-y divide-border\" aria-live=\"polite\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(props.Results) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<li class=\"py-2 text-gray-500 dark:text-gray-400\">No matches for \"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<li class=\"py-2 text-muted-foreground\">No matches for \"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.Query)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/patterns.templ`, Line: 47, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/patterns.templ`, Line: 47, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -262,7 +262,7 @@ func PatternEditDisplay(props PatternEditProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" hx-swap=\"outerHTML\" class=\"p-3 rounded-md border border-dashed border-gray-300 dark:border-gray-700 cursor-pointer\" role=\"button\" tabindex=\"0\" title=\"Click to edit\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" hx-swap=\"outerHTML\" class=\"p-3 rounded-md border border-dashed border-border cursor-pointer\" role=\"button\" tabindex=\"0\" title=\"Click to edit\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -426,7 +426,7 @@ func PatternScrollPage(props PatternScrollProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" hx-trigger=\"revealed\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-gray-500 dark:text-gray-400\">Loading more...</li>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" hx-trigger=\"revealed\" hx-swap=\"outerHTML\" class=\"py-2 text-center text-muted-foreground\">Loading more...</li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -456,7 +456,7 @@ func PatternToastResult() templ.Component {
 			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<span class=\"text-sm text-gray-500 dark:text-gray-400\">Toast fired via the HX-Trigger response header — the body payload stays tiny.</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<span class=\"text-sm text-muted-foreground\">Toast fired via the HX-Trigger response header — the body payload stays tiny.</span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -485,7 +485,7 @@ func PatternSkeletonContent() templ.Component {
 			templ_7745c5c3_Var20 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"p-4 rounded-md bg-surface dark:bg-surface-dark border border-gray-200 dark:border-gray-800\"><h4 class=\"font-medium mb-1\">Loaded content</h4><p class=\"text-sm text-gray-500 dark:text-gray-400\">The skeleton you just saw was pure CSS rendered instantly; this content arrived on a delayed HTMX load.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"p-4 rounded-md bg-surface border border-border\"><h4 class=\"font-medium mb-1\">Loaded content</h4><p class=\"text-sm text-muted-foreground\">The skeleton you just saw was pure CSS rendered instantly; this content arrived on a delayed HTMX load.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

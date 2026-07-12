@@ -55,7 +55,7 @@ func FlashcardsPage(props FlashcardsPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto\"><h1 class=\"text-2xl font-semibold mb-2\">Flashcards</h1><p class=\"text-gray-500 dark:text-gray-400 mb-6\">Cards you saved from the quiz — each one a real row scoped to you by Row Level Security. Flip to recall, mark what you know, delete what you don't need.</p><div id=\"flashcard-list\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto\"><h1 class=\"text-2xl font-semibold mb-2\">Flashcards</h1><p class=\"text-muted-foreground mb-6\">Cards you saved from the quiz — each one a real row scoped to you by Row Level Security. Flip to recall, mark what you know, delete what you don't need.</p><div id=\"flashcard-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
