@@ -1,0 +1,43 @@
+package pages
+
+import (
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/layouts"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
+)
+
+// QuizPageProps holds data for the architecture quiz page (ADR-024).
+type QuizPageProps struct {
+	view.BaseProps
+	// Empty marks a database with no seeded questions.
+	Empty bool
+	// Question is the card to answer; nil when Empty or when Result is shown.
+	Question *partials.QuizQuestionProps
+	// Result is the outcome of a non-HTMX answer submit (full-page fallback).
+	Result *partials.QuizResultProps
+	Score  view.QuizScore
+}
+
+templ QuizPage(props QuizPageProps) {
+	@layouts.Base(props.BaseProps) {
+		<div class="max-w-2xl mx-auto">
+			<h1 class="text-2xl font-semibold mb-2">Architecture Quiz</h1>
+			<p class="text-gray-500 dark:text-gray-400 mb-4">
+				Questions drawn from this starter's own architecture — every answer you
+				save is a real row behind Row Level Security.
+			</p>
+			if !props.Empty && props.Result == nil {
+				@partials.QuizScoreBadge(props.Score)
+			}
+			<div id="quiz-card" class="mt-4">
+				if props.Empty {
+					@partials.QuizEmptyState()
+				} else if props.Result != nil {
+					@partials.QuizResult(*props.Result)
+				} else if props.Question != nil {
+					@partials.QuizQuestionCard(*props.Question)
+				}
+			</div>
+		</div>
+	}
+}

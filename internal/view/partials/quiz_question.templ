@@ -1,0 +1,71 @@
+package partials
+
+import (
+	"fmt"
+	"github.com/clownware/go-performance-starter/internal/view/components"
+)
+
+// QuizQuestionProps holds data for the quiz question card (ADR-024).
+type QuizQuestionProps struct {
+	Slug    string
+	Topic   string
+	Prompt  string
+	Choices []string
+	// Error is the validation message shown when a submit had no usable choice.
+	Error string
+}
+
+func quizAnswerAction(slug string) string {
+	return fmt.Sprintf("/learn/quiz/%s/answer", slug)
+}
+
+// QuizQuestionCard renders the answer form for one question. It is a
+// standalone fragment for HTMX swaps and a plain form without JS: hx-post
+// swaps the card in place, the form action posts the same payload full-page.
+templ QuizQuestionCard(props QuizQuestionProps) {
+	<div
+		data-testid="quiz-question"
+		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6"
+	>
+		<p class="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{ props.Topic }</p>
+		<h2 class="text-xl font-semibold mb-4">{ props.Prompt }</h2>
+		if props.Error != "" {
+			<p class="text-danger mb-3" role="alert">{ props.Error }</p>
+		}
+		<form
+			method="post"
+			action={ templ.SafeURL(quizAnswerAction(props.Slug)) }
+			hx-post={ quizAnswerAction(props.Slug) }
+			hx-target="#quiz-card"
+			hx-swap="innerHTML"
+		>
+			@components.CSRFField()
+			<fieldset class="space-y-2 mb-4">
+				<legend class="sr-only">Choose an answer</legend>
+				for i, choice := range props.Choices {
+					<label class="flex items-center gap-3 p-3 rounded-md border border-gray-200 dark:border-gray-800 hover:border-primary cursor-pointer">
+						<input
+							type="radio"
+							name="choice"
+							value={ fmt.Sprintf("%d", i) }
+							required
+							class="text-primary focus:ring-primary"
+						/>
+						<span>{ choice }</span>
+					</label>
+				}
+			</fieldset>
+			<button type="submit" class="btn btn-primary">Check answer</button>
+		</form>
+	</div>
+}
+
+// QuizEmptyState renders when no questions are seeded yet.
+templ QuizEmptyState() {
+	<div
+		data-testid="quiz-empty"
+		class="bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400"
+	>
+		<p>No quiz questions yet — seed the database to take the architecture quiz.</p>
+	</div>
+}

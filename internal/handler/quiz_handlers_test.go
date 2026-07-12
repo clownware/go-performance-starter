@@ -1,0 +1,495 @@
+package handler
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+
+	"github.com/clownware/go-performance-starter/internal/database"
+	"github.com/clownware/go-performance-starter/internal/repository"
+	"github.com/clownware/go-performance-starter/internal/webutil"
+)
+
+// fakeQuizRepo is a hand-rolled repository.QuizRepository double: fixture
+// questions, injectable errors, and a record of every attempt written — the
+// handler must never touch SQL directly (ADR-003), so this is the full seam.
+type fakeQuizRepo struct {
+	questions    []database.QuizQuestion
+	correctCount int64
+
+	listErr   error
+	getErr    error
+	recordErr error
+	countErr  error
+
+	attempts []database.CreateQuizAttemptParams
+}
+
+var _ repository.QuizRepository = (*fakeQuizRepo)(nil)
+
+func (f *fakeQuizRepo) ListQuestions(_ context.Context) ([]database.QuizQuestion, error) {
+	if f.listErr != nil {
+		return nil, f.listErr
+	}
+	return f.questions, nil
+}
+
+func (f *fakeQuizRepo) GetQuestion(_ context.Context, id uuid.UUID) (*database.QuizQuestion, error) {
+	if f.getErr != nil {
+		return nil, f.getErr
+	}
+	for i := range f.questions {
+		if f.questions[i].ID == id {
+			return &f.questions[i], nil
+		}
+	}
+	return nil, repository.ErrNotFound
+}
+
+func (f *fakeQuizRepo) GetQuestionBySlug(_ context.Context, slug string) (*database.QuizQuestion, error) {
+	if f.getErr != nil {
+		return nil, f.getErr
+	}
+	for i := range f.questions {
+		if f.questions[i].Slug == slug {
+			return &f.questions[i], nil
+		}
+	}
+	return nil, repository.ErrNotFound
+}
+
+func (f *fakeQuizRepo) RecordAttempt(_ context.Context, params database.CreateQuizAttemptParams) (*database.QuizAttempt, error) {
+	if f.recordErr != nil {
+		return nil, f.recordErr
+	}
+	f.attempts = append(f.attempts, params)
+	return &database.QuizAttempt{
+		ID:            uuid.New(),
+		UserID:        params.UserID,
+		QuestionID:    params.QuestionID,
+		SelectedIndex: params.SelectedIndex,
+		IsCorrect:     params.IsCorrect,
+	}, nil
+}
+
+func (f *fakeQuizRepo) ListAttemptsByUser(_ context.Context, _ uuid.UUID, _, _ int32) ([]database.QuizAttempt, error) {
+	return nil, nil
+}
+
+func (f *fakeQuizRepo) CountCorrectByUser(_ context.Context, _ uuid.UUID) (int64, error) {
+	if f.countErr != nil {
+		return 0, f.countErr
+	}
+	return f.correctCount, nil
+}
+
+// quizFixtures returns three seeded questions in display order, mirroring the
+// explainer topics (demo-design-brief.md content map).
+func quizFixtures() []database.QuizQuestion {
+	return []database.QuizQuestion{
+		{
+			ID:           uuid.New(),
+			Slug:         "middleware-stack",
+			Topic:        "routing",
+			Prompt:       "Which router assembles the middleware stack?",
+			Choices:      []byte(`["Chi","Gin","Echo","net/http mux"]`),
+			CorrectIndex: 0,
+			Explanation:  "Chi composes the middleware stack in server.setupMiddleware.",
+		},
+		{
+			ID:           uuid.New(),
+			Slug:         "rls-scoping",
+			Topic:        "database",
+			Prompt:       "What scopes every query to the requesting user?",
+			Choices:      []byte(`["Row Level Security","WHERE clauses in handlers","An ORM hook"]`),
+			CorrectIndex: 0,
+			Explanation:  "RLS policies evaluate auth.uid() inside the scoped transaction.",
+		},
+		{
+			ID:           uuid.New(),
+			Slug:         "performance-budgets",
+			Topic:        "performance",
+			Prompt:       "Where are the performance budgets enforced?",
+			Choices:      []byte(`["CI via task ci","A wiki page","Nowhere"]`),
+			CorrectIndex: 0,
+			Explanation:  "task ci fails the build when a budget is exceeded.",
+		},
+	}
+}
+
+func newQuizRouter(repo repository.QuizRepository) http.Handler {
+	r := chi.NewRouter()
+	QuizRoutes(r, repo)
+	return r
+}
+
+// asQuizUser attaches the loaded users row and validated claims, exactly what
+// the GuestSession → AuthMiddleware → UserLoader chain provides in production.
+func asQuizUser(r *http.Request, user *database.User) *http.Request {
+	if user == nil {
+		return r
+	}
+	ctx := webutil.WithUser(r.Context(), user)
+	ctx = webutil.WithAuthClaims(ctx, webutil.AuthClaims{
+		Sub:         "auth-" + user.ID.String(),
+		Role:        webutil.RoleAuthenticated,
+		IsAnonymous: true, // guests are the default audience (ADR-024)
+	})
+	return r.WithContext(ctx)
+}
+
+func TestQuizPage(t *testing.T) {
+	questions := quizFixtures()
+	user := &database.User{ID: uuid.New(), IsAnonymous: true}
+
+	tests := []struct {
+		name         string
+		target       string
+		repo         *fakeQuizRepo
+		user         *database.User
+		htmx         bool
+		wantStatus   int
+		wantLocation string
+		wantContains []string
+		wantAbsent   []string
+	}{
+		{
+			name:       "defaults to the first question with a running score",
+			target:     "/learn/quiz",
+			repo:       &fakeQuizRepo{questions: questions, correctCount: 1},
+			user:       user,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-question"`,
+				"Which router assembles the middleware stack?",
+				"Chi", "Gin", "Echo", "net/http mux",
+				`data-testid="quiz-score"`,
+				"1 of 3",
+			},
+		},
+		{
+			name:       "selects a question by slug",
+			target:     "/learn/quiz?q=rls-scoping",
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				"What scopes every query to the requesting user?",
+			},
+			wantAbsent: []string{
+				"Which router assembles the middleware stack?",
+			},
+		},
+		{
+			name:       "full page render for direct navigation",
+			target:     "/learn/quiz",
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				"<!doctype",
+			},
+		},
+		{
+			name:       "HTMX request swaps just the question card",
+			target:     "/learn/quiz?q=rls-scoping",
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-question"`,
+			},
+			wantAbsent: []string{
+				"<!doctype",
+			},
+		},
+		{
+			name:       "unknown slug is a 404",
+			target:     "/learn/quiz?q=no-such-question",
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "empty question set renders the empty state",
+			target:     "/learn/quiz",
+			repo:       &fakeQuizRepo{},
+			user:       user,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-empty"`,
+			},
+		},
+		{
+			name:       "repository failure is a 500",
+			target:     "/learn/quiz",
+			repo:       &fakeQuizRepo{listErr: errFake},
+			user:       user,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "missing user redirects to auth",
+			target:       "/learn/quiz",
+			repo:         &fakeQuizRepo{questions: questions},
+			user:         nil,
+			wantStatus:   http.StatusSeeOther,
+			wantLocation: "/auth/page",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, tt.target, nil)
+			req = asQuizUser(req, tt.user)
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
+			w := httptest.NewRecorder()
+
+			newQuizRouter(tt.repo).ServeHTTP(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("GET %s status = %d, want %d", tt.target, w.Code, tt.wantStatus)
+			}
+			if tt.wantLocation != "" {
+				if got := w.Header().Get("Location"); got != tt.wantLocation {
+					t.Errorf("GET %s Location = %q, want %q", tt.target, got, tt.wantLocation)
+				}
+			}
+			body := strings.ToLower(w.Body.String())
+			for _, want := range tt.wantContains {
+				if !strings.Contains(body, strings.ToLower(want)) {
+					t.Errorf("GET %s body missing %q", tt.target, want)
+				}
+			}
+			for _, absent := range tt.wantAbsent {
+				if strings.Contains(body, strings.ToLower(absent)) {
+					t.Errorf("GET %s body unexpectedly contains %q", tt.target, absent)
+				}
+			}
+		})
+	}
+}
+
+func TestQuizAnswer(t *testing.T) {
+	questions := quizFixtures()
+	user := &database.User{ID: uuid.New(), IsAnonymous: true}
+
+	tests := []struct {
+		name         string
+		slug         string
+		form         url.Values
+		repo         *fakeQuizRepo
+		user         *database.User
+		htmx         bool
+		wantStatus   int
+		wantLocation string
+		wantContains []string
+		wantAbsent   []string
+		wantAttempt  *database.CreateQuizAttemptParams // nil = no attempt recorded
+	}{
+		{
+			name:       "correct answer records the attempt and explains",
+			slug:       "middleware-stack",
+			form:       url.Values{"choice": {"0"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-result"`,
+				"Chi composes the middleware stack in server.setupMiddleware.",
+				"/learn/quiz?q=rls-scoping", // link to the next question
+			},
+			wantAbsent: []string{
+				`data-testid="save-flashcard-offer"`,
+			},
+			wantAttempt: &database.CreateQuizAttemptParams{
+				UserID:        user.ID,
+				SelectedIndex: 0,
+				IsCorrect:     true,
+			},
+		},
+		{
+			name:       "wrong answer offers to save a flashcard",
+			slug:       "rls-scoping",
+			form:       url.Values{"choice": {"2"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-result"`,
+				"RLS policies evaluate auth.uid() inside the scoped transaction.",
+				`data-testid="save-flashcard-offer"`,
+			},
+			wantAttempt: &database.CreateQuizAttemptParams{
+				UserID:        user.ID,
+				SelectedIndex: 2,
+				IsCorrect:     false,
+			},
+		},
+		{
+			name:       "last question marks the quiz done",
+			slug:       "performance-budgets",
+			form:       url.Values{"choice": {"0"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="quiz-done"`,
+			},
+			wantAttempt: &database.CreateQuizAttemptParams{
+				UserID:        user.ID,
+				SelectedIndex: 0,
+				IsCorrect:     true,
+			},
+		},
+		{
+			name:       "non-HTMX submit falls back to a full result page",
+			slug:       "middleware-stack",
+			form:       url.Values{"choice": {"0"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       false,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				"<!doctype",
+				`data-testid="quiz-result"`,
+			},
+			wantAttempt: &database.CreateQuizAttemptParams{
+				UserID:        user.ID,
+				SelectedIndex: 0,
+				IsCorrect:     true,
+			},
+		},
+		{
+			name:       "unknown question slug is a 404 and records nothing",
+			slug:       "no-such-question",
+			form:       url.Values{"choice": {"0"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "missing choice re-renders with 422 and records nothing",
+			slug:       "middleware-stack",
+			form:       url.Values{},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusUnprocessableEntity,
+		},
+		{
+			name:       "non-numeric choice is a 422 and records nothing",
+			slug:       "middleware-stack",
+			form:       url.Values{"choice": {"first"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusUnprocessableEntity,
+		},
+		{
+			name:       "out-of-range choice is a 422 and records nothing",
+			slug:       "middleware-stack",
+			form:       url.Values{"choice": {"9"}},
+			repo:       &fakeQuizRepo{questions: questions},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusUnprocessableEntity,
+		},
+		{
+			name:       "record failure is a 500",
+			slug:       "middleware-stack",
+			form:       url.Values{"choice": {"0"}},
+			repo:       &fakeQuizRepo{questions: questions, recordErr: errFake},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "missing user redirects to auth and records nothing",
+			slug:         "middleware-stack",
+			form:         url.Values{"choice": {"0"}},
+			repo:         &fakeQuizRepo{questions: questions},
+			user:         nil,
+			wantStatus:   http.StatusSeeOther,
+			wantLocation: "/auth/page",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := "/learn/quiz/" + tt.slug + "/answer"
+			req := httptest.NewRequest(http.MethodPost, target, strings.NewReader(tt.form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req = asQuizUser(req, tt.user)
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
+			w := httptest.NewRecorder()
+
+			newQuizRouter(tt.repo).ServeHTTP(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("POST %s status = %d, want %d", target, w.Code, tt.wantStatus)
+			}
+			if tt.wantLocation != "" {
+				if got := w.Header().Get("Location"); got != tt.wantLocation {
+					t.Errorf("POST %s Location = %q, want %q", target, got, tt.wantLocation)
+				}
+			}
+
+			body := strings.ToLower(w.Body.String())
+			for _, want := range tt.wantContains {
+				if !strings.Contains(body, strings.ToLower(want)) {
+					t.Errorf("POST %s body missing %q", target, want)
+				}
+			}
+			for _, absent := range tt.wantAbsent {
+				if strings.Contains(body, strings.ToLower(absent)) {
+					t.Errorf("POST %s body unexpectedly contains %q", target, absent)
+				}
+			}
+
+			if tt.wantAttempt == nil {
+				if len(tt.repo.attempts) != 0 {
+					t.Fatalf("POST %s recorded %d attempt(s), want none", target, len(tt.repo.attempts))
+				}
+				return
+			}
+			if len(tt.repo.attempts) != 1 {
+				t.Fatalf("POST %s recorded %d attempt(s), want exactly 1", target, len(tt.repo.attempts))
+			}
+			got := tt.repo.attempts[0]
+			wantQuestion, err := tt.repo.GetQuestionBySlug(context.Background(), tt.slug)
+			if err != nil {
+				t.Fatalf("fixture question %q missing: %v", tt.slug, err)
+			}
+			if got.QuestionID != wantQuestion.ID {
+				t.Errorf("attempt QuestionID = %s, want %s", got.QuestionID, wantQuestion.ID)
+			}
+			if got.UserID != tt.wantAttempt.UserID {
+				t.Errorf("attempt UserID = %s, want %s", got.UserID, tt.wantAttempt.UserID)
+			}
+			if got.SelectedIndex != tt.wantAttempt.SelectedIndex {
+				t.Errorf("attempt SelectedIndex = %d, want %d", got.SelectedIndex, tt.wantAttempt.SelectedIndex)
+			}
+			if got.IsCorrect != tt.wantAttempt.IsCorrect {
+				t.Errorf("attempt IsCorrect = %v, want %v", got.IsCorrect, tt.wantAttempt.IsCorrect)
+			}
+		})
+	}
+}
+
+// errFake is a sentinel for injected repository failures.
+var errFake = errors.New("boom")

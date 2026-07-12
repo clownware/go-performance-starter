@@ -1,0 +1,159 @@
+package partials
+
+import "fmt"
+
+// Fragments returned by the /patterns/api demo endpoints (ADR-024 surface 2).
+// All stub data, no database — each is a standalone HTMX swap target.
+
+// PatternSearchProps holds results for the live-search and typeahead demos.
+type PatternSearchProps struct {
+	Query   string
+	Results []string
+}
+
+// PatternEditProps holds state for the click-to-edit demo.
+type PatternEditProps struct {
+	ID    string
+	Value string
+}
+
+// PatternFavoriteProps holds state for the optimistic-UI favorite demo.
+type PatternFavoriteProps struct {
+	ID        string
+	Favorited bool
+}
+
+// PatternScrollProps holds one page of the infinite-scroll demo.
+type PatternScrollProps struct {
+	Items    []string
+	NextPage int
+}
+
+// PatternTabProps holds one server-loaded tab panel.
+type PatternTabProps struct {
+	Name    string
+	Content string
+}
+
+templ PatternSwapResult() {
+	<div class="p-4 rounded-md bg-surface dark:bg-surface-dark border border-primary text-sm">
+		This fragment was rendered by the server and swapped in by HTMX — no page reload, no client templating.
+	</div>
+}
+
+templ PatternSearchResults(props PatternSearchProps) {
+	<ul class="divide-y divide-gray-200 dark:divide-gray-800" aria-live="polite">
+		if len(props.Results) == 0 {
+			<li class="py-2 text-gray-500 dark:text-gray-400">No matches for "{ props.Query }"</li>
+		}
+		for _, result := range props.Results {
+			<li class="py-2">{ result }</li>
+		}
+	</ul>
+}
+
+func patternEditURL(id string) string {
+	return fmt.Sprintf("/patterns/api/edit/%s", id)
+}
+
+templ PatternEditForm(props PatternEditProps) {
+	<form
+		hx-put={ patternEditURL(props.ID) }
+		hx-swap="outerHTML"
+		class="flex items-center gap-2"
+	>
+		<label for={ "pattern-edit-" + props.ID } class="sr-only">Edit value</label>
+		<input
+			id={ "pattern-edit-" + props.ID }
+			type="text"
+			name="value"
+			value={ props.Value }
+			class="input flex-grow"
+			autofocus
+		/>
+		<button type="submit" class="btn btn-primary">Save</button>
+	</form>
+}
+
+templ PatternEditDisplay(props PatternEditProps) {
+	<div
+		hx-get={ patternEditURL(props.ID) }
+		hx-swap="outerHTML"
+		class="p-3 rounded-md border border-dashed border-gray-300 dark:border-gray-700 cursor-pointer"
+		role="button"
+		tabindex="0"
+		title="Click to edit"
+	>
+		{ props.Value }
+	</div>
+}
+
+func patternFavoriteURL(id string) string {
+	return fmt.Sprintf("/patterns/api/favorite/%s", id)
+}
+
+templ PatternFavoriteButton(props PatternFavoriteProps) {
+	<button
+		hx-post={ patternFavoriteURL(props.ID) }
+		hx-vals={ fmt.Sprintf(`{"favorited": "%t"}`, props.Favorited) }
+		hx-swap="outerHTML"
+		x-data="{}"
+		x-transition
+		if props.Favorited {
+			class="btn btn-primary"
+			aria-pressed="true"
+		} else {
+			class="btn btn-secondary"
+			aria-pressed="false"
+		}
+	>
+		if props.Favorited {
+			&#9733; Favorited
+		} else {
+			&#9734; Favorite
+		}
+	</button>
+}
+
+templ PatternScrollPage(props PatternScrollProps) {
+	for _, item := range props.Items {
+		<li class="py-2">{ item }</li>
+	}
+	if props.NextPage > 0 {
+		<li
+			hx-get={ fmt.Sprintf("/patterns/api/scroll?page=%d", props.NextPage) }
+			hx-trigger="revealed"
+			hx-swap="outerHTML"
+			class="py-2 text-center text-gray-500 dark:text-gray-400"
+		>
+			Loading more...
+		</li>
+	}
+}
+
+templ PatternToastResult() {
+	<span class="text-sm text-gray-500 dark:text-gray-400">
+		Toast fired via the HX-Trigger response header — the body payload stays tiny.
+	</span>
+}
+
+templ PatternSkeletonContent() {
+	<div class="p-4 rounded-md bg-surface dark:bg-surface-dark border border-gray-200 dark:border-gray-800">
+		<h4 class="font-medium mb-1">Loaded content</h4>
+		<p class="text-sm text-gray-500 dark:text-gray-400">
+			The skeleton you just saw was pure CSS rendered instantly; this content arrived on a delayed HTMX load.
+		</p>
+	</div>
+}
+
+templ PatternTabPanel(props PatternTabProps) {
+	<div class="p-4 text-sm" role="tabpanel" aria-label={ props.Name }>
+		{ props.Content }
+	</div>
+}
+
+templ PatternBulkResult(count int) {
+	<p class="text-sm text-primary" role="status">
+		{ fmt.Sprintf("Archived %d item(s) in one request.", count) }
+	</p>
+}
