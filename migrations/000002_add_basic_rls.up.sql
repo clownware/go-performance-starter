@@ -4,7 +4,7 @@ ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
 
 -- Create a function to check if the current user has access to an organization
-CREATE OR REPLACE FUNCTION auth.user_is_organization_member(org_id uuid)
+CREATE OR REPLACE FUNCTION public.user_is_organization_member(org_id uuid)
 RETURNS boolean AS $$
 DECLARE
     current_auth_id text;
@@ -41,7 +41,7 @@ CREATE POLICY users_self_access ON users
 -- Allow all users to see organization details if they are a member
 CREATE POLICY organizations_member_select ON organizations
     FOR SELECT
-    USING (auth.user_is_organization_member(id));
+    USING (public.user_is_organization_member(id));
 
 -- Only organization owners or admins can modify organization details
 CREATE POLICY organizations_owner_or_admin_update ON organizations
@@ -59,7 +59,7 @@ CREATE POLICY organizations_owner_or_admin_update ON organizations
 -- Users can see organization members if they are a member of the organization
 CREATE POLICY org_members_select ON organization_members
     FOR SELECT
-    USING (auth.user_is_organization_member(organization_id));
+    USING (public.user_is_organization_member(organization_id));
 
 -- Only organization owners can add/remove members
 CREATE POLICY org_members_owner_modify ON organization_members
