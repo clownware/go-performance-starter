@@ -1,0 +1,16 @@
+package partials
+
+// AuthMessage is the inline feedback the auth forms swap into #auth-messages
+// — the visible, persistent counterpart of the transient toast, so a submit
+// never appears to do nothing. kind is "error" or "success".
+templ AuthMessage(kind string, message string) {
+	if kind == "success" {
+		<div role="status" class="mb-2 p-3 rounded bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-100 text-sm">
+			{ message }
+		</div>
+	} else {
+		<div role="alert" class="mb-2 p-3 rounded bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-100 text-sm">
+			{ message }
+		</div>
+	}
+}

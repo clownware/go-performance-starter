@@ -9,6 +9,7 @@ import (
 	"github.com/clownware/go-performance-starter/internal/auth"
 	"github.com/clownware/go-performance-starter/internal/view"
 	"github.com/clownware/go-performance-starter/internal/view/pages"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
 // AuthPage renders the tabbed login/signup card. ?mode=signup activates the
@@ -28,13 +29,25 @@ func AuthPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// authFeedback answers an auth form submit with the full feedback contract:
+// a plain-message toast (HX-Trigger + HX-Toast-Type — the layout listener
+// reads exactly these; JSON envelopes render as raw text), and an inline
+// AuthMessage body that HTMX swaps into #auth-messages so the outcome stays
+// visible after the toast fades.
+func authFeedback(w http.ResponseWriter, r *http.Request, status int, kind, message string) {
+	view.SetHXTrigger(w, message)
+	w.Header().Set("HX-Toast-Type", kind)
+	if err := view.Render(w, r, status, partials.AuthMessage(kind, message)); err != nil {
+		slog.Error("Failed to render auth feedback", "error", err)
+	}
+}
+
 // AuthLoginPost handles the login form submission.
 func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			slog.Error("Failed to parse login form", "error", err)
-			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Failed to process form."}}`)
-			w.WriteHeader(http.StatusBadRequest)
+			authFeedback(w, r, http.StatusBadRequest, "error", "Failed to process form.")
 			return
 		}
 
@@ -42,8 +55,7 @@ func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 		password := r.FormValue("password")
 
 		if email == "" || password == "" {
-			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Email and password cannot be empty."}}`)
-			w.WriteHeader(http.StatusBadRequest)
+			authFeedback(w, r, http.StatusBadRequest, "error", "Email and password cannot be empty.")
 			return
 		}
 
@@ -56,8 +68,7 @@ func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 			// Email is intentionally not logged (ADR-014 §7: no PII in logs)
 			slog.Warn("Supabase login failed", "error", err)
 			// Provide a generic error for security
-			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Invalid login credentials."}}`)
-			w.WriteHeader(http.StatusUnauthorized)
+			authFeedback(w, r, http.StatusUnauthorized, "error", "Invalid login credentials.")
 			return
 		}
 
@@ -74,8 +85,7 @@ func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			slog.Error("Failed to parse signup form", "error", err)
-			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Failed to process form."}}`)
-			w.WriteHeader(http.StatusBadRequest)
+			authFeedback(w, r, http.StatusBadRequest, "error", "Failed to process form.")
 			return
 		}
 
@@ -83,8 +93,7 @@ func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 		password := r.FormValue("password")
 
 		if email == "" || password == "" {
-			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Email and password cannot be empty."}}`)
-			w.WriteHeader(http.StatusBadRequest)
+			authFeedback(w, r, http.StatusBadRequest, "error", "Email and password cannot be empty.")
 			return
 		}
 
@@ -98,17 +107,12 @@ func AuthSignupPost(authClient *auth.AuthClient) http.HandlerFunc {
 		if err != nil {
 			slog.Warn("Supabase signup failed", "error", err)
 			// Provide a more user-friendly error based on the type of Supabase error if possible
-			view.SetHXTrigger(w, `{"showToast":{"level":"error","message":"Signup failed. User might already exist or password is too weak."}}`)
-			w.WriteHeader(http.StatusConflict) // Or Bad Request depending on error
-			// Optionally render a specific error message
+			authFeedback(w, r, http.StatusConflict, "error", "Signup failed. User might already exist or password is too weak.")
 			return
 		}
 
 		slog.Info("User signup initiated")
-		view.SetHXTrigger(w, `{"showToast":{"level":"success","message":"Signup successful! Please check your email to confirm your account."}}`)
-		w.WriteHeader(http.StatusOK)
-		// Optionally clear the form or redirect, or just show the toast
-		// w.Write([]byte("Signup successful! Check email.")) // Example direct response
+		authFeedback(w, r, http.StatusOK, "success", "Signup successful! Please check your email to confirm your account, then sign in.")
 	}
 }
 

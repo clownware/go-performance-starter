@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-07-12
+
+### Fixed
+- Signing up appeared to do nothing: the auth handlers sent the toast as a
+  JSON envelope the layout listener doesn't parse (rendering raw JSON in a
+  success-green toast), returned an empty body, and HTMX skips swapping 4xx
+  responses anyway. Auth submits now return a plain-message toast with the
+  level in `HX-Toast-Type` plus a persistent inline alert swapped into
+  `#auth-messages`, and `app.js` enables swaps for 400/401/409/422 — which
+  also un-breaks the quiz answer form's 422 re-render
+
 ## [0.5.0] - 2026-07-12
 
 Identity for the project and a browse-first front door: an original brand
