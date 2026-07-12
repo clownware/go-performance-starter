@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-12
+
+### Added
+- **Seven new showcase patterns** (12 -> 19): polling, out-of-band swap,
+  confirm + disabled button, View Transitions, loading states done right,
+  Alpine modal (x-teleport), and Alpine global store
+
+### Fixed
+- **The screen flash on every demo click**: the global full-screen loading
+  overlay toggled on every HTMX request — removed in favor of per-element
+  feedback (`.htmx-request` styling, `hx-indicator`, `hx-disabled-elt`),
+  which the new loading-states pattern now teaches
+- Alpine `alpine:init` registrations never ran: app.js loaded after Alpine,
+  which fires the event the moment its deferred script executes; app.js now
+  loads in `<head>` before Alpine
+
 ## [0.6.0] - 2026-07-12
 
 Guest mode goes live and the view layer gets one design language.
