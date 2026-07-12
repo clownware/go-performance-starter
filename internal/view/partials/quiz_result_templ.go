@@ -58,7 +58,7 @@ func QuizResult(props QuizResultProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-testid=\"quiz-result\" class=\"bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-testid=\"quiz-result\" class=\"bg-surface rounded-lg shadow-md p-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -95,7 +95,7 @@ func QuizResult(props QuizResultProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if props.OfferFlashcard {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form data-testid=\"save-flashcard-offer\" method=\"post\" action=\"/learn/flashcards\" hx-post=\"/learn/flashcards\" hx-swap=\"outerHTML\" class=\"mt-4 p-4 rounded-md border border-gray-200 dark:border-gray-800\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form data-testid=\"save-flashcard-offer\" method=\"post\" action=\"/learn/flashcards\" hx-post=\"/learn/flashcards\" hx-swap=\"outerHTML\" class=\"mt-4 p-4 rounded-md border border-border\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -205,7 +205,7 @@ func QuizScoreBadge(score view.QuizScore) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<p data-testid=\"quiz-score\" class=\"text-sm text-gray-500 dark:text-gray-400\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<p data-testid=\"quiz-score\" class=\"text-sm text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

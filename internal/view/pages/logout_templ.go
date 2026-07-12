@@ -47,7 +47,7 @@ func LogoutPage(props view.BaseProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-md mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6 mt-12 text-center\"><h1 class=\"text-2xl font-bold\">Sign Out</h1><form hx-post=\"/auth/logout\" hx-target=\"body\" method=\"post\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-md mx-auto bg-surface text-foreground rounded shadow p-6 mt-12 text-center\"><h1 class=\"text-2xl font-bold\">Sign Out</h1><form hx-post=\"/auth/logout\" hx-target=\"body\" method=\"post\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -37,17 +37,17 @@ templ AuthPage(props AuthPageProps) {
 	@layouts.Base(props.BaseProps) {
 		<div class="max-w-md mx-auto py-8" x-data={ authTabData(props.Mode) }>
 			<h1 class="text-2xl font-bold mb-2 text-center">Welcome</h1>
-			<p class="text-center text-gray-500 dark:text-gray-400 mb-6">
+			<p class="text-center text-muted-foreground mb-6">
 				Sign in to keep your quiz progress and flashcards — every row is yours alone, enforced by Row Level Security.
 			</p>
-			<div class="bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded-lg shadow-md overflow-hidden">
-				<div role="tablist" aria-label="Sign in or create an account" class="flex border-b border-gray-200 dark:border-gray-800">
+			<div class="bg-surface text-foreground rounded-lg shadow-md overflow-hidden">
+				<div role="tablist" aria-label="Sign in or create an account" class="flex border-b border-border">
 					<a
 						href="/auth/page?mode=login"
 						role="tab"
 						@click.prevent="tab = 'login'"
 						:aria-selected="(tab === 'login').toString()"
-						:class="tab === 'login' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500 dark:text-gray-400'"
+						:class="tab === 'login' ? 'border-b-2 border-primary font-semibold' : 'text-muted-foreground'"
 						class="flex-1 text-center px-4 py-3 text-sm"
 					>
 						Sign in
@@ -57,7 +57,7 @@ templ AuthPage(props AuthPageProps) {
 						role="tab"
 						@click.prevent="tab = 'signup'"
 						:aria-selected="(tab === 'signup').toString()"
-						:class="tab === 'signup' ? 'border-b-2 border-primary font-semibold' : 'text-gray-500 dark:text-gray-400'"
+						:class="tab === 'signup' ? 'border-b-2 border-primary font-semibold' : 'text-muted-foreground'"
 						class="flex-1 text-center px-4 py-3 text-sm"
 					>
 						Create account
@@ -90,40 +90,37 @@ templ AuthPage(props AuthPageProps) {
 templ loginPanel(flash string) {
 	<div class="p-6">
 		if flash != "" {
-			<div class="mb-4 p-3 rounded bg-red-100 text-red-700" role="alert">
+			<div class="mb-4 p-3 rounded bg-danger/10 text-danger" role="alert">
 				{ flash }
 			</div>
 		}
-		<form hx-post="/auth/login" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-6">
+		<form hx-post="/auth/login" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-4">
 			@components.CSRFField()
-			<div class="mb-4">
-				<label for="login-email" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Your Email Address</label>
+			<div>
+				<label for="login-email" class="block text-foreground text-sm font-medium mb-1">Your Email Address</label>
 				<input
 					type="email"
 					id="login-email"
 					name="email"
 					required
 					autocomplete="email"
-					class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+					class="input"
 				/>
 			</div>
-			<div class="mb-2">
-				<label for="login-password" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Your Password</label>
+			<div>
+				<label for="login-password" class="block text-foreground text-sm font-medium mb-1">Your Password</label>
 				<input
 					type="password"
 					id="login-password"
 					name="password"
 					required
 					autocomplete="current-password"
-					class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark mb-1 leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+					class="input"
 				/>
-			</div>
-			<div class="mb-4 text-right">
-				<a href="#" class="text-sm text-primary hover:underline dark:text-primary-dark">Reset password</a>
 			</div>
 			<button
 				type="submit"
-				class="w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6"
+				class="btn btn-primary w-full"
 			>
 				Sign in to your account
 			</button>
@@ -134,48 +131,48 @@ templ loginPanel(flash string) {
 templ signupPanel(flash string) {
 	<div class="p-6">
 		if flash != "" {
-			<div class="mb-4 p-3 rounded bg-red-100 text-red-700" role="alert">
+			<div class="mb-4 p-3 rounded bg-danger/10 text-danger" role="alert">
 				{ flash }
 			</div>
 		}
-		<form hx-post="/auth/signup" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-6">
+		<form hx-post="/auth/signup" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-4">
 			@components.CSRFField()
-			<div class="mb-4">
-				<label for="signup-email" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Your Email Address</label>
+			<div>
+				<label for="signup-email" class="block text-foreground text-sm font-medium mb-1">Your Email Address</label>
 				<input
 					type="email"
 					id="signup-email"
 					name="email"
 					required
 					autocomplete="email"
-					class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+					class="input"
 				/>
 			</div>
-			<div class="mb-4">
-				<label for="signup-password" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Create a Password</label>
+			<div>
+				<label for="signup-password" class="block text-foreground text-sm font-medium mb-1">Create a Password</label>
 				<input
 					type="password"
 					id="signup-password"
 					name="password"
 					required
 					autocomplete="new-password"
-					class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+					class="input"
 				/>
 			</div>
-			<div class="mb-6">
-				<label for="signup-password-confirm" class="block text-text dark:text-text-dark text-sm font-bold mb-2">Confirm Password</label>
+			<div>
+				<label for="signup-password-confirm" class="block text-foreground text-sm font-medium mb-1">Confirm Password</label>
 				<input
 					type="password"
 					id="signup-password-confirm"
 					name="password_confirm"
 					required
 					autocomplete="new-password"
-					class="shadow appearance-none border rounded w-full py-2 px-3 text-text bg-background dark:bg-background-dark dark:text-text-dark leading-tight focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+					class="input"
 				/>
 			</div>
 			<button
 				type="submit"
-				class="w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:bg-primary-dark dark:hover:opacity-90 mt-6"
+				class="btn btn-primary w-full"
 			>
 				Create your account
 			</button>

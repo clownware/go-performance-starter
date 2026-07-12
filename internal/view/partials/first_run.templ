@@ -27,16 +27,16 @@ templ FirstRunExperience(props FirstRunProps) {
 
 templ firstRunWelcome() {
 	<!-- Step 1: Welcome Banner -->
-	<div id="welcome-banner" class="rounded bg-primary-50 border border-primary-200 p-6 flex items-center justify-between" role="status">
+	<div id="welcome-banner" class="rounded bg-primary/10 border border-primary/30 p-6 flex items-center justify-between" role="status">
 		<div>
 			<h2 class="text-xl font-bold text-primary mb-2">Welcome to Micro SaaS Starter!</h2>
-			<p class="text-primary-900 text-base">Your account is ready. For your security, please complete your profile and keep your information up to date.</p>
+			<p class="text-foreground text-base">Your account is ready. For your security, please complete your profile and keep your information up to date.</p>
 		</div>
 		<button
 			hx-get="/first-run/profile"
 			hx-target="#first-run-steps"
 			hx-swap="innerHTML"
-			class="ml-6 px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-primary-700 focus:outline-hidden focus:ring-2 focus:ring-primary"
+			class="ml-6 px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-teal-strong focus:outline-hidden focus:ring-2 focus:ring-primary"
 		>
 			Next
 		</button>
@@ -45,9 +45,9 @@ templ firstRunWelcome() {
 
 templ firstRunProfile(props FirstRunProps) {
 	<!-- Step 2: Profile Setup Prompt -->
-	<div id="profile-setup" class="rounded bg-surface border border-gray-200 dark:bg-surface-dark dark:border-gray-800 p-6">
+	<div id="profile-setup" class="rounded bg-surface border border-border p-6">
 		<h3 class="text-lg font-semibold mb-2">Set up your profile</h3>
-		<p class="mb-4 text-gray-700 dark:text-gray-300">For your security, please add a display name and confirm your email address. Never share your password with anyone.</p>
+		<p class="mb-4 text-muted-foreground">For your security, please add a display name and confirm your email address. Never share your password with anyone.</p>
 		@ProfileForm(ProfileFormProps{
 			Name:   props.Name,
 			Errors: props.Errors,
@@ -57,7 +57,7 @@ templ firstRunProfile(props FirstRunProps) {
 				hx-get="/first-run/ctas"
 				hx-target="#first-run-steps"
 				hx-swap="innerHTML"
-				class="px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-primary-700 focus:outline-hidden focus:ring-2 focus:ring-primary"
+				class="px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-teal-strong focus:outline-hidden focus:ring-2 focus:ring-primary"
 			>
 				Continue
 			</button>
@@ -71,7 +71,7 @@ templ firstRunCTAs(errorMsg string) {
 		<h3 class="text-lg font-semibold mb-2 text-green-700">You're all set!</h3>
 		<p class="mb-4 text-green-900">Protect your account by enabling two-factor authentication and reviewing your security settings.</p>
 		if errorMsg != "" {
-			<p class="text-red-600 text-sm mb-4">{ errorMsg }</p>
+			<p class="text-danger text-sm mb-4">{ errorMsg }</p>
 		}
 		<div class="flex flex-col sm:flex-row gap-3">
 			<a href="/settings/security" class="px-4 py-2 rounded bg-green-600 text-white font-medium shadow hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-green-600 text-center">Set Up 2FA</a>

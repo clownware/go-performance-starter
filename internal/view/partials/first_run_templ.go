@@ -91,7 +91,7 @@ func firstRunWelcome() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<!-- Step 1: Welcome Banner --><div id=\"welcome-banner\" class=\"rounded bg-primary-50 border border-primary-200 p-6 flex items-center justify-between\" role=\"status\"><div><h2 class=\"text-xl font-bold text-primary mb-2\">Welcome to Micro SaaS Starter!</h2><p class=\"text-primary-900 text-base\">Your account is ready. For your security, please complete your profile and keep your information up to date.</p></div><button hx-get=\"/first-run/profile\" hx-target=\"#first-run-steps\" hx-swap=\"innerHTML\" class=\"ml-6 px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-primary-700 focus:outline-hidden focus:ring-2 focus:ring-primary\">Next</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<!-- Step 1: Welcome Banner --><div id=\"welcome-banner\" class=\"rounded bg-primary/10 border border-primary/30 p-6 flex items-center justify-between\" role=\"status\"><div><h2 class=\"text-xl font-bold text-primary mb-2\">Welcome to Micro SaaS Starter!</h2><p class=\"text-foreground text-base\">Your account is ready. For your security, please complete your profile and keep your information up to date.</p></div><button hx-get=\"/first-run/profile\" hx-target=\"#first-run-steps\" hx-swap=\"innerHTML\" class=\"ml-6 px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-teal-strong focus:outline-hidden focus:ring-2 focus:ring-primary\">Next</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -120,7 +120,7 @@ func firstRunProfile(props FirstRunProps) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<!-- Step 2: Profile Setup Prompt --><div id=\"profile-setup\" class=\"rounded bg-surface border border-gray-200 dark:bg-surface-dark dark:border-gray-800 p-6\"><h3 class=\"text-lg font-semibold mb-2\">Set up your profile</h3><p class=\"mb-4 text-gray-700 dark:text-gray-300\">For your security, please add a display name and confirm your email address. Never share your password with anyone.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<!-- Step 2: Profile Setup Prompt --><div id=\"profile-setup\" class=\"rounded bg-surface border border-border p-6\"><h3 class=\"text-lg font-semibold mb-2\">Set up your profile</h3><p class=\"mb-4 text-muted-foreground\">For your security, please add a display name and confirm your email address. Never share your password with anyone.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -131,7 +131,7 @@ func firstRunProfile(props FirstRunProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex justify-end mt-4\"><button hx-get=\"/first-run/ctas\" hx-target=\"#first-run-steps\" hx-swap=\"innerHTML\" class=\"px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-primary-700 focus:outline-hidden focus:ring-2 focus:ring-primary\">Continue</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex justify-end mt-4\"><button hx-get=\"/first-run/ctas\" hx-target=\"#first-run-steps\" hx-swap=\"innerHTML\" class=\"px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-teal-strong focus:outline-hidden focus:ring-2 focus:ring-primary\">Continue</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -165,14 +165,14 @@ func firstRunCTAs(errorMsg string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if errorMsg != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-red-600 text-sm mb-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p class=\"text-danger text-sm mb-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/first_run.templ`, Line: 74, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/first_run.templ`, Line: 74, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {

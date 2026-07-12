@@ -228,9 +228,13 @@ func TestServer_AssetCacheBusting(t *testing.T) {
 	}
 	body := rec.Body.String()
 
-	for _, asset := range []string{"app.css", "semantic-colors.css", "htmx.min.js", "alpine.min.js", "app.js"} {
+	for _, asset := range []string{"app.css", "htmx.min.js", "alpine.min.js", "app.js"} {
 		if !strings.Contains(body, asset+"?v=") {
 			t.Errorf("asset %s referenced without a cache-busting ?v= stamp", asset)
 		}
+	}
+	// ADR-029: one stylesheet — the role tokens live in app.css.
+	if strings.Contains(body, "semantic-colors.css") {
+		t.Error("page still references the retired semantic-colors.css")
 	}
 }

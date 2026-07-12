@@ -118,7 +118,7 @@ func FlashcardCard(props FlashcardProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" x-data=\"{ flipped: false }\" class=\"bg-surface dark:bg-surface-dark rounded-lg shadow-md p-5 flex flex-col gap-3 list-none\"><button type=\"button\" @click=\"flipped = !flipped\" :aria-pressed=\"flipped.toString()\" class=\"text-left focus:outline-hidden focus:ring-2 focus:ring-primary rounded\" title=\"Flip card\"><span x-show=\"!flipped\" class=\"font-medium\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" x-data=\"{ flipped: false }\" class=\"bg-surface rounded-lg shadow-md p-5 flex flex-col gap-3 list-none\"><button type=\"button\" @click=\"flipped = !flipped\" :aria-pressed=\"flipped.toString()\" class=\"text-left focus:outline-hidden focus:ring-2 focus:ring-primary rounded\" title=\"Flip card\"><span x-show=\"!flipped\" class=\"font-medium\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -131,20 +131,20 @@ func FlashcardCard(props FlashcardProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span> <span x-show=\"flipped\" x-cloak class=\"text-gray-600 dark:text-gray-300\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span> <span x-show=\"flipped\" x-cloak class=\"text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(props.Back)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/flashcard.templ`, Line: 60, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/flashcard.templ`, Line: 60, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span> <span class=\"block mt-2 text-xs text-gray-400\">Click to flip</span></button><div class=\"flex items-center justify-between gap-2 mt-auto\"><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span> <span class=\"block mt-2 text-xs text-muted-foreground\">Click to flip</span></button><div class=\"flex items-center justify-between gap-2 mt-auto\"><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -283,7 +283,7 @@ func FlashcardsEmptyState() templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div data-testid=\"flashcards-empty\" class=\"bg-surface dark:bg-surface-dark rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400\"><p class=\"mb-2\">No flashcards yet.</p><p class=\"text-sm\">Miss a question on the <a href=\"/learn/quiz\" class=\"text-primary underline\">architecture quiz</a> and save it here to review later.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div data-testid=\"flashcards-empty\" class=\"bg-surface rounded-lg shadow-md p-6 text-center text-muted-foreground\"><p class=\"mb-2\">No flashcards yet.</p><p class=\"text-sm\">Miss a question on the <a href=\"/learn/quiz\" class=\"text-primary underline\">architecture quiz</a> and save it here to review later.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -11,7 +11,7 @@ type ProfileFormProps struct {
 templ ProfileForm(props ProfileFormProps) {
 	<div class="space-y-4">
 		if errMsg, ok := props.Errors["name"]; ok {
-			<p class="text-red-600 text-sm">{ errMsg }</p>
+			<p class="text-danger text-sm">{ errMsg }</p>
 		}
 		if props.Success {
 			<div
@@ -23,17 +23,17 @@ templ ProfileForm(props ProfileFormProps) {
 				Profile updated successfully!
 			</div>
 		}
-		<label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+		<label for="name" class="block text-sm font-medium text-foreground">Name</label>
 		<input
 			type="text"
 			name="name"
 			id="name"
 			value={ props.Name }
-			class="mt-1 block w-full border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+			class="mt-1 block w-full border-border rounded-md focus:ring-primary focus:border-primary"
 		/>
 		<div class="mt-2">
-			<button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded" hx-indicator=".indicator">Save</button>
-			<span class="indicator hidden text-gray-500 ml-2">Saving...</span>
+			<button type="submit" class="px-4 py-2 bg-teal text-white rounded" hx-indicator=".indicator">Save</button>
+			<span class="indicator hidden text-muted-foreground ml-2">Saving...</span>
 		</div>
 	</div>
 }
