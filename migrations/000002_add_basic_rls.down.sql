@@ -10,7 +10,7 @@ DROP POLICY IF EXISTS organizations_member_select ON organizations;
 DROP POLICY IF EXISTS users_self_access ON users;
 
 -- Drop the helper function
-DROP FUNCTION IF EXISTS auth.user_is_organization_member(uuid);
+DROP FUNCTION IF EXISTS public.user_is_organization_member(uuid);
 
 -- Disable RLS on all tables
 ALTER TABLE users DISABLE ROW LEVEL SECURITY;
