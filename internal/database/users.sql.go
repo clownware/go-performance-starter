@@ -270,6 +270,39 @@ func (q *Queries) SetUserIsAnonymous(ctx context.Context, arg SetUserIsAnonymous
 	return err
 }
 
+const setUserLastLogin = `-- name: SetUserLastLogin :one
+UPDATE users
+SET last_login_at = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
+`
+
+type SetUserLastLoginParams struct {
+	ID          uuid.UUID          `json:"id"`
+	LastLoginAt pgtype.Timestamptz `json:"last_login_at"`
+}
+
+// Deliberately narrow like UpdateUserName: routing this through UpdateUser
+// passed ” (not NULL) for email, and COALESCE(”, email) wiped the address.
+func (q *Queries) SetUserLastLogin(ctx context.Context, arg SetUserLastLoginParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserLastLogin, arg.ID, arg.LastLoginAt)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.AvatarUrl,
+		&i.AuthID,
+		&i.IsActive,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.FirstRunComplete,
+		&i.IsAnonymous,
+	)
+	return i, err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET

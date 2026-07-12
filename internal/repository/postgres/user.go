@@ -145,10 +145,13 @@ func (r *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-// SetLastLogin updates the last login timestamp for a user.
+// SetLastLogin updates the last login timestamp for a user. Uses the narrow
+// SetUserLastLogin query — the generic UpdateUser COALESCEs a non-null email
+// param, so routing through it blanked the address (caught by
+// TestUserRepoLifecycleIntegration).
 func (r *UserRepo) SetLastLogin(ctx context.Context, id uuid.UUID, loginTime time.Time) error {
 	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (database.User, error) {
-		return q.UpdateUser(ctx, database.UpdateUserParams{
+		return q.SetUserLastLogin(ctx, database.SetUserLastLoginParams{
 			ID:          id,
 			LastLoginAt: pgtype.Timestamptz{Time: loginTime, Valid: true},
 		})

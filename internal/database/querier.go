@@ -60,6 +60,9 @@ type Querier interface {
 	// Guest → registered upgrade (#68): flipping to false exempts the row from
 	// the anonymous-user reaper.
 	SetUserIsAnonymous(ctx context.Context, arg SetUserIsAnonymousParams) error
+	// Deliberately narrow like UpdateUserName: routing this through UpdateUser
+	// passed '' (not NULL) for email, and COALESCE('', email) wiped the address.
+	SetUserLastLogin(ctx context.Context, arg SetUserLastLoginParams) (User, error)
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (Organization, error)
 	UpdateOrganizationMember(ctx context.Context, arg UpdateOrganizationMemberParams) (OrganizationMember, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -125,5 +126,87 @@ func TestUserRLSIsolation(t *testing.T) {
 	}
 	if _, err := repo.GetByAuthID(ctx, authB); err != repository.ErrNotFound {
 		t.Errorf("A GetByAuthID(B): err = %v, want ErrNotFound", err)
+	}
+}
+
+// TestUserRepoLifecycleIntegration covers the mutation methods the demo's
+// login/onboarding/reaper paths call: List, Update (the upgrade flow's email
+// sync, #68), SetLastLogin, UpdateFirstRunComplete, and soft Delete.
+func TestUserRepoLifecycleIntegration(t *testing.T) {
+	ctx, q := withTx(t)
+	repo := NewUserRepo(nil, q)
+
+	first := seedUser(ctx, t, q)
+	second := seedUser(ctx, t, q)
+
+	all, err := repo.List(ctx, 1000, 0)
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	found := map[uuid.UUID]bool{}
+	for _, u := range all {
+		found[u.ID] = true
+	}
+	if !found[first] || !found[second] {
+		t.Errorf("List missing seeded users (got %d rows)", len(all))
+	}
+	one, err := repo.List(ctx, 1, 0)
+	if err != nil {
+		t.Fatalf("List(limit 1): %v", err)
+	}
+	if len(one) != 1 {
+		t.Errorf("List(limit 1) len = %d, want 1", len(one))
+	}
+
+	newEmail := "upgraded-" + uuid.NewString() + "@example.com"
+	updated, err := repo.Update(ctx, database.UpdateUserParams{ID: first, Email: newEmail})
+	if err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if updated.Email != newEmail {
+		t.Errorf("Update email = %q, want %q", updated.Email, newEmail)
+	}
+	if _, err := repo.Update(ctx, database.UpdateUserParams{ID: uuid.New(), Email: "x@example.com"}); err != repository.ErrNotFound {
+		t.Errorf("Update(missing) err = %v, want ErrNotFound", err)
+	}
+
+	loginAt := time.Now().Truncate(time.Second)
+	if err := repo.SetLastLogin(ctx, first, loginAt); err != nil {
+		t.Fatalf("SetLastLogin: %v", err)
+	}
+	afterLogin, err := repo.Get(ctx, first)
+	if err != nil {
+		t.Fatalf("Get after SetLastLogin: %v", err)
+	}
+	if !afterLogin.LastLoginAt.Valid || afterLogin.LastLoginAt.Time.Unix() != loginAt.Unix() {
+		t.Errorf("LastLoginAt = %+v, want %v", afterLogin.LastLoginAt, loginAt)
+	}
+	if afterLogin.Email != newEmail {
+		t.Errorf("SetLastLogin must not touch email: got %q", afterLogin.Email)
+	}
+	if err := repo.SetLastLogin(ctx, uuid.New(), loginAt); err != repository.ErrNotFound {
+		t.Errorf("SetLastLogin(missing) err = %v, want ErrNotFound", err)
+	}
+
+	if err := repo.UpdateFirstRunComplete(ctx, first, true); err != nil {
+		t.Fatalf("UpdateFirstRunComplete: %v", err)
+	}
+	onboarded, err := repo.Get(ctx, first)
+	if err != nil {
+		t.Fatalf("Get after UpdateFirstRunComplete: %v", err)
+	}
+	if !onboarded.FirstRunComplete {
+		t.Error("UpdateFirstRunComplete(true) did not set the flag")
+	}
+
+	if err := repo.Delete(ctx, first); err != nil {
+		t.Fatalf("Delete: %v", err)
+	}
+	deleted, err := repo.Get(ctx, first)
+	if err != nil {
+		t.Fatalf("Get after delete: %v", err)
+	}
+	if deleted.IsActive.Bool {
+		t.Error("Delete should soft-delete (is_active=false), not remove the row")
 	}
 }
