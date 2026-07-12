@@ -1,9 +1,21 @@
 package middleware
 
 import (
+	"bytes"
+	"context"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
+	"github.com/clownware/go-performance-starter/internal/performance"
 )
 
 func TestResponseWriter_WriteHeader(t *testing.T) {
@@ -96,5 +108,117 @@ func TestMetrics_HandlerChain(t *testing.T) {
 	}
 	if w.Code != http.StatusOK {
 		t.Errorf("response status = %d, want %d", w.Code, http.StatusOK)
+	}
+}
+
+// TestCheckPerformanceBudget pins the ADR-000 thresholds with exact-boundary
+// rows: a request at exactly the budget is within budget. Unique paths per
+// row keep the global counter readable.
+func TestCheckPerformanceBudget(t *testing.T) {
+	tests := []struct {
+		name     string
+		duration time.Duration
+		wantP50  float64
+		wantP95  float64
+		wantP99  float64
+	}{
+		{"under every budget", 10 * time.Millisecond, 0, 0, 0},
+		{"exactly p50 budget is within budget", performance.MaxP50ResponseTime, 0, 0, 0},
+		{"just over p50", performance.MaxP50ResponseTime + time.Millisecond, 1, 0, 0},
+		{"exactly p95 budget violates only p50", performance.MaxP95ResponseTime, 1, 0, 0},
+		{"just over p95", performance.MaxP95ResponseTime + time.Millisecond, 1, 1, 0},
+		{"exactly p99 budget violates p50+p95", performance.MaxP99ResponseTime, 1, 1, 0},
+		{"just over p99 violates all three", performance.MaxP99ResponseTime + time.Millisecond, 1, 1, 1},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := fmt.Sprintf("/budget-test-%d", i)
+			checkPerformanceBudget(tt.duration, path, http.MethodGet)
+
+			got := map[string]float64{
+				"p50": testutil.ToFloat64(budgetViolations.WithLabelValues("p50_response_time", path)),
+				"p95": testutil.ToFloat64(budgetViolations.WithLabelValues("p95_response_time", path)),
+				"p99": testutil.ToFloat64(budgetViolations.WithLabelValues("p99_response_time", path)),
+			}
+			want := map[string]float64{"p50": tt.wantP50, "p95": tt.wantP95, "p99": tt.wantP99}
+			for k := range want {
+				if got[k] != want[k] {
+					t.Errorf("%s violations = %v, want %v", k, got[k], want[k])
+				}
+			}
+		})
+	}
+}
+
+func TestGetRoutePattern_ChiContext(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/posts/123", nil)
+	rctx := chi.NewRouteContext()
+	rctx.RoutePatterns = []string{"/api/posts/{id}"}
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	if got := getRoutePattern(req); got != "/api/posts/{id}" {
+		t.Errorf("getRoutePattern = %q, want the chi pattern", got)
+	}
+
+	// An empty pattern (mounted-but-unmatched) falls back to the raw path.
+	req2 := httptest.NewRequest(http.MethodGet, "/raw/path", nil)
+	req2 = req2.WithContext(context.WithValue(req2.Context(), chi.RouteCtxKey, chi.NewRouteContext()))
+	if got := getRoutePattern(req2); got != "/raw/path" {
+		t.Errorf("getRoutePattern(empty pattern) = %q, want /raw/path", got)
+	}
+}
+
+// TestMetrics_RequestSizeOnlyWithBody pins that the request-size histogram
+// records only requests that actually carry a body — a zero-length series
+// per GET would skew the distribution toward zero.
+func TestMetrics_RequestSizeOnlyWithBody(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+
+	withBody := httptest.NewRequest(http.MethodPost, "/size-test-body", strings.NewReader("hello"))
+	Metrics(next).ServeHTTP(httptest.NewRecorder(), withBody)
+	noBody := httptest.NewRequest(http.MethodGet, "/size-test-empty", nil)
+	Metrics(next).ServeHTTP(httptest.NewRecorder(), noBody)
+
+	if got := testutil.CollectAndCount(httpRequestSize, "http_request_size_bytes"); got < 1 {
+		t.Fatalf("request size series count = %d, want >= 1", got)
+	}
+	// The GET path must not have created a series; probe by checking that
+	// observing it now increases the series count (i.e. it did not exist).
+	before := testutil.CollectAndCount(httpRequestSize, "http_request_size_bytes")
+	httpRequestSize.WithLabelValues(http.MethodGet, "/size-test-empty").Observe(0)
+	after := testutil.CollectAndCount(httpRequestSize, "http_request_size_bytes")
+	if after == before {
+		t.Error("bodyless GET created a request-size series; ContentLength > 0 gate is broken")
+	}
+}
+
+// TestMetrics_SlowRequestLogged pins the slow-request warning — the log line
+// on-call greps for when p95 pages fire. One deliberate 120ms sleep; the
+// budget is 100ms (ADR-000).
+func TestMetrics_SlowRequestLogged(t *testing.T) {
+	var mu sync.Mutex
+	var buf bytes.Buffer
+	prev := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(writerFunc(func(p []byte) (int, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		return buf.Write(p)
+	}), nil)))
+	t.Cleanup(func() { slog.SetDefault(prev) })
+	logged := func() string { mu.Lock(); defer mu.Unlock(); return buf.String() }
+
+	fast := httptest.NewRequest(http.MethodGet, "/slow-log-fast", nil)
+	Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})).ServeHTTP(httptest.NewRecorder(), fast)
+	if strings.Contains(logged(), "slow request detected") {
+		t.Error("fast request must not log a slow-request warning")
+	}
+
+	slow := httptest.NewRequest(http.MethodGet, "/slow-log-slow", nil)
+	Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(performance.MaxP95ResponseTime + 20*time.Millisecond)
+	})).ServeHTTP(httptest.NewRecorder(), slow)
+	if !strings.Contains(logged(), "slow request detected") {
+		t.Error("request over the p95 budget must log a slow-request warning")
 	}
 }

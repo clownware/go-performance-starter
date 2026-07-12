@@ -93,6 +93,14 @@ func TestGuestSession(t *testing.T) {
 					if !c.HttpOnly {
 						t.Error("guest access cookie must be HttpOnly")
 					}
+					if c.MaxAge != 3600 {
+						t.Errorf("access cookie MaxAge = %d, want the session's ExpiresIn (3600)", c.MaxAge)
+					}
+				}
+				if c.Name == "sb-refresh-token" && c.Value != "" {
+					if c.MaxAge != 30*24*60*60 {
+						t.Errorf("refresh cookie MaxAge = %d, want 30 days (%d)", c.MaxAge, 30*24*60*60)
+					}
 				}
 			}
 			if gotSetCookie != tt.wantCookie {

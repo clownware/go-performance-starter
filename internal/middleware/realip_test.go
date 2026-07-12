@@ -114,6 +114,13 @@ func TestRealIP(t *testing.T) {
 			want:       "8.8.8.8",
 		},
 		{
+			name:       "trusted peer falls back to True-Client-IP",
+			trusted:    []string{"192.168.0.0/16"},
+			remoteAddr: "192.168.1.1:80",
+			headers:    map[string]string{"True-Client-IP": "9.9.9.9"},
+			want:       "9.9.9.9",
+		},
+		{
 			name:       "no headers strips port to bare IP",
 			trusted:    []string{"10.0.0.0/8"},
 			remoteAddr: "10.0.0.9:443",

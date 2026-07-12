@@ -88,6 +88,81 @@ func TestSignInAnonymously_Unconfigured(t *testing.T) {
 	}
 }
 
+func TestServiceRoleKey(t *testing.T) {
+	client := &AuthClient{}
+	if client.HasServiceRoleKey() {
+		t.Error("HasServiceRoleKey() = true before a key is attached")
+	}
+	if got := client.WithServiceRoleKey("sr-key"); got != client {
+		t.Error("WithServiceRoleKey() must return the same client for chaining")
+	}
+	if !client.HasServiceRoleKey() {
+		t.Error("HasServiceRoleKey() = false after attaching a key")
+	}
+}
+
+func TestAdminDeleteUser(t *testing.T) {
+	tests := []struct {
+		name    string
+		status  int
+		body    string
+		wantErr bool
+	}{
+		{"200 deletes", http.StatusOK, `{}`, false},
+		{"204 deletes", http.StatusNoContent, "", false},
+		{"404 is tolerated (already gone, reaper retry-safe)", http.StatusNotFound, `{"msg":"User not found"}`, false},
+		{"403 is an error (bad service role key)", http.StatusForbidden, `{"msg":"forbidden"}`, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gotMethod, gotPath, gotAuth string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotMethod = r.Method
+				gotPath = r.URL.Path
+				gotAuth = r.Header.Get("Authorization")
+				w.WriteHeader(tt.status)
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer srv.Close()
+
+			client := (&AuthClient{baseURL: srv.URL, anonKey: "anon-key"}).WithServiceRoleKey("sr-key")
+			err := client.AdminDeleteUser(context.Background(), "user-123")
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("AdminDeleteUser() = nil error, want error")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("AdminDeleteUser() error: %v", err)
+			}
+			if gotMethod != http.MethodDelete {
+				t.Errorf("method = %q, want DELETE", gotMethod)
+			}
+			if gotPath != "/auth/v1/admin/users/user-123" {
+				t.Errorf("path = %q, want /auth/v1/admin/users/user-123", gotPath)
+			}
+			if gotAuth != "Bearer sr-key" {
+				t.Errorf("Authorization = %q, want the service role key, never the anon key", gotAuth)
+			}
+		})
+	}
+}
+
+func TestAdminDeleteUser_NoServiceRoleKey(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("admin delete without a service role key must not call GoTrue")
+	}))
+	defer srv.Close()
+
+	client := &AuthClient{baseURL: srv.URL, anonKey: "anon-key"}
+	if err := client.AdminDeleteUser(context.Background(), "user-123"); err == nil {
+		t.Error("AdminDeleteUser() without service role key = nil error, want error")
+	}
+}
+
 // makeJWT builds an unsigned JWT with the given payload for claim parsing tests.
 func makeJWT(t *testing.T, payload map[string]any) string {
 	t.Helper()
