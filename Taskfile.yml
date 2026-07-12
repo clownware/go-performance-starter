@@ -186,6 +186,23 @@ tasks:
     cmds:
       - go run ./scripts/check-asset-budgets
 
+  mutation:install:
+    desc: Install gremlins for mutation testing (ADR-032)
+    cmds:
+      - go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
+    status:
+      - which gremlins
+
+  test:mutation:
+    desc: Mutation-test well-covered pure-logic packages (ADR-032; manual, not part of task ci)
+    deps: [mutation:install]
+    cmds:
+      - gremlins unleash --timeout-coefficient 20 ./internal/middleware
+      - gremlins unleash --timeout-coefficient 20 ./internal/auth
+      - gremlins unleash --timeout-coefficient 20 ./internal/config
+      - gremlins unleash --timeout-coefficient 20 ./internal/validate
+      - gremlins unleash --timeout-coefficient 20 ./internal/jobs
+
   test:memory-profile:
     desc: Run memory profiling tests
     cmds:

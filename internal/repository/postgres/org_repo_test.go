@@ -186,3 +186,67 @@ func TestOrganizationMemberRepoIntegration(t *testing.T) {
 		t.Errorf("Get(missing) err = %v, want ErrNotFound", err)
 	}
 }
+
+func TestOrganizationListIntegration(t *testing.T) {
+	ctx, q := withTx(t)
+	repo := NewOrganizationRepo(nil, q)
+
+	orgA := seedOrg(ctx, t, repo, "list-a")
+	orgB := seedOrg(ctx, t, repo, "list-b")
+
+	all, err := repo.List(ctx, 1000, 0)
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	found := map[uuid.UUID]bool{}
+	for _, o := range all {
+		found[o.ID] = true
+	}
+	if !found[orgA.ID] || !found[orgB.ID] {
+		t.Errorf("List missing seeded orgs (got %d rows)", len(all))
+	}
+
+	one, err := repo.List(ctx, 1, 0)
+	if err != nil {
+		t.Fatalf("List(limit 1): %v", err)
+	}
+	if len(one) != 1 {
+		t.Errorf("List(limit 1) len = %d, want 1", len(one))
+	}
+}
+
+func TestOrganizationMemberUpdateIntegration(t *testing.T) {
+	ctx, q := withTx(t)
+	orgRepo := NewOrganizationRepo(nil, q)
+	memberRepo := NewOrganizationMemberRepo(nil, q)
+	userID := seedUser(ctx, t, q)
+	org := seedOrg(ctx, t, orgRepo, "member-update")
+
+	if _, err := memberRepo.Create(ctx, database.CreateOrganizationMemberParams{
+		OrganizationID: org.ID,
+		UserID:         userID,
+		Role:           "member",
+	}); err != nil {
+		t.Fatalf("Create member: %v", err)
+	}
+
+	promoted, err := memberRepo.Update(ctx, database.UpdateOrganizationMemberParams{
+		OrganizationID: org.ID,
+		UserID:         userID,
+		Role:           "admin",
+	})
+	if err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if promoted.Role != "admin" {
+		t.Errorf("Update role = %q, want admin", promoted.Role)
+	}
+
+	if _, err := memberRepo.Update(ctx, database.UpdateOrganizationMemberParams{
+		OrganizationID: org.ID,
+		UserID:         uuid.New(),
+		Role:           "admin",
+	}); err != repository.ErrNotFound {
+		t.Errorf("Update(missing) err = %v, want ErrNotFound", err)
+	}
+}

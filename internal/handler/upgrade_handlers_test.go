@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"github.com/clownware/go-performance-starter/internal/auth"
@@ -274,5 +275,41 @@ func TestUpgradeSubmit(t *testing.T) {
 				t.Errorf("unexpected session cookie set: %q", gotAccess)
 			}
 		})
+	}
+}
+
+// TestUpgradeRoutes_RateLimitTier pins the ADR-014 §4 promise UpgradeRoutes
+// makes: the credential-setting POST sits behind the strict rate tier
+// (burst 5), while the GET page stays unthrottled. All requests here are
+// sessionless, so handlers answer with the login redirect — the assertion
+// is about which requests the limiter lets through at all.
+func TestUpgradeRoutes_RateLimitTier(t *testing.T) {
+	router := chi.NewRouter()
+	UpgradeRoutes(router, &fakeUpgrader{}, false)
+
+	post := func() int {
+		req := formRequest("/learn/upgrade", "email=a@b.co&password=12345678")
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		return rec.Code
+	}
+
+	for i := 1; i <= 5; i++ {
+		if code := post(); code != http.StatusSeeOther {
+			t.Fatalf("POST %d = %d, want 303 (within burst)", i, code)
+		}
+	}
+	if code := post(); code != http.StatusTooManyRequests {
+		t.Errorf("POST 6 = %d, want 429 — credential endpoint must be rate limited (ADR-014 §4)", code)
+	}
+
+	// The GET page shares the path but not the strict tier.
+	for i := 1; i <= 6; i++ {
+		req := httptest.NewRequest(http.MethodGet, "/learn/upgrade", nil)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		if rec.Code != http.StatusSeeOther {
+			t.Fatalf("GET %d = %d, want 303 (page load must not be throttled)", i, rec.Code)
+		}
 	}
 }

@@ -117,6 +117,21 @@ func TestQuizRepoIntegration(t *testing.T) {
 	if got.ID != question.ID {
 		t.Errorf("GetQuestionBySlug ID = %v, want %v", got.ID, question.ID)
 	}
+
+	questions, err := repo.ListQuestions(ctx)
+	if err != nil {
+		t.Fatalf("ListQuestions: %v", err)
+	}
+	listed := false
+	for _, qn := range questions {
+		if qn.ID == question.ID {
+			listed = true
+			break
+		}
+	}
+	if !listed {
+		t.Errorf("ListQuestions missing seeded question (got %d rows)", len(questions))
+	}
 }
 
 func TestFlashcardRepoIntegration(t *testing.T) {

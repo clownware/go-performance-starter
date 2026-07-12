@@ -31,6 +31,12 @@ func TestValidate(t *testing.T) {
 		{"unknown environment", func(c *Config) { c.Env = "prod" }, "ENV"},
 		{"non-numeric port", func(c *Config) { c.HTTPPort = "http" }, "HTTP_PORT"},
 		{"port out of range", func(c *Config) { c.HTTPPort = "70000" }, "HTTP_PORT"},
+		// Boundary rows below pin the exact comparison operators; a 2026-07-12
+		// mutation baseline (ADR-032) showed these survived operator mutants.
+		{"port 1 is the lowest valid", func(c *Config) { c.HTTPPort = "1" }, ""},
+		{"port 0 is invalid", func(c *Config) { c.HTTPPort = "0" }, "HTTP_PORT"},
+		{"port 65535 is the highest valid", func(c *Config) { c.HTTPPort = "65535" }, ""},
+		{"port 65536 is invalid", func(c *Config) { c.HTTPPort = "65536" }, "HTTP_PORT"},
 		{"supabase url without anon key", func(c *Config) { c.SupabaseURL = "https://x.supabase.co" }, "SUPABASE"},
 		{"anon key without supabase url", func(c *Config) { c.SupabaseAnonKey = "anon" }, "SUPABASE"},
 		{"supabase fully configured is valid", func(c *Config) {
@@ -38,8 +44,13 @@ func TestValidate(t *testing.T) {
 			c.SupabaseAnonKey = "anon"
 		}, ""},
 		{"zero max conns", func(c *Config) { c.DBMaxConns = 0 }, "DB_MAX_CONNS"},
+		{"single max conn is valid", func(c *Config) { c.DBMaxConns = 1; c.DBMinConns = 0 }, ""},
 		{"min conns above max", func(c *Config) { c.DBMinConns = 50 }, "DB_MIN_CONNS"},
+		{"min conns equal to max is valid", func(c *Config) { c.DBMinConns = c.DBMaxConns }, ""},
+		{"zero min conns is valid", func(c *Config) { c.DBMinConns = 0 }, ""},
+		{"negative min conns is invalid", func(c *Config) { c.DBMinConns = -1 }, "DB_MIN_CONNS"},
 		{"zero max request body", func(c *Config) { c.MaxRequestBodyBytes = 0 }, "MAX_REQUEST_BODY_BYTES"},
+		{"one-byte max request body is valid", func(c *Config) { c.MaxRequestBodyBytes = 1 }, ""},
 		{"guest mode without supabase", func(c *Config) {
 			c.GuestModeEnabled = true
 			c.GuestTTL = time.Hour
@@ -51,6 +62,12 @@ func TestValidate(t *testing.T) {
 			c.SupabaseAnonKey = "anon"
 			c.ReaperInterval = time.Hour
 		}, "GUEST_TTL"},
+		{"guest mode with zero reaper interval", func(c *Config) {
+			c.GuestModeEnabled = true
+			c.SupabaseURL = "https://x.supabase.co"
+			c.SupabaseAnonKey = "anon"
+			c.GuestTTL = time.Hour
+		}, "REAPER_INTERVAL"},
 		{"guest mode fully configured is valid", func(c *Config) {
 			c.GuestModeEnabled = true
 			c.SupabaseURL = "https://x.supabase.co"

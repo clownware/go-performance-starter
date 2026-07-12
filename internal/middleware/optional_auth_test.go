@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/clownware/go-performance-starter/internal/webutil"
 )
 
@@ -78,6 +80,65 @@ func TestOptionalUserLoader_AnonymousPassthrough(t *testing.T) {
 
 	if !nextRan {
 		t.Fatal("next handler did not run — OptionalUserLoader must pass anonymous requests through")
+	}
+	if rec.Code != http.StatusOK {
+		t.Errorf("status = %d, want 200", rec.Code)
+	}
+}
+
+// TestOptionalAuth_ValidSession pins the half of OptionalAuth the anonymous
+// tests can't: a valid cookie must actually be validated and enrich the
+// context — a regression that silently skips validation would demote every
+// signed-in /learn visitor to the teaser view.
+func TestOptionalAuth_ValidSession(t *testing.T) {
+	userID := uuid.New()
+	token := sessionJWT(t, "sub-1", true)
+	authClient := fakeGoTrue(t, userID, map[string]bool{token: true})
+
+	nextRan := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nextRan = true
+		user, ok := GetUserFromContext(r.Context())
+		if !ok || user == nil || user.ID != userID {
+			t.Error("valid session must put the gotrue user in context")
+		}
+		if _, ok := webutil.AuthClaimsFromContext(r.Context()); !ok {
+			t.Error("valid session must carry RLS claims (ADR-004)")
+		}
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/learn", nil)
+	req.AddCookie(&http.Cookie{Name: "sb-access-token", Value: token})
+	rec := httptest.NewRecorder()
+
+	OptionalAuth(authClient, false)(next).ServeHTTP(rec, req)
+
+	if !nextRan {
+		t.Fatalf("next handler did not run; status = %d", rec.Code)
+	}
+}
+
+// TestOptionalAuth_RejectedTokenContinuesAnonymously pins the degrade path:
+// a stale cookie is cleared but the page still renders, without identity.
+func TestOptionalAuth_RejectedTokenContinuesAnonymously(t *testing.T) {
+	authClient := fakeGoTrue(t, uuid.New(), map[string]bool{}) // accepts nothing
+
+	nextRan := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nextRan = true
+		if _, ok := GetUserFromContext(r.Context()); ok {
+			t.Error("rejected token must not leave a user in context")
+		}
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/learn", nil)
+	req.AddCookie(&http.Cookie{Name: "sb-access-token", Value: "stale"})
+	rec := httptest.NewRecorder()
+
+	OptionalAuth(authClient, false)(next).ServeHTTP(rec, req)
+
+	if !nextRan {
+		t.Fatal("rejected token must degrade to anonymous, not block the page")
 	}
 	if rec.Code != http.StatusOK {
 		t.Errorf("status = %d, want 200", rec.Code)
