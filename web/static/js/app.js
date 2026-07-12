@@ -17,7 +17,15 @@ document.addEventListener('htmx:configRequest', (event) => {
 });
 
 document.addEventListener('htmx:beforeSwap', (event) => {
-  // Global before-swap handler
+  // HTMX skips swapping 4xx responses by default, but this app's handlers
+  // return meaningful fragments on validation and auth failures (400/401/
+  // 409/422): inline form errors, re-rendered question cards. Swap those so
+  // the user sees the feedback; other statuses keep the default behavior.
+  const status = event.detail.xhr.status;
+  if ([400, 401, 409, 422].includes(status)) {
+    event.detail.shouldSwap = true;
+    event.detail.isError = false;
+  }
 });
 
 document.addEventListener('htmx:afterSwap', (event) => {

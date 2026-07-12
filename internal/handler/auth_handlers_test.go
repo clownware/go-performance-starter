@@ -160,8 +160,27 @@ func TestAuthLoginPost(t *testing.T) {
 				}
 			}
 			if tt.wantToast != "" {
-				if got := w.Header().Get("HX-Trigger"); !strings.Contains(got, tt.wantToast) {
+				// The layout's toast listener treats HX-Trigger as the plain
+				// message and HX-Toast-Type as the level — no JSON envelopes
+				// (that mismatch rendered raw JSON in a success-green toast).
+				got := w.Header().Get("HX-Trigger")
+				if !strings.Contains(got, tt.wantToast) {
 					t.Errorf("HX-Trigger = %q, want it to contain %q", got, tt.wantToast)
+				}
+				if strings.Contains(got, "{") {
+					t.Errorf("HX-Trigger = %q must be a plain message, not JSON", got)
+				}
+				if w.Header().Get("HX-Toast-Type") != "error" {
+					t.Errorf("HX-Toast-Type = %q, want %q", w.Header().Get("HX-Toast-Type"), "error")
+				}
+				// The form swaps the response into #auth-messages, so failures
+				// must also carry a visible inline alert — a 4-second toast is
+				// not the only feedback.
+				if !strings.Contains(w.Body.String(), tt.wantToast) {
+					t.Errorf("response body missing inline alert %q", tt.wantToast)
+				}
+				if !strings.Contains(w.Body.String(), `role="alert"`) {
+					t.Error("inline auth feedback missing role=\"alert\"")
 				}
 			}
 			if tt.gotrueStatus != 0 && gotPath != "/auth/v1/token" {
@@ -229,8 +248,31 @@ func TestAuthSignupPost(t *testing.T) {
 			if w.Code != tt.wantStatus {
 				t.Fatalf("AuthSignupPost() status = %d, want %d", w.Code, tt.wantStatus)
 			}
-			if got := w.Header().Get("HX-Trigger"); !strings.Contains(got, tt.wantToast) {
+			// Plain-message toast contract (no JSON envelope) with the level
+			// in HX-Toast-Type, and a visible inline message in the body the
+			// form swaps into #auth-messages — signup previously returned an
+			// empty body and a mis-typed JSON toast, so "nothing happened".
+			got := w.Header().Get("HX-Trigger")
+			if !strings.Contains(got, tt.wantToast) {
 				t.Errorf("HX-Trigger = %q, want it to contain %q", got, tt.wantToast)
+			}
+			if strings.Contains(got, "{") {
+				t.Errorf("HX-Trigger = %q must be a plain message, not JSON", got)
+			}
+			wantType := "error"
+			wantRole := `role="alert"`
+			if tt.wantStatus == http.StatusOK {
+				wantType = "success"
+				wantRole = `role="status"`
+			}
+			if w.Header().Get("HX-Toast-Type") != wantType {
+				t.Errorf("HX-Toast-Type = %q, want %q", w.Header().Get("HX-Toast-Type"), wantType)
+			}
+			if !strings.Contains(w.Body.String(), tt.wantToast) {
+				t.Errorf("response body missing inline message %q", tt.wantToast)
+			}
+			if !strings.Contains(w.Body.String(), wantRole) {
+				t.Errorf("inline auth feedback missing %s", wantRole)
 			}
 			if tt.gotrueStatus != 0 && gotPath != "/auth/v1/signup" {
 				t.Errorf("gotrue request path = %q, want /auth/v1/signup", gotPath)
