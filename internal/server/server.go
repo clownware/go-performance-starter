@@ -196,6 +196,27 @@ func (s *Server) setupRoutes() {
 	// Toggle favorite (optimistic UI)
 	s.router.Post("/items/{id}/toggle", handler.ItemToggle)
 
+	// Pattern showcase (ADR-024 surface 2): public, stub data, no DB/auth.
+	handler.PatternsRoutes(r)
+
+	// Quiz (ADR-024 surface 3): RLS-scoped persistence behind the identity
+	// chain. GuestSession issues anonymous identities only when guest mode is
+	// enabled (config-gated: requires anonymous sign-ins in Supabase);
+	// registered users pass straight through AuthMiddleware either way.
+	if s.authClient != nil && s.db != nil {
+		r.Group(func(learn chi.Router) {
+			if s.cfg.GuestModeEnabled {
+				learn.Use(mw.GuestSession(s.authClient, s.cfg.IsProduction()))
+			}
+			learn.Use(mw.AuthMiddleware(s.authClient, s.cfg.IsProduction()))
+			learn.Use(mw.UserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
+			// Anonymous-writable surface: stricter tier on top of the global
+			// limiter (ADR-024 accompanying constraints).
+			learn.Use(mw.RateLimiter(30.0/60.0, 20))
+			handler.QuizRoutes(learn, postgres.NewQuizRepo(s.db, database.New(s.db)))
+		})
+	}
+
 	// --- Authentication Routes ---
 	if s.authClient != nil {
 		r.Route("/auth", func(authRouter chi.Router) {
