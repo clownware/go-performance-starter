@@ -38,3 +38,4 @@ Define a scope table (canonical copy in `.claude/workflow.md`):
 
 - [ADR-018](ADR-018-Layered-AI-Constitution.md), [ADR-022](ADR-022-Cross-Tool-Agents-Spine.md)
 - `.claude/workflow.md`
+- The forker-facing counterpart of this boundary — which pieces of the template are load-bearing vs. removable — lives in the README's ["What's Load-Bearing vs. Removable"](../../README.md#whats-load-bearing-vs-removable) section (added 2026-07 with the ADR-024 demo).

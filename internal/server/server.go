@@ -156,13 +156,6 @@ func (s *Server) setupRoutes() {
 	// Logout GET route for UX (renders confirm form)
 	r.Get("/auth/logout", handler.LogoutPage)
 
-	// API routes
-	s.router.Route("/api", func(api chi.Router) {
-		api.Get("/", handler.APIPlaceholder)
-		api.Get("/users/{userID}", handler.GetUserProfile)
-		api.Get("/organizations", handler.ListOrganizations)
-	})
-
 	// Health check endpoints (ADR-013)
 	s.router.Get("/healthz", handler.HealthHandler)      // Liveness probe (Dockerfile HEALTHCHECK)
 	s.router.Get("/health", handler.HealthDetailHandler) // Detailed readiness check
@@ -189,12 +182,6 @@ func (s *Server) setupRoutes() {
 			}
 		})
 	}
-
-	// Items list (HTMX-powered)
-	s.router.Get("/items", handler.ItemsPage)
-	s.router.Get("/items/list", handler.ItemsList)
-	// Toggle favorite (optimistic UI)
-	s.router.Post("/items/{id}/toggle", handler.ItemToggle)
 
 	// Pattern showcase (ADR-024 surface 2): public, stub data, no DB/auth.
 	handler.PatternsRoutes(r)

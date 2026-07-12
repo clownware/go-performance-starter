@@ -1,6 +1,6 @@
 # Go Performance Starter
 
-An opinionated, performance-first SaaS starter kit built with Go, templ, HTMX, Alpine.js, and Tailwind CSS. Designed for solo developers and small teams who want production-ready infrastructure without the bloat.
+A Go + HTMX SaaS starter built for **agent-assisted development** — a layered AI constitution and a halt-on-violation CI gate hold coding agents to the same rules as humans — with **multi-tenancy proven end-to-end**: Postgres Row Level Security scoped by real Supabase identities, exercised by the demo app itself rather than promised in a diagram.
 
 **Stack:** Go (Chi) | templ | HTMX + Alpine.js | Tailwind CSS | Supabase (Auth + PostgreSQL) | Cloudflare
 
@@ -8,19 +8,43 @@ An opinionated, performance-first SaaS starter kit built with Go, templ, HTMX, A
 
 ## What You Get
 
-- **Authentication** -- Supabase email/password auth with server-side JWT validation
-- **User-scoped CRUD** -- "Items" resource with HTMX forms and optimistic UI
-- **Row Level Security** -- PostgreSQL RLS policies enforced at the database layer
+- **Authentication** -- Supabase email/password auth with server-side JWT validation, plus anonymous guest sign-in (server-side GoTrue) so demo visitors get a real identity with zero signup friction ([ADR-024](docs/adr/ADR-024-Demo-Application-Direction.md))
+- **A demo that proves the stack** -- a [`/patterns`](docs/adr/ADR-024-Demo-Application-Direction.md) showcase of every HTMX/Alpine pattern the starter supports (live demo + source per pattern), and an architecture quiz whose wrong answers become saveable, per-user flashcards — real rows behind RLS, not an in-memory stub
+- **Row Level Security** -- PostgreSQL RLS policies enforced at the database layer and integration-tested; request JWT claims ride into every query via a scoped transaction ([ADR-004](docs/adr/ADR-004-Authorization-Strategy-RLS.md))
 - **Type-safe templates** -- templ compiles HTML to Go; typed props, no `map[string]interface{}` (see [ADR-017](docs/adr/ADR-017-Templ-Adoption.md))
 - **Type-safe SQL** -- sqlc code generation with repository pattern
-- **Performance budgets** -- CI-enforced binary size, response time, and memory limits
+- **Performance budgets** -- CI-enforced binary size, gzipped asset budgets, and memory limits
 - **Agentic discipline** -- a layered AI constitution and halt-on-violation quality gate (see below)
-- **Observability** -- Prometheus metrics, structured logging (zerolog), health checks
+- **Observability** -- Prometheus metrics, structured logging (log/slog), health checks
 - **Developer experience** -- Hot reload (air), Taskfile automation, golangci-lint, CI/CD
+
+## Supabase Is a Committed Bet
+
+This starter does **not** treat auth and data as pluggable adapters. Supabase (GoTrue + Postgres + RLS) is load-bearing by design:
+
+- The auth middleware validates Supabase JWTs and carries the claims into every database transaction (`SET LOCAL ROLE` + `request.jwt.claims`), so `auth.uid()` resolves inside RLS policies — the repository layer physically cannot skip tenant scoping.
+- Guest mode issues **real anonymous Supabase identities** server-side; the same `users_self_access` policy covers guests and registered users with no parallel code path.
+- The TTL reaper uses the Supabase admin API to expire inactive guests.
+
+If you want vendor-neutral auth, this is the wrong starter — swapping Supabase means rewriting the auth middleware, the RLS scope helper, and the policies. What you get for the lock-in is multi-tenancy that is proven by integration tests and exercised by the live demo, not asserted.
+
+## What's Load-Bearing vs. Removable
+
+Forking this for your own product? The governance apparatus is modular ([ADR-019](docs/adr/ADR-019-Template-Scope-Boundary.md)):
+
+| Piece | Verdict | Notes |
+|---|---|---|
+| `task ci` quality gate | **Load-bearing** | CI invokes it; the budgets, lint, race tests, and drift checks all hang off it. Removing gates means editing `Taskfile.yml`, not the workflow. |
+| sqlc/templ codegen + repository pattern | **Load-bearing** | The RLS scoping lives in the repository layer; handlers depend on generated types. |
+| Performance budgets | **Tunable** | Numbers live in `internal/performance/` and `scripts/`; raise or lower them in one place ([ADR-000](docs/adr/ADR-000-Performance-Budgets-and-Quality-Attributes.md) classifies which are enforced vs. aspirational). |
+| Layered AI constitution (`CLAUDE.md`, `.claude/`) | **Removable** | Only matters if you develop with agents. Delete it and nothing in the app breaks. |
+| `AGENTS.md` cross-tool spine | **Removable with the constitution** | Generated via `task agents:build`; drop the drift check from `Taskfile.yml` if you remove it. |
+| Three-pass Architect→Coder→Reviewer workflow | **Removable** | A process convention ([ADR-020](docs/adr/ADR-020-Agent-Roles.md)), not code. |
+| Demo surfaces (`/patterns`, `/learn/*`) | **Replaceable** | They exist to prove the stack; swap them for your domain. The quiz/flashcard handlers are the reference implementation for RLS-scoped CRUD. |
 
 ## Prerequisites
 
-- Go 1.25+
+- Go 1.26+
 - Docker & Docker Compose (for local development database)
 - [Task](https://taskfile.dev) (task runner)
 - Node.js 20+ (for Tailwind CSS build)
