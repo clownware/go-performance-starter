@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-11
+
+First release deployed against hosted Supabase: security-audit fixes, the
+migration bug that blocked production, and the handler/repository test-coverage
+gaps closed.
+
+### Security
+- Client IP resolution now honors only trusted proxies (ADR-027,
+  `TRUSTED_PROXY_CIDRS`; default trusts none) so rate limits can't be bypassed
+  with forged `X-Forwarded-For` headers
+- Request bodies capped before handlers read them (`MAX_REQUEST_BODY_BYTES`,
+  1 MiB default)
+- Cookie `Secure` flags made consistent across auth middleware and logout
+  (edge-TLS aware per ADR-025 instead of `r.TLS`)
+- Form-validation `x-data` JSON-escaped, closing a latent XSS path in the
+  shared form component
+- 5xx JSON error bodies genericized so internal error strings never reach
+  clients
+- Go toolchain bumped to 1.26.5 (GO-2026-5856, `crypto/tls`); release workflow
+  actions pinned to commit SHAs
+
+### Fixed
+- Migration `000002` created its RLS helper function in the Supabase-reserved
+  `auth` schema, which hosted Supabase rejects (`permission denied`); moved to
+  `public`. CI's vanilla-Postgres auth stub owns that schema, which masked the
+  failure until the first production migration run
+
+### Added
+- Handler tests for the auth flow (login/signup/logout against an `httptest`
+  fake GoTrue), profile, and first-run onboarding; integration tests for the
+  organization and organization-member repositories
+
 ## [0.3.0] - 2026-07-05
 
 Deployment-readiness release: the 2026-07-05 audit's findings implemented end
@@ -125,6 +157,8 @@ enforcement, unified logging, guest-mode backend, and a release pipeline.
   injection works correctly
 - Build commands in Taskfile now include `-ldflags` version injection
 
-[Unreleased]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/clownware/alpine-go-performance-starter/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/clownware/alpine-go-performance-starter/releases/tag/v0.1.0
