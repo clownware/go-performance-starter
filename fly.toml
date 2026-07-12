@@ -19,6 +19,10 @@ primary_region = "ewr"
   # Non-secret tuning lives here, versioned — not in `fly secrets` where it
   # becomes invisible and gets lost on app migrations.
   DB_MAX_CONNS = "10"
+  # Anonymous guest identities (ADR-024): requires "anonymous sign-ins"
+  # enabled in the Supabase project (done 2026-07). Visitors to /learn get a
+  # real Supabase identity server-side; the TTL reaper expires stale ones.
+  GUEST_MODE_ENABLED = "true"
 
 [http_service]
   internal_port = 4000
