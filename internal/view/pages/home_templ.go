@@ -10,14 +10,47 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/clownware/go-performance-starter/internal/view"
-	"github.com/clownware/go-performance-starter/internal/view/components"
 	"github.com/clownware/go-performance-starter/internal/view/layouts"
 )
 
-// HomePageProps holds data for the home page.
+// HomePageProps holds data for the home landing page.
 type HomePageProps struct {
 	view.BaseProps
-	TestFieldError string
+}
+
+// surface is one entry in the home directory of demo surfaces.
+type surface struct {
+	Href        string
+	Title       string
+	Description string
+}
+
+// homeSurfaces lists the demo surfaces in tour order — the interim
+// navigational directory until the full ADR-024 architecture explainer
+// lands on this page.
+func homeSurfaces() []surface {
+	return []surface{
+		{
+			Href:        "/patterns",
+			Title:       "Pattern Showcase",
+			Description: "Every HTMX and Alpine.js pattern the starter supports, live, with the templ and handler source beside each demo.",
+		},
+		{
+			Href:        "/learn/quiz",
+			Title:       "Architecture Quiz",
+			Description: "Questions drawn from this system's own architecture — every answer is a real row persisted behind Row Level Security.",
+		},
+		{
+			Href:        "/learn/flashcards",
+			Title:       "Flashcards",
+			Description: "Wrong quiz answers become saveable flashcards: review, flip, mark known, delete — per-user CRUD through the RLS-scoped repositories.",
+		},
+		{
+			Href:        "/dashboard",
+			Title:       "Dashboard",
+			Description: "Your workspace shell — progress widgets land here as the demo grows.",
+		},
+	}
 }
 
 func HomePage(props HomePageProps) templ.Component {
@@ -53,23 +86,56 @@ func HomePage(props HomePageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto bg-surface text-text dark:bg-surface-dark dark:text-text-dark rounded shadow p-6\"><h1 class=\"text-2xl font-semibold mb-4\">Welcome!</h1><p class=\"mb-6\">This page demonstrates form validation feedback.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"max-w-3xl mx-auto text-center py-8\"><img src=\"/static/img/emblem-black.svg\" alt=\"\" aria-hidden=\"true\" class=\"h-16 w-auto mx-auto mb-6 dark:hidden\" width=\"145\" height=\"162\"> <img src=\"/static/img/emblem-white.svg\" alt=\"\" aria-hidden=\"true\" class=\"h-16 w-auto mx-auto mb-6 hidden dark:block\" width=\"145\" height=\"162\"><h1 class=\"text-3xl font-bold mb-3\">Go Performance Starter</h1><p class=\"text-gray-500 dark:text-gray-400 mb-6 max-w-xl mx-auto\">A server-rendered Go + HTMX starter that proves its own architecture: typed templates, RLS-scoped data access, and performance budgets enforced in CI — demonstrated live by the surfaces below.</p><div class=\"flex flex-wrap justify-center gap-3 mb-12\"><a href=\"/patterns\" class=\"btn btn-primary inline-block\">Explore the patterns</a> <a href=\"https://github.com/clownware/go-performance-starter\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"btn btn-secondary inline-block\">View on GitHub</a></div></section><section data-testid=\"surface-directory\" aria-label=\"Demo surfaces\" class=\"max-w-3xl mx-auto grid gap-4 sm:grid-cols-2 pb-8\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.FormValidation(components.FormValidationProps{
-				ID:              "test-field",
-				Name:            "test_field",
-				Label:           "Test Field (Server Validation Demo)",
-				Placeholder:     "Enter something",
-				Required:        true,
-				ServerError:     props.TestFieldError,
-				RequiredMessage: "Client: This field is mandatory!",
-			}).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			for _, s := range homeSurfaces() {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a data-testid=\"surface-card\" href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 templ.SafeURL
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.Href))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 68, Col: 33}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"block bg-surface dark:bg-surface-dark rounded-lg shadow-md p-5 hover:shadow-lg border border-transparent hover:border-primary transition-shadow\"><h2 class=\"text-lg font-semibold mb-1 text-primary-600\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 71, Col: 70}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h2><p class=\"text-sm text-gray-500 dark:text-gray-400\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(s.Description)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 72, Col: 72}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></a>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<button type=\"submit\" class=\"bg-primary text-white dark:bg-primary-dark dark:text-white font-bold py-2 px-4 rounded focus:outline-hidden focus:ring-2 focus:ring-primary-500 hover:opacity-90 dark:hover:opacity-90 mt-2\">Submit (for client validation)</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

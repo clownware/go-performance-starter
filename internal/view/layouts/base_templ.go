@@ -221,7 +221,7 @@ func header(props view.BaseProps) templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<header class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow\" x-data=\"{ navOpen: false }\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4\"><div class=\"flex justify-between items-center\"><div class=\"flex items-center space-x-4\"><a href=\"/\" class=\"text-xl font-bold text-primary-600\">Go Performance Starter</a><nav class=\"hidden md:flex space-x-4\" role=\"navigation\" aria-label=\"Primary\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<header class=\"bg-surface text-text dark:bg-surface-dark dark:text-text-dark shadow\" x-data=\"{ navOpen: false }\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4\"><div class=\"flex justify-between items-center\"><div class=\"flex items-center space-x-6\"><!-- Brand lockup: mark always, wordmark from sm up (mark-only on\n\t\t\t\t\t     phones). The mark appears here and nowhere else in the chrome —\n\t\t\t\t\t     controls use functional icons, the footer uses the wordmark. --><a href=\"/\" class=\"flex items-center gap-2\" aria-label=\"Go Performance Starter — home\"><img src=\"/static/img/emblem-black.svg\" alt=\"Go Performance Starter\" class=\"h-7 w-auto dark:hidden\" width=\"145\" height=\"162\"> <img src=\"/static/img/emblem-white.svg\" alt=\"\" aria-hidden=\"true\" class=\"h-7 w-auto hidden dark:block\" width=\"145\" height=\"162\"> <span class=\"text-xl font-bold text-primary-600 whitespace-nowrap hidden sm:inline\">Go Performance Starter</span></a><nav class=\"hidden md:flex space-x-4\" role=\"navigation\" aria-label=\"Primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -243,7 +243,7 @@ func header(props view.BaseProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<a href=\"/auth/page\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Sign In</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<a href=\"/auth/page\" class=\"px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Sign In</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -265,7 +265,8 @@ func header(props view.BaseProps) templ.Component {
 }
 
 // navLinks is the shared primary navigation, rendered in both the desktop
-// bar and the mobile disclosure panel.
+// bar and the mobile disclosure panel. No "Home" item — the brand lockup is
+// the home link (same convention as the astro starter).
 func navLinks() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -287,7 +288,7 @@ func navLinks() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<a href=\"/\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Home</a> <a href=\"/patterns\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Patterns</a> <a href=\"/learn/quiz\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Quiz</a> <a href=\"/learn/flashcards\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Flashcards</a> <a href=\"/dashboard\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Dashboard</a>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<a href=\"/patterns\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Patterns</a> <a href=\"/learn/quiz\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Quiz</a> <a href=\"/learn/flashcards\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Flashcards</a> <a href=\"/dashboard\" class=\"px-3 py-2 rounded-md text-sm font-medium text-text hover:bg-gray-100 dark:text-text-dark dark:hover:bg-gray-800\">Dashboard</a>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -295,6 +296,8 @@ func navLinks() templ.Component {
 	})
 }
 
+// darkModeToggle is a functional control, so it wears sun/moon icons — never
+// the brand mark. The visible icon reflects the current mode.
 func darkModeToggle() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -316,7 +319,7 @@ func darkModeToggle() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<button @click=\"dark = !dark\" :aria-pressed=\"dark\" :class=\"dark ? 'bg-primary text-white' : 'bg-surface text-primary'\" class=\"rounded-full p-2 border-2 border-primary focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors shadow-sm\" title=\"Toggle dark mode\"><img x-show=\"!dark\" x-cloak src=\"/static/img/emblem-black.svg\" alt=\"Enable dark mode\" class=\"h-5 w-5\"> <img x-show=\"dark\" x-cloak src=\"/static/img/emblem-white.svg\" alt=\"Enable light mode\" class=\"h-5 w-5\"></button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<button @click=\"dark = !dark\" :aria-pressed=\"dark\" class=\"rounded-md p-2 text-text dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors\" title=\"Toggle dark mode\" aria-label=\"Toggle dark mode\"><!-- Sun: shown in light mode --><svg x-show=\"!dark\" class=\"h-5 w-5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"></circle> <path stroke-linecap=\"round\" d=\"M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41\"></path></svg><!-- Moon: shown in dark mode --><svg x-show=\"dark\" x-cloak class=\"h-5 w-5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z\"></path></svg></button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -352,7 +355,7 @@ func userMenu(userName string) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(userMenuData())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 192, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 208, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -365,7 +368,7 @@ func userMenu(userName string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(userName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 200, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 216, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -407,7 +410,7 @@ func footer(props view.BaseProps) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(footerCopyright(props.CurrentYear))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 225, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 241, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -481,7 +484,7 @@ func toastNotifications() templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(toastData())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 247, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 263, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -494,7 +497,7 @@ func toastNotifications() templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(toastInit())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 248, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layouts/base.templ`, Line: 264, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {

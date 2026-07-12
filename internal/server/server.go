@@ -238,10 +238,8 @@ func (s *Server) AuthClient() *auth.AuthClient {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	// Demo: hardcoded error to exercise the form validation component
 	props := pages.HomePageProps{
-		BaseProps:      view.NewBaseProps("Home Page"),
-		TestFieldError: "Server: This value is invalid!",
+		BaseProps: view.NewBaseProps("Go Performance Starter"),
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.HomePage(props)); err != nil {
 		slog.Error("Failed to render home page", "error", err)
