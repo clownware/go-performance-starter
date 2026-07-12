@@ -186,17 +186,20 @@ func (s *Server) setupRoutes() {
 	// Pattern showcase (ADR-024 surface 2): public, stub data, no DB/auth.
 	handler.PatternsRoutes(r)
 
-	// Quiz (ADR-024 surface 3): RLS-scoped persistence behind the identity
-	// chain. GuestSession issues anonymous identities only when guest mode is
-	// enabled (config-gated: requires anonymous sign-ins in Supabase);
-	// registered users pass straight through AuthMiddleware either way.
+	// Quiz + flashcards (ADR-024 surface 3): RLS-scoped persistence behind a
+	// browse-first identity chain. GuestSession issues anonymous identities
+	// only when guest mode is enabled (config-gated: requires anonymous
+	// sign-ins in Supabase). OptionalAuth/OptionalUserLoader load a valid
+	// session exactly like the strict pair but let signed-out GETs through —
+	// the handlers render a why-sign-in teaser for them and guard every
+	// mutation (nil user → redirect to login).
 	if s.authClient != nil && s.db != nil {
 		r.Group(func(learn chi.Router) {
 			if s.cfg.GuestModeEnabled {
 				learn.Use(mw.GuestSession(s.authClient, s.cfg.IsProduction()))
 			}
-			learn.Use(mw.AuthMiddleware(s.authClient, s.cfg.IsProduction()))
-			learn.Use(mw.UserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
+			learn.Use(mw.OptionalAuth(s.authClient, s.cfg.IsProduction()))
+			learn.Use(mw.OptionalUserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
 			// Anonymous-writable surface: stricter tier on top of the global
 			// limiter (ADR-024 accompanying constraints).
 			learn.Use(mw.RateLimiter(30.0/60.0, 20))

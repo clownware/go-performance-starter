@@ -43,7 +43,14 @@ func quizPage(repo repository.QuizRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := webutil.GetUserFromContext(r.Context())
 		if user == nil {
-			http.Redirect(w, r, "/auth/page", http.StatusSeeOther)
+			// Browse-first: preview what the quiz is and why it needs an
+			// identity instead of bouncing to the login page.
+			if view.IsHTMXRequest(r) {
+				renderQuiz(w, r, http.StatusOK, partials.QuizTeaser())
+				return
+			}
+			props := pages.QuizPageProps{BaseProps: view.NewBaseProps("Architecture Quiz"), Teaser: true}
+			renderQuiz(w, r, http.StatusOK, pages.QuizPage(props))
 			return
 		}
 

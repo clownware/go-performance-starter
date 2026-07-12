@@ -196,11 +196,19 @@ func TestFlashcardsPage(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name:         "missing user redirects to auth",
-			repo:         &fakeFlashcardRepo{cards: cards},
-			user:         nil,
-			wantStatus:   http.StatusSeeOther,
-			wantLocation: "/auth/page",
+			// Signed-out browsing gets a preview that sells the sign-in
+			// instead of a blind redirect (mutations still redirect).
+			name:       "missing user sees the teaser with a sign-in call to action",
+			repo:       &fakeFlashcardRepo{cards: cards},
+			user:       nil,
+			wantStatus: http.StatusOK,
+			wantContains: []string{
+				`data-testid="flashcards-teaser"`,
+				`href="/auth/page"`,
+			},
+			wantAbsent: []string{
+				`data-testid="flashcard"`,
+			},
 		},
 	}
 

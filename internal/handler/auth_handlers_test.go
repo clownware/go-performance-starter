@@ -29,17 +29,61 @@ func formRequest(target, body string) *http.Request {
 	return req
 }
 
+// TestAuthPage pins the tabbed auth card: one panel active at a time (login
+// by default), the other reachable both by Alpine tab switch and by a plain
+// ?mode link so the page works without JS. Both forms are always in the
+// markup — "hidden" is a server-rendered class the client enhancement
+// toggles — and the #auth-messages target the forms post into must exist.
 func TestAuthPage(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/auth/page", nil)
-	w := httptest.NewRecorder()
-
-	AuthPage(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("AuthPage() status = %d, want %d", w.Code, http.StatusOK)
+	tests := []struct {
+		name        string
+		target      string
+		wantHidden  string // panel that must render with the hidden class
+		wantVisible string // panel that must NOT be hidden
+	}{
+		{
+			name:        "defaults to the login tab",
+			target:      "/auth/page",
+			wantHidden:  "panel-signup",
+			wantVisible: "panel-login",
+		},
+		{
+			name:        "mode=signup activates the signup tab without JS",
+			target:      "/auth/page?mode=signup",
+			wantHidden:  "panel-login",
+			wantVisible: "panel-signup",
+		},
 	}
-	if w.Body.Len() == 0 {
-		t.Error("AuthPage() rendered an empty body")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, tt.target, nil)
+			w := httptest.NewRecorder()
+
+			AuthPage(w, req)
+
+			if w.Code != http.StatusOK {
+				t.Fatalf("AuthPage() status = %d, want %d", w.Code, http.StatusOK)
+			}
+			body := w.Body.String()
+
+			// Both forms ship in the markup regardless of active tab.
+			for _, want := range []string{`hx-post="/auth/login"`, `hx-post="/auth/signup"`, `id="auth-messages"`} {
+				if !strings.Contains(body, want) {
+					t.Errorf("auth page missing %q", want)
+				}
+			}
+			// Tab links carry the no-JS fallback.
+			if !strings.Contains(body, `href="/auth/page?mode=signup"`) || !strings.Contains(body, `href="/auth/page?mode=login"`) {
+				t.Error("auth page tab links missing the ?mode fallback hrefs")
+			}
+			if !strings.Contains(body, `id="`+tt.wantHidden+`" class="hidden"`) {
+				t.Errorf("panel %s should render hidden on %s", tt.wantHidden, tt.target)
+			}
+			if strings.Contains(body, `id="`+tt.wantVisible+`" class="hidden"`) {
+				t.Errorf("panel %s should be visible on %s", tt.wantVisible, tt.target)
+			}
+		})
 	}
 }
 

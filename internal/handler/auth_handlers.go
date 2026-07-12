@@ -11,10 +11,17 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view/pages"
 )
 
-// AuthPage renders the combined login/signup page.
+// AuthPage renders the tabbed login/signup card. ?mode=signup activates the
+// signup tab server-side, so tab switching works without JS; Alpine enhances
+// it into an instant toggle.
 func AuthPage(w http.ResponseWriter, r *http.Request) {
+	mode := r.URL.Query().Get("mode")
+	if mode != "signup" {
+		mode = "login"
+	}
 	props := pages.AuthPageProps{
 		BaseProps: view.NewBaseProps("Login or Sign Up"),
+		Mode:      mode,
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.AuthPage(props)); err != nil {
 		slog.Error("Failed to render auth page", "error", err)
