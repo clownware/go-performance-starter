@@ -200,6 +200,9 @@ func (s *Server) setupRoutes() {
 			learn.Use(mw.RateLimiter(30.0/60.0, 20))
 			handler.QuizRoutes(learn, postgres.NewQuizRepo(s.db, database.New(s.db)))
 			handler.FlashcardRoutes(learn, postgres.NewFlashcardRepo(s.db, database.New(s.db)))
+			// Guest → registered upgrade (#68): same identity chain as the
+			// other /learn surfaces; the POST adds the strict credential tier.
+			handler.UpgradeRoutes(learn, s.authClient, s.cfg.IsProduction())
 		})
 	}
 

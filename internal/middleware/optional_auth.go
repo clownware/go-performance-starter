@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -47,10 +46,7 @@ func OptionalUserLoader(repo repository.UserRepository) func(http.Handler) http.
 				return
 			}
 
-			user, err := repo.GetByAuthID(r.Context(), claims.Sub)
-			if errors.Is(err, repository.ErrNotFound) {
-				user, err = provisionUser(r, repo, claims)
-			}
+			user, err := resolveUser(r, repo, claims)
 			if err != nil {
 				slog.Error("Failed to load user row", "sub", claims.Sub, "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)

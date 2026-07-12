@@ -19,6 +19,8 @@ type QuizPageProps struct {
 	view.BaseProps
 	// Teaser marks a signed-out visit: preview the quiz and sell the sign-in.
 	Teaser bool
+	// GuestBanner marks an anonymous identity: offer the upgrade (#68).
+	GuestBanner bool
 	// Empty marks a database with no seeded questions.
 	Empty bool
 	// Question is the card to answer; nil when Empty or when Result is shown.
@@ -61,7 +63,17 @@ func QuizPage(props QuizPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold mb-2\">Architecture Quiz</h1><p class=\"text-muted-foreground mb-4\">Questions drawn from this starter's own architecture — every answer you save is a real row behind Row Level Security.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if props.GuestBanner {
+				templ_7745c5c3_Err = partials.GuestBanner().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<h1 class=\"text-2xl font-semibold mb-2\">Architecture Quiz</h1><p class=\"text-muted-foreground mb-4\">Questions drawn from this starter's own architecture — every answer you save is a real row behind Row Level Security.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -71,7 +83,7 @@ func QuizPage(props QuizPageProps) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div id=\"quiz-card\" class=\"mt-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"quiz-card\" class=\"mt-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -96,7 +108,7 @@ func QuizPage(props QuizPageProps) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

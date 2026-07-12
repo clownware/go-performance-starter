@@ -19,13 +19,14 @@ import (
 // repository calls.
 type fakeUserRepo struct {
 	repository.UserRepository
-	firstRunErr    error
-	gotUserID      uuid.UUID
-	gotComplete    bool
-	firstRunSeen   bool
-	updateNameErr  error
-	updateNameSeen bool
-	gotName        string
+	firstRunErr      error
+	gotUserID        uuid.UUID
+	gotComplete      bool
+	firstRunSeen     bool
+	updateNameErr    error
+	updateNameSeen   bool
+	gotName          string
+	anonymousFlipIDs []uuid.UUID
 }
 
 func (f *fakeUserRepo) UpdateFirstRunComplete(_ context.Context, id uuid.UUID, complete bool) error {

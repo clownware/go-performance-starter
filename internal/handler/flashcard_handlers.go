@@ -71,8 +71,9 @@ func flashcardsPage(repo repository.FlashcardRepository) http.HandlerFunc {
 			return
 		}
 		props := pages.FlashcardsPageProps{
-			BaseProps: view.NewBaseProps("Flashcards"),
-			Cards:     listProps.Cards,
+			BaseProps:   view.NewBaseProps("Flashcards"),
+			GuestBanner: user.IsAnonymous,
+			Cards:       listProps.Cards,
 		}
 		renderQuiz(w, r, http.StatusOK, pages.FlashcardsPage(props))
 	}

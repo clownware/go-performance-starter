@@ -1,0 +1,39 @@
+package pages
+
+import (
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/layouts"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
+)
+
+// UpgradePageProps holds data for the guest → registered upgrade page
+// (ADR-024 upgrade flow, #68).
+type UpgradePageProps struct {
+	view.BaseProps
+	// Registered marks a visitor who already has a non-anonymous identity.
+	Registered bool
+	Form       partials.UpgradeFormProps
+}
+
+templ UpgradePage(props UpgradePageProps) {
+	@layouts.Base(props.BaseProps) {
+		<div class="max-w-lg mx-auto">
+			<h1 class="text-2xl font-semibold mb-2">Keep your progress</h1>
+			if props.Registered {
+				<p class="text-muted-foreground mb-6">
+					You're already signed in with a registered account — your quiz
+					progress and flashcards are saved to it.
+				</p>
+				<a href="/learn/quiz" class="btn btn-primary inline-block">Back to the quiz</a>
+			} else {
+				<p class="text-muted-foreground mb-6">
+					Add an email and password to your guest identity. It's the same
+					account underneath — every quiz answer and flashcard you've saved
+					stays yours, because the rows are already scoped to this identity
+					by Row Level Security.
+				</p>
+				@partials.UpgradeForm(props.Form)
+			}
+		</div>
+	}
+}

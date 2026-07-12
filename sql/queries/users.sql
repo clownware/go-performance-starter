@@ -63,6 +63,13 @@ SET name = $2, updated_at = NOW()
 WHERE id = $1
 RETURNING id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous;
 
+-- name: SetUserIsAnonymous :exec
+-- Guest → registered upgrade (#68): flipping to false exempts the row from
+-- the anonymous-user reaper.
+UPDATE users
+SET is_anonymous = $2, updated_at = NOW()
+WHERE id = $1;
+
 -- name: SetUserFirstRunComplete :exec
 UPDATE users
 SET first_run_complete = $2, updated_at = NOW()
