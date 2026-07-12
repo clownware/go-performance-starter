@@ -23,6 +23,10 @@ primary_region = "ewr"
   # enabled in the Supabase project (done 2026-07). Visitors to /learn get a
   # real Supabase identity server-side; the TTL reaper expires stale ones.
   GUEST_MODE_ENABLED = "true"
+  # Public-demo cadence (ADR-031): the nightly reset clears guests' content;
+  # a short TTL keeps the reaper's identity cleanup in the same rhythm instead
+  # of letting anonymous auth users linger for the 720h default.
+  GUEST_TTL = "48h"
 
 [http_service]
   internal_port = 4000
