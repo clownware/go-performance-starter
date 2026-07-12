@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-12
+
+### Changed
+- The 19 showcase patterns are grouped into five teaching categories
+  (Fetch & swap, Search & lists, Forms & actions, Server-driven UX,
+  Alpine islands) with a sticky scroll-spied sidebar TOC on desktop and
+  grouped pill navigation on mobile; every pattern keeps its deep-link
+  anchor
+
 ## [0.7.0] - 2026-07-12
 
 ### Added
