@@ -57,12 +57,38 @@ var patternStubData = []string{
 
 const patternScrollPerPage = 5
 
+// patternCategories are the teaching groups the showcase is organized by,
+// in display order. Every catalogue entry names one (enforced by test).
+var patternCategories = []view.PatternCategory{
+	{Slug: "fetch-swap", Title: "Fetch & swap", Blurb: "The core loop: an attribute fires a request, the server renders HTML, HTMX places it."},
+	{Slug: "search-lists", Title: "Search & lists", Blurb: "Server-filtered results with debounce, indicators, and pagination that loads itself."},
+	{Slug: "forms-actions", Title: "Forms & actions", Blurb: "Validation, editing, confirmation, and honest in-flight feedback — all server-round-trip."},
+	{Slug: "server-driven", Title: "Server-driven UX", Blurb: "Responses that steer the page: toasts from headers, multi-region swaps, animated transitions."},
+	{Slug: "alpine-islands", Title: "Alpine islands", Blurb: "The client-only slice: state, teleported modals, and stores shared across components."},
+}
+
+// patternGroups orders the catalogue by category for the grouped page.
+func patternGroups() []view.PatternGroup {
+	groups := make([]view.PatternGroup, 0, len(patternCategories))
+	for _, cat := range patternCategories {
+		g := view.PatternGroup{Category: cat}
+		for _, s := range patternsCatalog {
+			if s.Category == cat.Slug {
+				g.Sections = append(g.Sections, s)
+			}
+		}
+		groups = append(groups, g)
+	}
+	return groups
+}
+
 // patternsCatalog drives the showcase sections. Source snippets are abridged
 // from the real handlers and templates below (kept in sync by hand — see
 // ux-overhaul-spec.md for the generated-source future iteration).
 var patternsCatalog = []view.PatternSection{
 	{
 		Slug:         "partial-swap",
+		Category:     "fetch-swap",
 		Title:        "Partial swap",
 		Summary:      "Click a button, replace a fragment. The simplest HTMX pattern — a GET returns rendered HTML and hx-target places it.",
 		HTMXFeatures: []string{"hx-get", "hx-target", "hx-swap"},
@@ -78,6 +104,7 @@ var patternsCatalog = []view.PatternSection{
 	},
 	{
 		Slug:         "live-search",
+		Category:     "search-lists",
 		Title:        "Live search",
 		Summary:      "Type in a search box; results filter server-side with a debounce, so the server stays the single source of truth.",
 		HTMXFeatures: []string{"hx-get", `hx-trigger="keyup changed delay:300ms"`, "hx-target"},
@@ -92,6 +119,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "click-to-edit",
+		Category:     "forms-actions",
 		Title:        "Click to edit",
 		Summary:      "Click text to turn it into an edit form; saving swaps the display view back in. Two endpoints, zero client state.",
 		HTMXFeatures: []string{"hx-get", "hx-put", "hx-swap"},
@@ -107,6 +135,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "inline-validation",
+		Category:       "forms-actions",
 		Title:          "Inline validation",
 		Summary:        "Alpine validates as you type; the server re-checks on submit and returns field errors into the same markup.",
 		HTMXFeatures:   []string{"hx-post", "hx-target"},
@@ -123,6 +152,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "optimistic-ui",
+		Category:       "forms-actions",
 		Title:          "Optimistic UI",
 		Summary:        "A favorite toggle that swaps instantly — current state rides along in hx-vals, so the endpoint stays stateless.",
 		HTMXFeatures:   []string{"hx-post", `hx-swap="outerHTML"`, "hx-vals"},
@@ -140,6 +170,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "infinite-scroll",
+		Category:     "search-lists",
 		Title:        "Infinite scroll",
 		Summary:      "Scroll to the bottom and the next page loads automatically; the sentinel row replaces itself with each new page.",
 		HTMXFeatures: []string{"hx-get", `hx-trigger="revealed"`, `hx-swap="outerHTML"`},
@@ -154,6 +185,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "typeahead",
+		Category:     "search-lists",
 		Title:        "Active search (typeahead)",
 		Summary:      "Like live search, plus a loading indicator that HTMX toggles for you while the request is in flight.",
 		HTMXFeatures: []string{"hx-get", `hx-trigger="keyup changed delay:200ms"`, "hx-indicator"},
@@ -167,6 +199,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "toasts",
+		Category:       "server-driven",
 		Title:          "Toast notifications",
 		Summary:        "The response body swaps a tiny status line; the toast itself fires from the HX-Trigger header into an Alpine listener.",
 		HTMXFeatures:   []string{"HX-Trigger", "HX-Toast-Type"},
@@ -182,6 +215,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "dark-mode",
+		Category:       "alpine-islands",
 		Title:          "Dark mode",
 		Summary:        "Alpine state seeded from the system preference, persisted to localStorage, applied as a class on the root element.",
 		AlpineFeatures: []string{"x-data", "$watch", "localStorage"},
@@ -194,6 +228,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "skeleton-loading",
+		Category:       "fetch-swap",
 		Title:          "Skeleton loading",
 		Summary:        "A CSS skeleton renders instantly; HTMX replaces it with real content on a delayed load trigger.",
 		HTMXFeatures:   []string{"hx-get", `hx-trigger="load delay:1.5s"`},
@@ -210,6 +245,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "tabs",
+		Category:       "fetch-swap",
 		Title:          "Tabs",
 		Summary:        "Tab buttons fetch server-rendered panels; Alpine handles the client-only variant (see the source panel you're using).",
 		HTMXFeatures:   []string{"hx-get", "hx-target"},
@@ -225,6 +261,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "bulk-operations",
+		Category:       "forms-actions",
 		Title:          "Bulk operations",
 		Summary:        "Alpine tracks the checkbox selection client-side; one HTMX POST submits the whole batch as form values.",
 		HTMXFeatures:   []string{"hx-post", "hx-target"},
@@ -245,6 +282,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "polling",
+		Category:     "fetch-swap",
 		Title:        "Polling",
 		Summary:      "A live server value without WebSockets: the element re-fetches itself on a fixed interval — the whole real-time stack is one attribute.",
 		HTMXFeatures: []string{`hx-trigger="load, every 5s"`, "hx-get"},
@@ -257,6 +295,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "oob-swap",
+		Category:     "server-driven",
 		Title:        "Out-of-band swap",
 		Summary:      "One response updates two regions: the button replaces itself, and a badge elsewhere updates via hx-swap-oob riding the same payload.",
 		HTMXFeatures: []string{"hx-swap-oob", "hx-vals", `hx-swap="outerHTML"`},
@@ -272,6 +311,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "confirm-delete",
+		Category:     "forms-actions",
 		Title:        "Confirm + disabled button",
 		Summary:      "hx-confirm gates the request behind a native confirm dialog; hx-disabled-elt holds the button while the request runs.",
 		HTMXFeatures: []string{"hx-confirm", `hx-disabled-elt="this"`, "hx-post"},
@@ -286,6 +326,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "view-transitions",
+		Category:     "server-driven",
 		Title:        "View Transitions",
 		Summary:      "transition:true on the swap animates it through the browser's View Transitions API — cross-fade with zero animation code, instant fallback elsewhere.",
 		HTMXFeatures: []string{`hx-swap="innerHTML transition:true"`},
@@ -300,6 +341,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:         "loading-states",
+		Category:     "forms-actions",
 		Title:        "Loading states",
 		Summary:      "The right way to show in-flight work: a per-element spinner (hx-indicator) and a disabled trigger (hx-disabled-elt) — never a full-screen overlay.",
 		HTMXFeatures: []string{"hx-indicator", `hx-disabled-elt="this"`},
@@ -318,6 +360,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "modal",
+		Category:       "alpine-islands",
 		Title:          "Modal (teleport)",
 		Summary:        "An accessible Alpine modal: x-teleport lifts it to <body> so no ancestor clips it, Escape and backdrop close it, focus lands inside.",
 		AlpineFeatures: []string{"x-teleport", "x-show", "@keydown.escape.window", "x-transition"},
@@ -334,6 +377,7 @@ view.Render(w, r, http.StatusOK,
 	},
 	{
 		Slug:           "global-store",
+		Category:       "alpine-islands",
 		Title:          "Global store",
 		Summary:        "Alpine.store shares state across unrelated components: two separate x-data islands read and write one store registered in app.js.",
 		AlpineFeatures: []string{"Alpine.store", "$store", "x-text"},
@@ -360,7 +404,7 @@ var patternTabs = map[string]string{
 func PatternsPage(w http.ResponseWriter, r *http.Request) {
 	props := pages.PatternsPageProps{
 		BaseProps: view.NewBaseProps("Pattern Showcase"),
-		Sections:  patternsCatalog,
+		Groups:    patternGroups(),
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.PatternsPage(props)); err != nil {
 		slog.Error("Failed to render patterns page", "error", err)

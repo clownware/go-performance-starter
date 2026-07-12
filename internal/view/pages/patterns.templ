@@ -6,35 +6,77 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
-// PatternsPageProps holds data for the /patterns showcase (ADR-024 surface 2).
+// PatternsPageProps holds data for the /patterns showcase (ADR-024 surface 2),
+// grouped by teaching category for discovery.
 type PatternsPageProps struct {
 	view.BaseProps
-	Sections []view.PatternSection
+	Groups []view.PatternGroup
 }
 
 templ PatternsPage(props PatternsPageProps) {
 	@layouts.Base(props.BaseProps) {
 		<h1 class="text-2xl font-semibold mb-2">Pattern Showcase</h1>
 		<p class="text-muted-foreground mb-6 max-w-2xl">
-			Every HTMX and Alpine.js pattern this starter supports, live. Each demo is
-			the real thing — the source shown next to it is what serves it.
+			Every HTMX and Alpine.js pattern this starter supports, live and grouped
+			by what it teaches. Each demo is the real thing — the source shown next
+			to it is what serves it.
 		</p>
-		<nav aria-label="Patterns" class="mb-10 flex flex-wrap gap-2">
-			for _, s := range props.Sections {
-				<a href={ templ.SafeURL("#" + s.Slug) } class="px-3 py-1 rounded-full text-sm bg-surface border border-border hover:border-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary">
-					{ s.Title }
-				</a>
-			}
-		</nav>
-		for _, s := range props.Sections {
+		<div class="lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-10">
+			<!-- Desktop: sticky TOC; app.js scroll-spy marks the section in view -->
+			<aside class="hidden lg:block">
+				<nav data-testid="patterns-nav" aria-label="Patterns" class="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto pr-2 text-sm">
+					for _, g := range props.Groups {
+						<p class="uppercase tracking-wide text-xs text-muted-foreground mt-5 mb-1 first:mt-0">{ g.Category.Title }</p>
+						<ul>
+							for _, s := range g.Sections {
+								<li>
+									<a
+										href={ templ.SafeURL("#" + s.Slug) }
+										class="block py-1 text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary rounded"
+									>
+										{ s.Title }
+									</a>
+								</li>
+							}
+						</ul>
+					}
+				</nav>
+			</aside>
+			<div>
+				<!-- Mobile: grouped pills replace the sidebar -->
+				<nav aria-label="Patterns" class="mb-10 lg:hidden">
+					for _, g := range props.Groups {
+						<p class="uppercase tracking-wide text-xs text-muted-foreground mt-4 mb-2 first:mt-0">{ g.Category.Title }</p>
+						<div class="flex flex-wrap gap-2">
+							for _, s := range g.Sections {
+								<a href={ templ.SafeURL("#" + s.Slug) } class="px-3 py-1 rounded-full text-sm bg-surface border border-border hover:border-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary">
+									{ s.Title }
+								</a>
+							}
+						</div>
+					}
+				</nav>
+				for _, g := range props.Groups {
+					@patternCategorySection(g)
+				}
+			</div>
+		</div>
+	}
+}
+
+templ patternCategorySection(g view.PatternGroup) {
+	<section data-testid="pattern-category" aria-labelledby={ "cat-" + g.Category.Slug } class="mb-20">
+		<h2 id={ "cat-" + g.Category.Slug } class="text-2xl font-bold mb-1 pb-2 border-b border-border">{ g.Category.Title }</h2>
+		<p class="text-muted-foreground mt-2 mb-10 max-w-2xl">{ g.Category.Blurb }</p>
+		for _, s := range g.Sections {
 			@patternSection(s)
 		}
-	}
+	</section>
 }
 
 templ patternSection(s view.PatternSection) {
 	<section id={ s.Slug } class="mb-14 scroll-mt-24" aria-labelledby={ s.Slug + "-title" }>
-		<h2 id={ s.Slug + "-title" } class="text-xl font-semibold mb-1">{ s.Title }</h2>
+		<h3 id={ s.Slug + "-title" } class="text-xl font-semibold mb-1">{ s.Title }</h3>
 		<p class="text-muted-foreground mb-3 max-w-2xl">{ s.Summary }</p>
 		<div class="flex flex-wrap gap-2 mb-4">
 			for _, f := range s.HTMXFeatures {

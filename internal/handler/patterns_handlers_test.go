@@ -213,3 +213,57 @@ func TestPatternsAPI(t *testing.T) {
 		})
 	}
 }
+
+// TestPatternsCatalogCategorized pins the discovery model: every pattern
+// belongs to one of the five teaching categories, and every category has at
+// least one pattern — an uncategorized entry would silently fall out of the
+// grouped page.
+func TestPatternsCatalogCategorized(t *testing.T) {
+	valid := make(map[string]bool)
+	for _, c := range patternCategories {
+		valid[c.Slug] = true
+	}
+	if len(valid) != 5 {
+		t.Fatalf("expected 5 pattern categories, got %d", len(valid))
+	}
+
+	seen := make(map[string]int)
+	for _, s := range patternsCatalog {
+		if !valid[s.Category] {
+			t.Errorf("pattern %q has unknown category %q", s.Slug, s.Category)
+		}
+		seen[s.Category]++
+	}
+	for slug := range valid {
+		if seen[slug] == 0 {
+			t.Errorf("category %q has no patterns", slug)
+		}
+	}
+}
+
+// TestPatternsPageDiscovery pins the navigation/discovery layer: a sidebar
+// TOC for the scroll-spy to drive, and one grouped section per category.
+func TestPatternsPageDiscovery(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/patterns", nil)
+	w := httptest.NewRecorder()
+
+	newPatternsRouter().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /patterns status = %d, want 200", w.Code)
+	}
+	body := w.Body.String()
+
+	if !strings.Contains(body, `data-testid="patterns-nav"`) {
+		t.Error("patterns page missing the sidebar TOC nav")
+	}
+	if got := strings.Count(body, `data-testid="pattern-category"`); got != 5 {
+		t.Errorf("patterns page renders %d category sections, want 5", got)
+	}
+	// Every pattern must keep its anchor so deep links and the TOC work.
+	for _, slug := range patternSlugs {
+		if !strings.Contains(body, `id="`+slug+`"`) {
+			t.Errorf("pattern %q lost its section anchor in the grouped layout", slug)
+		}
+	}
+}
