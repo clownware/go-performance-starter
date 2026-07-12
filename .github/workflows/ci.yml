@@ -48,6 +48,15 @@ jobs:
         go-version-file: 'go.mod'
         cache: true
 
+    - name: Set up Node (Tailwind build for the asset-budget gate)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install npm dependencies
+      run: npm ci
+
     - name: Install Task
       run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 

@@ -155,6 +155,9 @@ tasks:
 
   test:asset-budgets:
     desc: Check gzipped JS/CSS sizes against the ADR-000 frontend budgets
+    # app.css is a build artifact (gitignored); build it fresh so the check
+    # measures what production ships, not a stale local copy.
+    deps: [css:build]
     cmds:
       - go run ./scripts/check-asset-budgets
 
@@ -182,9 +185,9 @@ tasks:
 
   # CSS tasks
   css:build:
-    desc: Build CSS files with Tailwind
+    desc: Build CSS files with Tailwind (minified — same recipe as the Dockerfile)
     cmds:
-      - npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css
+      - npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css --minify
 
   css:watch:
     desc: Watch and build CSS files with Tailwind
