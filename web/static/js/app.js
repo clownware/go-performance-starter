@@ -9,6 +9,15 @@ document.addEventListener('alpine:init', () => {
       this.open = !this.open;
     }
   }));
+
+  // Cross-component state for the /patterns global-store demo: unrelated
+  // x-data islands read and write this via $store.demo.
+  Alpine.store('demo', {
+    count: 0,
+    inc() {
+      this.count++;
+    }
+  });
 });
 
 // HTMX event listeners
@@ -40,14 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Go Performance Starter loaded');
 });
 
-// Global HTMX loading indicator — the overlay markup lives in the base
-// layout; the listeners live here because inline <script> is CSP-forbidden
-// (ADR-028). Events bubble to document, so this covers swapped content too.
-document.addEventListener('htmx:beforeRequest', () => {
-  const el = document.getElementById('global-loading');
-  if (el) el.classList.remove('hidden');
-});
-document.addEventListener('htmx:afterRequest', () => {
-  const el = document.getElementById('global-loading');
-  if (el) el.classList.add('hidden');
-});
+// No global loading overlay: it flashed the whole screen on every fragment
+// swap. In-flight feedback is per-element — htmx puts .htmx-request on the
+// triggering element (styled in input.css); hx-indicator and hx-disabled-elt
+// handle explicit spinners and disabled submit buttons.

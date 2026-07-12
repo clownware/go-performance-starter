@@ -157,3 +157,100 @@ templ PatternBulkResult(count int) {
 		{ fmt.Sprintf("Archived %d item(s) in one request.", count) }
 	</p>
 }
+
+// --- Wave 2 fragments ---
+
+// PatternTimeTick is the polling demo payload: one server-rendered tick.
+templ PatternTimeTick(now string, load string) {
+	<div class="flex items-baseline gap-3">
+		<span class="text-2xl font-semibold tabular-nums">{ now }</span>
+		<span class="text-sm text-muted-foreground">server time - refreshed every 5s ({ load })</span>
+	</div>
+}
+
+// PatternCounterProps carries the stateless counter demo state in hx-vals.
+type PatternCounterProps struct {
+	Count int
+}
+
+// PatternCounterButton replaces itself on each click and updates the badge
+// elsewhere in the panel via an out-of-band swap in the same response.
+templ PatternCounterButton(props PatternCounterProps) {
+	<button
+		id="oob-counter-btn"
+		hx-post="/patterns/api/counter"
+		hx-vals={ fmt.Sprintf(`{"count": "%d"}`, props.Count) }
+		hx-swap="outerHTML"
+		class="btn btn-primary"
+	>
+		Add item
+	</button>
+}
+
+// PatternCounterBadge is the second region the counter response updates
+// out-of-band — one request, two swaps.
+templ PatternCounterBadge(count int, oob bool) {
+	<span
+		id="oob-total"
+		if oob {
+			hx-swap-oob="true"
+		}
+		class="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary tabular-nums"
+	>
+		{ fmt.Sprintf("%d added", count) }
+	</span>
+}
+
+// PatternCounterResponse is the full counter payload: the replacement button
+// plus the OOB badge.
+templ PatternCounterResponse(props PatternCounterProps) {
+	@PatternCounterButton(props)
+	@PatternCounterBadge(props.Count, true)
+}
+
+// PatternConfirmResult replaces the confirm-delete demo row once confirmed.
+templ PatternConfirmResult() {
+	<div class="p-3 rounded-md bg-success/10 text-success text-sm" role="status">
+		Deleted - hx-confirm gated the request and hx-disabled-elt held the
+		button while it ran.
+	</div>
+}
+
+// PatternTransitionCard cycles three token-tinted cards; the swap animates
+// via the View Transitions API (hx-swap "transition:true").
+templ PatternTransitionCard(step int) {
+	switch step % 3 {
+		case 0:
+			<div class="p-6 rounded-lg bg-primary/15 border border-primary">
+				<h4 class="font-semibold mb-1">Teal</h4>
+				<p class="text-sm text-muted-foreground">Swapped with a cross-fade via the View Transitions API - no animation library.</p>
+			</div>
+		case 1:
+			<div class="p-6 rounded-lg bg-accent/30 border border-accent">
+				<h4 class="font-semibold mb-1">Sage</h4>
+				<p class="text-sm text-muted-foreground">Each swap is a plain HTMX innerHTML swap with transition:true.</p>
+			</div>
+		default:
+			<div class="p-6 rounded-lg bg-danger/10 border border-danger">
+				<h4 class="font-semibold mb-1">Bittersweet</h4>
+				<p class="text-sm text-muted-foreground">Browsers without the API just swap instantly - progressive enhancement.</p>
+			</div>
+	}
+	<button
+		hx-get={ fmt.Sprintf("/patterns/api/transition?step=%d", step+1) }
+		hx-target="#vt-card"
+		hx-swap="innerHTML transition:true"
+		class="btn btn-secondary mt-3"
+	>
+		Next card
+	</button>
+}
+
+// PatternSlowContent lands after the server-side delay in the
+// loading-states demo.
+templ PatternSlowContent() {
+	<div class="p-3 rounded-md bg-success/10 text-success text-sm" role="status">
+		Loaded. While this request ran, the button was disabled
+		(hx-disabled-elt) and the spinner showed (hx-indicator).
+	</div>
+}

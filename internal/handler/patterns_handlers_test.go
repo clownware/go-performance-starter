@@ -33,6 +33,14 @@ var patternSlugs = []string{
 	"skeleton-loading",
 	"tabs",
 	"bulk-operations",
+	// wave 2: the rest of the bells and whistles
+	"polling",
+	"oob-swap",
+	"confirm-delete",
+	"view-transitions",
+	"loading-states",
+	"modal",
+	"global-store",
 }
 
 func TestPatternsPage(t *testing.T) {
@@ -138,6 +146,37 @@ func TestPatternsAPI(t *testing.T) {
 			name:       "bulk operation result",
 			method:     http.MethodPost,
 			target:     "/patterns/api/bulk",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "polling tick",
+			method:     http.MethodGet,
+			target:     "/patterns/api/time",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:         "counter response carries an out-of-band swap",
+			method:       http.MethodPost,
+			target:       "/patterns/api/counter",
+			wantStatus:   http.StatusOK,
+			wantContains: []string{`hx-swap-oob`},
+		},
+		{
+			name:       "confirmed delete returns the emptied state",
+			method:     http.MethodPost,
+			target:     "/patterns/api/confirm",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "view-transition card",
+			method:     http.MethodGet,
+			target:     "/patterns/api/transition?step=1",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "loading-states content (delay capped server-side)",
+			method:     http.MethodGet,
+			target:     "/patterns/api/slow?delay=0",
 			wantStatus: http.StatusOK,
 		},
 	}
