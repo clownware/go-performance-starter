@@ -100,9 +100,10 @@ func quizPage(repo repository.QuizRepository) http.HandlerFunc {
 			return
 		}
 		props := pages.QuizPageProps{
-			BaseProps: view.NewBaseProps("Architecture Quiz"),
-			Question:  &qProps,
-			Score:     score,
+			BaseProps:   view.NewBaseProps("Architecture Quiz"),
+			GuestBanner: user.IsAnonymous,
+			Question:    &qProps,
+			Score:       score,
 		}
 		renderQuiz(w, r, http.StatusOK, pages.QuizPage(props))
 	}

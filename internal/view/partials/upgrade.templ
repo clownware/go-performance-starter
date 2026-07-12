@@ -1,0 +1,95 @@
+package partials
+
+import "github.com/clownware/go-performance-starter/internal/view/components"
+
+// UpgradeFormProps holds state for the guest → registered upgrade form
+// (ADR-024 upgrade flow, #68).
+type UpgradeFormProps struct {
+	Email  string
+	Errors map[string]string
+	// Success marks a completed upgrade; ConfirmationSent qualifies it —
+	// the email must be confirmed before it becomes active.
+	Success          bool
+	ConfirmationSent bool
+}
+
+// UpgradeForm renders the upgrade form as a standalone fragment (for HTMX
+// swaps); the page and the swap share one source of markup.
+templ UpgradeForm(props UpgradeFormProps) {
+	<div id="upgrade-card" class="bg-surface rounded-lg shadow-md p-6">
+		if props.Success {
+			<div class="p-3 rounded-md bg-success/10 text-success text-sm mb-4" role="status">
+				if props.ConfirmationSent {
+					Your progress is saved. A confirmation link is on its way to
+					<span class="font-medium">{ props.Email }</span> — click it to finish
+					activating your sign-in.
+				} else {
+					Your progress is saved — you can now sign in with <span class="font-medium">{ props.Email }</span> from any browser.
+				}
+			</div>
+			<a href="/learn/quiz" class="btn btn-primary inline-block">Back to the quiz</a>
+		} else {
+			<form
+				method="post"
+				action="/learn/upgrade"
+				hx-post="/learn/upgrade"
+				hx-target="#upgrade-card"
+				hx-swap="outerHTML"
+				hx-disabled-elt="find button"
+				class="space-y-4"
+			>
+				if errMsg, ok := props.Errors["form"]; ok {
+					<p class="p-3 rounded-md bg-danger/10 text-danger text-sm" role="alert">{ errMsg }</p>
+				}
+				@components.CSRFField()
+				<div>
+					<label for="upgrade-email" class="block text-sm font-medium">Email</label>
+					<input
+						type="email"
+						name="email"
+						id="upgrade-email"
+						value={ props.Email }
+						required
+						autocomplete="email"
+						class="input mt-1 w-full"
+					/>
+					if errMsg, ok := props.Errors["email"]; ok {
+						<p class="text-danger text-sm mt-1" role="alert">{ errMsg }</p>
+					}
+				</div>
+				<div>
+					<label for="upgrade-password" class="block text-sm font-medium">Password</label>
+					<input
+						type="password"
+						name="password"
+						id="upgrade-password"
+						required
+						minlength="8"
+						autocomplete="new-password"
+						class="input mt-1 w-full"
+					/>
+					if errMsg, ok := props.Errors["password"]; ok {
+						<p class="text-danger text-sm mt-1" role="alert">{ errMsg }</p>
+					}
+				</div>
+				<button type="submit" class="btn btn-primary">Keep my progress</button>
+			</form>
+		}
+	</div>
+}
+
+// GuestBanner is the persistent "you're browsing as a guest" affordance on
+// the /learn surfaces (design brief priority 2). Same identity, so every
+// RLS-scoped row survives the upgrade — that's the pitch.
+templ GuestBanner() {
+	<div
+		data-testid="guest-banner"
+		class="mb-6 p-3 rounded-md bg-accent/30 border border-accent text-sm flex flex-wrap items-center justify-between gap-2"
+	>
+		<span>
+			You're browsing as a guest — your quiz progress and flashcards are real rows,
+			but the identity expires.
+		</span>
+		<a href="/learn/upgrade" class="font-medium text-link underline">Keep your progress</a>
+	</div>
+}

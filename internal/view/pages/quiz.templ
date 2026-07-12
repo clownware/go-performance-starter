@@ -11,6 +11,8 @@ type QuizPageProps struct {
 	view.BaseProps
 	// Teaser marks a signed-out visit: preview the quiz and sell the sign-in.
 	Teaser bool
+	// GuestBanner marks an anonymous identity: offer the upgrade (#68).
+	GuestBanner bool
 	// Empty marks a database with no seeded questions.
 	Empty bool
 	// Question is the card to answer; nil when Empty or when Result is shown.
@@ -23,6 +25,9 @@ type QuizPageProps struct {
 templ QuizPage(props QuizPageProps) {
 	@layouts.Base(props.BaseProps) {
 		<div class="max-w-2xl mx-auto">
+			if props.GuestBanner {
+				@partials.GuestBanner()
+			}
 			<h1 class="text-2xl font-semibold mb-2">Architecture Quiz</h1>
 			<p class="text-muted-foreground mb-4">
 				Questions drawn from this starter's own architecture — every answer you

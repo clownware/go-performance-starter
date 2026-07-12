@@ -34,6 +34,10 @@ type UserRepository interface {
 	// UpdateName sets the user's display name (profile self-service, #70)
 	UpdateName(ctx context.Context, id uuid.UUID, name string) (*database.User, error)
 
+	// SetAnonymous flips the guest flag; false exempts the row from the
+	// anonymous-user reaper (upgrade flow, #68)
+	SetAnonymous(ctx context.Context, id uuid.UUID, anonymous bool) error
+
 	// Delete soft-deletes a user by setting is_active to false
 	Delete(ctx context.Context, id uuid.UUID) error
 

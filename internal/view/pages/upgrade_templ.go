@@ -14,17 +14,16 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
-// FlashcardsPageProps holds data for the flashcard review page (ADR-024).
-type FlashcardsPageProps struct {
+// UpgradePageProps holds data for the guest → registered upgrade page
+// (ADR-024 upgrade flow, #68).
+type UpgradePageProps struct {
 	view.BaseProps
-	// Teaser marks a signed-out visit: preview the surface, sell the sign-in.
-	Teaser bool
-	// GuestBanner marks an anonymous identity: offer the upgrade (#68).
-	GuestBanner bool
-	Cards       []partials.FlashcardProps
+	// Registered marks a visitor who already has a non-anonymous identity.
+	Registered bool
+	Form       partials.UpgradeFormProps
 }
 
-func FlashcardsPage(props FlashcardsPageProps) templ.Component {
+func UpgradePage(props UpgradePageProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -57,32 +56,26 @@ func FlashcardsPage(props FlashcardsPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-lg mx-auto\"><h1 class=\"text-2xl font-semibold mb-2\">Keep your progress</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if props.GuestBanner {
-				templ_7745c5c3_Err = partials.GuestBanner().Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<h1 class=\"text-2xl font-semibold mb-2\">Flashcards</h1><p class=\"text-muted-foreground mb-6\">Cards you saved from the quiz — each one a real row scoped to you by Row Level Security. Flip to recall, mark what you know, delete what you don't need.</p><div id=\"flashcard-list\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			if props.Teaser {
-				templ_7745c5c3_Err = partials.FlashcardsTeaser().Render(ctx, templ_7745c5c3_Buffer)
+			if props.Registered {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-muted-foreground mb-6\">You're already signed in with a registered account — your quiz progress and flashcards are saved to it.</p><a href=\"/learn/quiz\" class=\"btn btn-primary inline-block\">Back to the quiz</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = partials.FlashcardList(partials.FlashcardListProps{Cards: props.Cards}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p class=\"text-muted-foreground mb-6\">Add an email and password to your guest identity. It's the same account underneath — every quiz answer and flashcard you've saved stays yours, because the rows are already scoped to this identity by Row Level Security.</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = partials.UpgradeForm(props.Form).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -68,6 +68,17 @@ func TestUserRepoIntegration(t *testing.T) {
 	if _, err := repo.UpdateName(ctx, uuid.New(), "Nobody"); err != repository.ErrNotFound {
 		t.Errorf("UpdateName(missing) err = %v, want ErrNotFound", err)
 	}
+
+	if err := repo.SetAnonymous(ctx, created.ID, false); err != nil {
+		t.Fatalf("SetAnonymous: %v", err)
+	}
+	promoted, err := repo.Get(ctx, created.ID)
+	if err != nil {
+		t.Fatalf("Get after promotion: %v", err)
+	}
+	if promoted.IsAnonymous {
+		t.Error("SetAnonymous(false) did not promote the row")
+	}
 }
 
 // TestUserRLSIsolation proves the users_self_access policy: an authenticated

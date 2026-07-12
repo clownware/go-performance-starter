@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -30,10 +31,7 @@ func UserLoader(repo repository.UserRepository) func(http.Handler) http.Handler 
 				return
 			}
 
-			user, err := repo.GetByAuthID(r.Context(), claims.Sub)
-			if errors.Is(err, repository.ErrNotFound) {
-				user, err = provisionUser(r, repo, claims)
-			}
+			user, err := resolveUser(r, repo, claims)
 			if err != nil {
 				slog.Error("Failed to load user row", "sub", claims.Sub, "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -44,6 +42,29 @@ func UserLoader(repo repository.UserRepository) func(http.Handler) http.Handler 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// resolveUser loads (or JIT-provisions) the users row for the authenticated
+// claims and heals a stale guest flag: a non-anonymous token with an
+// is_anonymous row means the identity was upgraded (#68) but the row flip
+// was missed — sync it here so the reaper can never delete an upgraded
+// account. The reverse direction never syncs: a row is only ever promoted.
+func resolveUser(r *http.Request, repo repository.UserRepository, claims webutil.AuthClaims) (*database.User, error) {
+	user, err := repo.GetByAuthID(r.Context(), claims.Sub)
+	if errors.Is(err, repository.ErrNotFound) {
+		return provisionUser(r, repo, claims)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if user.IsAnonymous && !claims.IsAnonymous {
+		if err := repo.SetAnonymous(r.Context(), user.ID, false); err != nil {
+			return nil, fmt.Errorf("heal stale guest flag: %w", err)
+		}
+		user.IsAnonymous = false
+		slog.Info("Healed stale guest flag after upgrade", "user_id", user.ID)
+	}
+	return user, nil
 }
 
 // provisionUser creates the users row for a first-time authenticated visitor,

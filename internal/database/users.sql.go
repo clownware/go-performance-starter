@@ -252,6 +252,24 @@ func (q *Queries) SetUserFirstRunComplete(ctx context.Context, arg SetUserFirstR
 	return err
 }
 
+const setUserIsAnonymous = `-- name: SetUserIsAnonymous :exec
+UPDATE users
+SET is_anonymous = $2, updated_at = NOW()
+WHERE id = $1
+`
+
+type SetUserIsAnonymousParams struct {
+	ID          uuid.UUID `json:"id"`
+	IsAnonymous bool      `json:"is_anonymous"`
+}
+
+// Guest → registered upgrade (#68): flipping to false exempts the row from
+// the anonymous-user reaper.
+func (q *Queries) SetUserIsAnonymous(ctx context.Context, arg SetUserIsAnonymousParams) error {
+	_, err := q.db.Exec(ctx, setUserIsAnonymous, arg.ID, arg.IsAnonymous)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET

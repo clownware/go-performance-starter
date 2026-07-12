@@ -16,8 +16,9 @@ import (
 
 // fakeUserRepo implements repository.UserRepository for UserLoader tests.
 type fakeUserRepo struct {
-	byAuthID map[string]*database.User
-	created  []database.CreateUserParams
+	byAuthID       map[string]*database.User
+	created        []database.CreateUserParams
+	anonymousFlips []bool
 }
 
 func (f *fakeUserRepo) GetByAuthID(ctx context.Context, authID string) (*database.User, error) {
@@ -48,6 +49,10 @@ func (f *fakeUserRepo) Update(ctx context.Context, params database.UpdateUserPar
 func (f *fakeUserRepo) UpdateName(ctx context.Context, id uuid.UUID, name string) (*database.User, error) {
 	return nil, repository.ErrNotFound
 }
+func (f *fakeUserRepo) SetAnonymous(ctx context.Context, id uuid.UUID, anonymous bool) error {
+	f.anonymousFlips = append(f.anonymousFlips, anonymous)
+	return nil
+}
 func (f *fakeUserRepo) Delete(ctx context.Context, id uuid.UUID) error { return nil }
 func (f *fakeUserRepo) SetLastLogin(ctx context.Context, id uuid.UUID, loginTime time.Time) error {
 	return nil
@@ -66,6 +71,7 @@ func TestUserLoader(t *testing.T) {
 		wantStatus    int
 		wantUserEmail string
 		wantCreated   int
+		wantAnonFlip  bool
 	}{
 		{
 			name:       "no claims: unauthorized",
@@ -86,6 +92,29 @@ func TestUserLoader(t *testing.T) {
 			repo:        &fakeUserRepo{byAuthID: map[string]*database.User{}},
 			wantStatus:  http.StatusOK,
 			wantCreated: 1,
+		},
+		{
+			// Upgrade self-heal (#68): a non-anonymous token with a stale
+			// guest row flips the row, so the reaper can never eat an
+			// upgraded account even if the upgrade handler's flip failed.
+			name:   "stale guest row is healed from non-anonymous claims",
+			claims: &webutil.AuthClaims{Sub: "upgraded-sub", Role: webutil.RoleAuthenticated, IsAnonymous: false},
+			repo: &fakeUserRepo{byAuthID: map[string]*database.User{
+				"upgraded-sub": {ID: uuid.New(), Email: "upgraded@example.com", IsAnonymous: true},
+			}},
+			wantStatus:    http.StatusOK,
+			wantUserEmail: "upgraded@example.com",
+			wantAnonFlip:  true,
+		},
+		{
+			// An anonymous token must never flip the row the other way.
+			name:   "anonymous claims leave the row untouched",
+			claims: &webutil.AuthClaims{Sub: "guest-sub", Role: webutil.RoleAuthenticated, IsAnonymous: true},
+			repo: &fakeUserRepo{byAuthID: map[string]*database.User{
+				"guest-sub": {ID: uuid.New(), Email: "guest@example.com", IsAnonymous: true},
+			}},
+			wantStatus:    http.StatusOK,
+			wantUserEmail: "guest@example.com",
 		},
 	}
 
@@ -120,6 +149,16 @@ func TestUserLoader(t *testing.T) {
 				if got := tt.repo.created[0].AuthID.String; got != tt.claims.Sub {
 					t.Errorf("provisioned auth_id = %q, want claims sub %q", got, tt.claims.Sub)
 				}
+			}
+			if tt.wantAnonFlip {
+				if len(tt.repo.anonymousFlips) != 1 || tt.repo.anonymousFlips[0] != false {
+					t.Errorf("SetAnonymous calls = %v, want one flip to false", tt.repo.anonymousFlips)
+				}
+				if gotUser != nil && gotUser.IsAnonymous {
+					t.Error("context user still marked anonymous after heal")
+				}
+			} else if len(tt.repo.anonymousFlips) != 0 {
+				t.Errorf("unexpected SetAnonymous calls: %v", tt.repo.anonymousFlips)
 			}
 		})
 	}

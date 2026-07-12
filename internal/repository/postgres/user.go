@@ -126,6 +126,17 @@ func (r *UserRepo) UpdateName(ctx context.Context, id uuid.UUID, name string) (*
 	return &user, nil
 }
 
+// SetAnonymous flips the guest flag (upgrade flow, #68).
+func (r *UserRepo) SetAnonymous(ctx context.Context, id uuid.UUID, anonymous bool) error {
+	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (struct{}, error) {
+		return struct{}{}, q.SetUserIsAnonymous(ctx, database.SetUserIsAnonymousParams{
+			ID:          id,
+			IsAnonymous: anonymous,
+		})
+	})
+	return err
+}
+
 // Delete soft-deletes a user by setting is_active to false.
 func (r *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := inScope(ctx, r.db, r.querier, func(q database.Querier) (struct{}, error) {
