@@ -52,3 +52,12 @@ Build the demo as a **self-documenting architecture explainer** with three coher
 
 - Supersedes the bookmarks/landing scope of [`docs/updates/ux-overhaul-spec.md`](../updates/ux-overhaul-spec.md); design brief in [`docs/updates/demo-design-brief.md`](../updates/demo-design-brief.md).
 - Related: [ADR-004](ADR-004-Authorization-Strategy-RLS.md) (RLS), [ADR-007](ADR-007-Frontend-Stack-Selection.md) (frontend), [ADR-014](ADR-014-Security-Patterns-and-Threat-Model.md) (security), [ADR-017](ADR-017-Templ-Adoption.md) (templ).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `gotrue-go`/`supabase-go` pins surface in `versions.json` accounting (via go.mod source-of-truth rules, ADR-030).
+- **Checks:**
+  - TC-1 → `task versions:check` in `task ci` (status: **block**, pre-existing; owned by ADR-030)
+- **Not machine-checkable:** The single-identity model ("no parallel guest path"), `is_anonymous` gating on destructive operations, and reaper correctness are architectural/behavioural — covered by the packages' own tests where written, otherwise review. The retired `items` handlers were verified absent 2026-07-12; a standing absence check isn't warranted.
+- **Graduation log:** _(empty)_

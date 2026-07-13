@@ -40,3 +40,14 @@ The demo application (ADR-024) is going public: the repo self-deploys its own de
 ## References
 
 - Related: [ADR-024](ADR-024-Demo-Application-Direction.md) (demo app, guest mode, reaper), [ADR-025](ADR-025-Deployment-Target.md) (deployment target, release pipeline), [ADR-030](ADR-030-Versions-Manifest-Contract.md) (public manifest).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `task demo:seed` and `task demo:reset` refuse to run unless `DEMO_MODE=1`.
+  - TC-2: The nightly reset workflow is double-gated (secret present AND repo var `DEMO_MODE=1`).
+- **Checks:**
+  - TC-1 → Taskfile `preconditions` on both targets (status: **block**, pre-existing)
+  - TC-2 → gate jobs in `demo-reset.yml`/`deploy.yml` (status: **block**, pre-existing)
+- **Not machine-checkable:** The reset-scope guarantee (deletes only anonymous users' content, never identity or registered accounts) — lives in `sql/demo/reset.sql` semantics, review territory.
+- **Graduation log:** _(empty)_

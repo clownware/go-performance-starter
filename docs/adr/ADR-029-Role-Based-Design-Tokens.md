@@ -84,3 +84,13 @@ so drift fails `task ci` (ADR-021).
   amendment) — the sibling-template precedent this adapts.
 - [ADR-007](ADR-007-Frontend-Stack-Selection.md), [ADR-017](ADR-017-Templ-Adoption.md),
   [ADR-024](ADR-024-Demo-Application-Direction.md) (design brief flagged the gap).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: No `dark:` color variants in `internal/view/**/*.templ`.
+  - TC-2: No raw `gray-N00` utilities in components.
+- **Checks:**
+  - TC-1, TC-2 → `internal/view/tokens_test.go` via `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** Rules 3–4 (brand constants on solid buttons; status feedback as tint + role text) — semantic composition judgment.
+- **Graduation log:** _(empty)_

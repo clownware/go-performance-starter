@@ -47,3 +47,13 @@ Implementation lands in the consistency phase (issue #16) as a table-driven-test
 - [ADR-001](ADR-001-Foundation.md) §3 (superseded), [ADR-013](ADR-013-Error-Handling-and-Observability.md) §2 (amended), [ADR-000](ADR-000-Performance-Budgets-and-Quality-Attributes.md) (budgets), [ADR-023](ADR-023-Testing-Philosophy.md) (test-first refactor)
 - Issue #16 — zerolog vs slog inconsistency
 - [Go blog: Structured Logging with slog](https://go.dev/blog/slog)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `github.com/rs/zerolog` is absent from `go.mod`.
+  - TC-2: No `log.Printf`/`log.Print`/`log.Println` call sites in `cmd/` or `internal/` — logging goes through `log/slog`.
+- **Checks:**
+  - TC-1, TC-2 → `adr026-slog-only` in `scripts/adrcheck` (status: **warn**)
+- **Not machine-checkable:** Structured-field completeness (`request_id`, `user_id`, `error`, `duration_ms` on relevant entries) and scrubbing rules — semantic, per ADR-013.
+- **Graduation log:** _(empty)_

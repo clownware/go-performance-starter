@@ -42,3 +42,12 @@ Replace the unconditional `RealIP` with a **trusted-proxy-gated** resolver:
 
 - [ADR-014](ADR-014-Security-Patterns-and-Threat-Model.md) §4 (rate limiting), [ADR-015](ADR-015-Configuration-Management-Strategy.md) (env config), [ADR-025](ADR-025-Deployment-Target.md) §2 (edge TLS), [ADR-023](ADR-023-Testing-Philosophy.md) (test-first)
 - 2026-07-06 security audit
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: The table-driven trusted-proxy tests (trusted honours headers, untrusted ignores, empty config never trusts, malformed falls back to peer) pass.
+- **Checks:**
+  - TC-1 → `go test` in `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** That `TRUSTED_PROXY_CIDRS` is configured correctly for a given deployment — ops configuration, outside the repo.
+- **Graduation log:** _(empty)_

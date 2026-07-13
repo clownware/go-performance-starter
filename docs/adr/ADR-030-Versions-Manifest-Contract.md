@@ -33,3 +33,14 @@ Such a manifest is only useful if it cannot lie. Hand-maintained version lists d
 
 - Pattern source: `clownware/astro-performance-starter` `versions.json`.
 - Related: [ADR-021](ADR-021-Halt-On-Violation-Quality-Gate.md) (quality gate), [ADR-022](ADR-022-Cross-Tool-Agents-Spine.md) (drift-check precedent), [ADR-025](ADR-025-Deployment-Target.md) (release pipeline).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Every non-`template` key in `versions.json` agrees with its in-repo source of truth; a key with no wired check fails.
+  - TC-2: The `template` field is stamped by the release workflow and only ever a `vX.Y.Z` tag.
+- **Checks:**
+  - TC-1 → `task versions:check` in `task ci` (status: **block**, pre-existing)
+  - TC-2 → `release.yml` stamp job + format assertion in `versions:check` (status: **block**, pre-existing)
+- **Not machine-checkable:** The additive-only key discipline (rename/remove = breaking change) — semver judgment at release time.
+- **Graduation log:** _(empty)_
