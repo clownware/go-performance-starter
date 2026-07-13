@@ -57,3 +57,12 @@ These technologies will be used in conjunction with Go's `html/template` engine 
 - [HTMX](https://htmx.org/)
 - [Alpine.js](https://alpinejs.dev/)
 - [Go `html/template` Package](https://pkg.go.dev/html/template)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: No heavy client framework (react, vue, svelte, angular, jquery, next, nuxt) appears in `package.json` dependencies.
+- **Checks:**
+  - TC-1 → `adr007-no-heavy-frameworks` in `scripts/adrcheck` (status: **warn**)
+- **Not machine-checkable:** The "prefer server-rendering over client JS" judgment call — governed per-change by ADR-012 and review.
+- **Graduation log:** _(empty)_
