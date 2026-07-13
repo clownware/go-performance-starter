@@ -1,0 +1,12 @@
+[
+  { "id": "adr002-migration-pairs", "adr": "ADR-002", "tc": "TC-1", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr003-no-sql-in-handlers", "adr": "ADR-003", "tc": "TC-1/TC-2", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr007-no-heavy-frameworks", "adr": "ADR-007", "tc": "TC-1", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr011-adr-metadata", "adr": "ADR-011", "tc": "TC-1", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr015-env-only-config", "adr": "ADR-015", "tc": "TC-1/TC-2", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr017-no-html-template", "adr": "ADR-017", "tc": "TC-1", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr017-typed-view-props", "adr": "ADR-017", "tc": "TC-2", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr021-ci-invokes-gate", "adr": "ADR-021", "tc": "TC-2", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr025-deploy-scope", "adr": "ADR-025", "tc": "TC-1", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr026-slog-only", "adr": "ADR-026", "tc": "TC-1/TC-2", "status": "warn", "added": "2026-07-12" }
+]
