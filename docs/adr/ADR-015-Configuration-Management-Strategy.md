@@ -421,3 +421,13 @@ Maintain configuration documentation in:
 
 **Date**: 2025-11-15
 **Author**: System Architecture Team
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Environment reads (`os.Getenv`/`os.LookupEnv`) happen only in `internal/config` (allowlisted exception: the `cmd/api/main.go` bootstrap, which loads dotenv and the logger before config exists).
+  - TC-2: `.env` is gitignored; `.env.example` exists at the repo root.
+- **Checks:**
+  - TC-1, TC-2 → `adr015-env-only-config` in `scripts/adrcheck` (status: **warn**)
+- **Not machine-checkable:** "No hardcoded secrets" beyond structural patterns — no secret scanner is wired (recorded as a TODO in ADR-033). Environment parity is deployment discipline.
+- **Graduation log:** _(empty)_

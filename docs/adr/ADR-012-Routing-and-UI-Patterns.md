@@ -23,3 +23,12 @@ Consistent routing, handler structure, and UI update patterns are important for 
 - Routing and handlers are easy to follow and extend.
 - UI updates are efficient and minimize client JS.
 - Error handling is consistent and user-friendly.
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Chi is the router in use.
+- **Checks:**
+  - TC-1 → `go build` in `task ci` — removing chi breaks the server package (status: **block**, pre-existing)
+- **Not machine-checkable:** Handler focus/size, RESTful naming, "Alpine only where server-side can't" — all semantic judgment enforced in review.
+- **Graduation log:** _(empty)_

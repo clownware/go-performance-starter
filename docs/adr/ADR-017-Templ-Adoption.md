@@ -68,3 +68,16 @@ internal/view/
 - HTMX partial responses are correct — fragments render without the base layout.
 - `templ generate` adds a build step, integrated into CI and Taskfile.
 - Developers must learn templ syntax (minimal — it's Go with HTML).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: No file imports `html/template`.
+  - TC-2: No `map[string]interface{}` inside `internal/view` — props are typed structs.
+  - TC-3: Generated templ output compiles.
+- **Checks:**
+  - TC-1 → `adr017-no-html-template` in `scripts/adrcheck` (status: **warn**)
+  - TC-2 → `adr017-typed-view-props` in `scripts/adrcheck` (status: **warn**)
+  - TC-3 → `templ generate` + `go build` in `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** Single-render-path discipline (`view.Render` everywhere) and partial/page composition judgment. templ-regeneration drift has no wired check — TODO in ADR-033.
+- **Graduation log:** _(empty)_

@@ -430,3 +430,16 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
 
 **Date**: 2025-11-15
 **Author**: System Architecture Team
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Security headers (X-Frame-Options, nosniff, CSP; HSTS in production only) are set by middleware.
+  - TC-2: No known-vulnerable dependencies.
+  - TC-3: Queries are parameterized — no hand-written SQL in handlers.
+- **Checks:**
+  - TC-1 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
+  - TC-2 → `task scan:vuln` (govulncheck) in `task ci` (status: **block**, pre-existing)
+  - TC-3 → sqlc by construction + `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **warn**; owned by ADR-003)
+- **Not machine-checkable:** The OWASP table in this ADR honestly records partially-implemented mitigations (e.g. CSRF ❌, JWT-claim propagation ⚠️) — those are implementation gaps, not check gaps; a check can't gate what doesn't exist. Rate-limit tier values, secret rotation cadence, and log-scrubbing coverage are ops/review territory.
+- **Graduation log:** _(empty)_
