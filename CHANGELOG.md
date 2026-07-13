@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- ADR enforcement architecture (ADR-033): `## Enforcement` sections on
+  all 33 ADRs, a warn-only check suite (`scripts/adrcheck`, ten checks,
+  wired into `task ci` as `check:adr`), per-check graduation via
+  `checks/enforcement.config.json`, and two blocking hooks — a
+  Stop-gate (tests + suite on agent turn completion) and a PreToolUse
+  guard denying hand-edits to existing ADRs, `AGENTS.md`, and
+  sqlc/templ-generated code (`scripts/adrguard`)
+
 ## [0.8.0] - 2026-07-12
 
 ### Changed
