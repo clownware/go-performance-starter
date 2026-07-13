@@ -38,6 +38,7 @@ Thumbs.db
 /app
 /api
 /dist
+tmp/
 
 # Log files
 *.log
