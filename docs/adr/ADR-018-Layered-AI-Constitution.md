@@ -42,3 +42,13 @@ Split agent guidance into a layered constitution:
 
 - [ADR-019](ADR-019-Template-Scope-Boundary.md), [ADR-020](ADR-020-Agent-Roles.md), [ADR-021](ADR-021-Halt-On-Violation-Quality-Gate.md), [ADR-022](ADR-022-Cross-Tool-Agents-Spine.md)
 - `astro-performance-starter` ADR-036 (layered constitution)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `AGENTS.md` matches a fresh generation from its source layers.
+  - TC-2: The source layer files exist (generation fails without them).
+- **Checks:**
+  - TC-1, TC-2 → `task agents:check` in `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** Rule quality and the ~10-rule ceiling on `CLAUDE.md` — editorial judgment.
+- **Graduation log:** _(empty)_

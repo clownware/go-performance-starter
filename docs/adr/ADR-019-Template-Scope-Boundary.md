@@ -39,3 +39,13 @@ Define a scope table (canonical copy in `.claude/workflow.md`):
 - [ADR-018](ADR-018-Layered-AI-Constitution.md), [ADR-022](ADR-022-Cross-Tool-Agents-Spine.md)
 - `.claude/workflow.md`
 - The forker-facing counterpart of this boundary — which pieces of the template are load-bearing vs. removable — lives in the README's ["What's Load-Bearing vs. Removable"](../../README.md#whats-load-bearing-vs-removable) section (added 2026-07 with the ADR-024 demo).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Generated artefacts (`internal/database/*` via sqlc, `internal/view/*_templ.go` via templ, `AGENTS.md`) are never hand-edited.
+- **Checks:**
+  - TC-1 → drift checks in `task ci` (`agents:check`; build regeneration) (status: **block**, pre-existing)
+  - TC-1 → PreToolUse guard (`scripts/adrguard`) denies agent edits to these paths at write time (status: **block**, hook — see ADR-033)
+- **Not machine-checkable:** The "docs/ is read-only unless asked" and "don't create deployment infra/marketing" rules require knowing what the operator asked for — agent-behavioural, enforced by review.
+- **Graduation log:** _(empty)_
