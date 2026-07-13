@@ -37,3 +37,8 @@ Each pass ends with an explicit hand-off announcement. Trivial changes (typo, si
 
 - [ADR-021](ADR-021-Halt-On-Violation-Quality-Gate.md), [ADR-023](ADR-023-Testing-Philosophy.md)
 - `.claude/roles/{architect,coder,reviewer}.md`
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Not machine-checkable:** Three-pass (Architect/Coder/Reviewer) compliance is process, enforced by the human operator refusing to merge skipped passes — by this ADR's own design. The Reviewer pass's `task ci` run is the machine-checkable part and is owned by ADR-021.
+- **Graduation log:** _(empty)_

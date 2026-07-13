@@ -21,3 +21,8 @@ Accessibility (a11y) and responsive design are core requirements for SaaS target
 - Product is usable by more people.
 - Fewer a11y bugs in production.
 - Some extra effort required in design and QA.
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Not machine-checkable:** WCAG 2.1 AA conformance, semantic-HTML quality, and screen-reader/keyboard testing are manual review and process. A Lighthouse-CI accessibility gate would be the automatable proxy; it is deliberately not wired at this repo's scale (see ADR-033 right-sizing note).
+- **Graduation log:** _(empty)_

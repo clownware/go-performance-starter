@@ -70,3 +70,16 @@ ADR-019's "don't create deployment infra" boundary is amended to permit **one wo
 
 - [ADR-000](ADR-000-Performance-Budgets-and-Quality-Attributes.md) (image/memory budgets), [ADR-001](ADR-001-Foundation.md) (superseded §5), [ADR-014](ADR-014-Security-Patterns-and-Threat-Model.md) (HSTS, sessions), [ADR-015](ADR-015-Configuration-Management-Strategy.md) (env config), [ADR-016](ADR-016-Caching-Strategy.md) (CDN layer), [ADR-019](ADR-019-Template-Scope-Boundary.md) (amended), [ADR-024](ADR-024-Demo-Application-Direction.md) (demo instance)
 - 2026-07-05 deployment-readiness audit (session transcript)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Exactly one `fly.toml` (at the repo root); no Terraform or Kubernetes manifests anywhere.
+  - TC-2: `Strict-Transport-Security` is emitted only when `ENV=production`.
+  - TC-3: The Docker image stays under 30MB.
+- **Checks:**
+  - TC-1 → `adr025-deploy-scope` in `scripts/adrcheck` (status: **warn**)
+  - TC-2 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
+  - TC-3 → docker job in `.github/workflows/ci.yml` (status: **block**, pre-existing; owned by ADR-000)
+- **Not machine-checkable:** Statelessness (no session store, no local disk state) and forward-only production migration discipline — architectural/process, review territory.
+- **Graduation log:** _(empty)_

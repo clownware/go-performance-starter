@@ -72,3 +72,14 @@ ADR-007/ADR-012 (Alpine.js is the sanctioned client-interactivity layer).
 - [ADR-014](ADR-014-Security-Patterns-and-Threat-Model.md) — the CSP this amends (amendment note added there)
 - [ADR-017](ADR-017-Templ-Adoption.md) — templ escaping as the primary XSS defense
 - Alpine.js docs, "Content Security Policy" — the standard build requires `'unsafe-eval'`
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: No rendered page ships an inline `<script>` block (every script tag has `src`).
+  - TC-2: The CSP header is exactly the decided policy (`script-src 'self' 'unsafe-eval'`, no `'unsafe-inline'`).
+- **Checks:**
+  - TC-1 → `internal/server/server_test.go` via `task ci` (status: **block**, pre-existing)
+  - TC-2 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** None — this ADR is fully pinned by tests.
+- **Graduation log:** _(empty)_

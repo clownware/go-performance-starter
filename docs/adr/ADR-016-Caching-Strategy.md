@@ -512,3 +512,8 @@ func GetWithMetrics(key string) (interface{}, bool) {
 
 **Date**: 2025-11-15
 **Author**: System Architecture Team
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Not machine-checkable:** Cache-hit-rate targets and invalidation correctness are runtime behaviour; TTL and header values are implementation-coupled and covered by the package's own tests where written. No standing structural check earns its keep here.
+- **Graduation log:** _(empty)_

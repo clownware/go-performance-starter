@@ -74,6 +74,11 @@ tasks:
     cmds:
       - go run ./scripts/checkversions
 
+  check:adr:
+    desc: Run the ADR enforcement suite — warn-status checks report, block-status checks fail (ADR-033)
+    cmds:
+      - go run ./scripts/adrcheck
+
   ci:
     desc: Halt-on-violation quality gate — run before claiming a change is complete (ADR-021)
     cmds:
@@ -82,6 +87,7 @@ tasks:
       - go test -race -covermode=atomic -coverprofile=coverage.txt ./...
       - task: agents:check
       - task: versions:check
+      - task: check:adr
       - task: test:binary-size
       - task: test:asset-budgets
       - task: scan:vuln

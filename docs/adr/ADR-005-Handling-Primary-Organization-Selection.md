@@ -35,3 +35,12 @@ These two `sqlc`-generated query functions are executed sequentially within a si
 ## 2026-04 Review Note
 
 Investigated whether modern sqlc versions have resolved the CTE parsing limitation. As of sqlc v1.29+, multiple related issues remain open (GitHub sqlc-dev/sqlc#3861 — ambiguous column reference in nested CTE chains). The database-backed analyzer may help with some patterns, but the specific multi-UPDATE CTE structure this ADR addresses is not confirmed fixed. The two-step transactional approach remains the correct solution and performs well within ADR-000 budget constraints (< 10ms total for both queries on indexed unique constraints).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: The named queries `SetPrimaryOrganizationStep1`/`SetPrimaryOrganizationStep2` exist and compile.
+- **Checks:**
+  - TC-1 → sqlc generation + `go build` in `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** The <10ms combined-latency budget (monitored via ADR-000 instrumentation, not gated).
+- **Graduation log:** _(empty)_

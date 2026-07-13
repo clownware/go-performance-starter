@@ -36,3 +36,8 @@ Adopt these testing rules, enforced through the three-pass workflow (ADR-020) an
 ## References
 
 - [ADR-010](ADR-010-Testing-and-Code-Quality.md), [ADR-020](ADR-020-Agent-Roles.md), [ADR-021](ADR-021-Halt-On-Violation-Quality-Gate.md)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Not machine-checkable:** Test-first ordering, table-driven style, behaviour-named cases, and the handlers-then-repositories gap-closing priority are process and editorial judgment — enforced through the ADR-020 review workflow and the ADR-021 gate (which proves tests exist and pass, not that they came first). "Never lower a threshold" is diff-review territory.
+- **Graduation log:** _(empty)_

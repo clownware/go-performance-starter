@@ -177,3 +177,17 @@ This ADR should be reviewed quarterly to ensure budgets remain aligned with:
 **Date**: 2025-11-15  
 **Author**: System Architecture Team  
 **Reviewers**: Engineering, Product
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: The stripped linux production binary is under 20MB.
+  - TC-2: The Docker image is under 30MB.
+  - TC-3: Shipped JavaScript is under 50KB gzipped.
+  - TC-4: Shipped CSS is under 30KB gzipped.
+- **Checks:**
+  - TC-1 → `task test:binary-size` in `task ci` (status: **block**, pre-existing)
+  - TC-2 → docker job in `.github/workflows/ci.yml` (status: **block**, pre-existing)
+  - TC-3, TC-4 → `task test:asset-budgets` in `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** Latency percentiles (P50/P95/P99), memory, and startup budgets are monitored via Prometheus but not gated — no load-test harness in CI. Page-weight, Core Web Vitals, and Lighthouse score targets are aspirational; no measurement is wired.
+- **Graduation log:** _(empty)_

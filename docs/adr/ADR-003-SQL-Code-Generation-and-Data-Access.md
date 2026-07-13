@@ -53,3 +53,12 @@ Key considerations include:
 
 - `sqlc` Documentation: [https://docs.sqlc.dev/](https://docs.sqlc.dev/)
 - Repository Pattern discussions.
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: No hand-written SQL string literals in `internal/handler`.
+  - TC-2: Handlers do not import `pgx` or `database/sql` — data access goes through repository interfaces. (Importing `internal/database` for sqlc-generated param/row *types* is legitimate.)
+- **Checks:**
+  - TC-1, TC-2 → `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **warn**)
+- **Not machine-checkable:** Repository-interface granularity and naming judgment. sqlc-regeneration drift (`task db:generate` output vs committed code) has no wired check — recorded as a TODO in ADR-033.
+- **Graduation log:** _(empty)_

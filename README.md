@@ -120,6 +120,15 @@ This starter is built to be developed with AI coding agents — and it holds the
 - **Cross-tool spine.** [`AGENTS.md`](AGENTS.md) is **generated** from those layers via `task agents:build` and read natively by Cursor, Copilot, Codex, Windsurf, and others. CI fails if it drifts from its sources ([ADR-022](docs/adr/ADR-022-Cross-Tool-Agents-Spine.md)).
 - **Role-separated workflow.** Non-trivial features run a three-pass Architect → Coder → Reviewer flow, each pass producing an ADR, a failing test, or a review ([ADR-020](docs/adr/ADR-020-Agent-Roles.md)).
 - **Halt-on-violation gate.** `task ci` is the single definition of "done." An agent must clear it before claiming a change complete — no lowering thresholds, no `--no-verify` ([ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md)).
+- **ADR enforcement.** Every ADR carries an `## Enforcement` section mapping its rules to checks — or naming honestly what no machine can check ([ADR-033](docs/adr/ADR-033-ADR-Enforcement-Architecture.md)).
+
+### ADR Enforcement
+
+`task check:adr` runs a deterministic suite (`scripts/adrcheck`, part of `task ci`) that verifies the testable consequences declared in each ADR's Enforcement section. Checks start life as **warn** — they report but never fail the build — and are promoted to **block** in [`checks/enforcement.config.json`](checks/enforcement.config.json) only after 7+ clean days or one real catch, with the promotion logged in the owning ADR's graduation log and the CHANGELOG. Demotion back to warn is always allowed, same trail. Every failure message names the ADR, the testable consequence, and the remedy; `--json` gives machine-readable output.
+
+Two hooks are the only blocking layer: a **Stop-gate** (agents can't finish a turn with failing tests or a BLOCKER; kill-switch `STOP_GATE_OFF=1`) and a **PreToolUse guard** (agents can't hand-edit existing ADRs, `AGENTS.md`, or sqlc/templ-generated code; kill-switch `ADR_GUARD_OFF=1`).
+
+**If you're using this template:** you inherit the suite, the config, and both hooks. To prune enforcement entirely, delete `scripts/adrcheck`, `scripts/adrguard`, `checks/`, `.claude/hooks/`, the `check:adr` task, and the `hooks` block in [`.claude/settings.json`](.claude/settings.json) — the rest of the quality gate stands on its own. If you keep it, the checks are plain Go in one file; retarget them at your own ADRs as they diverge.
 
 ## versions.json Is a Public Contract
 

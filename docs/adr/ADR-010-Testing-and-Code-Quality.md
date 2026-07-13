@@ -45,3 +45,16 @@ Clear and up-to-date documentation is critical for onboarding and handoff. The t
 
 - Team can onboard quickly.
 - Less knowledge is lost over time.
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `golangci-lint run ./...` passes.
+  - TC-2: All Go files are gofmt-clean.
+  - TC-3: `go test` runs in the gate with race detection and coverage.
+- **Checks:**
+  - TC-1 → `task lint` in `task ci` (status: **block**, pre-existing)
+  - TC-2 → `task fmt:check` in `task ci` (status: **block**, pre-existing)
+  - TC-3 → `go test -race -covermode=atomic` in `task ci` (status: **block**, pre-existing)
+- **Not machine-checkable:** Table-driven style preference and integration-test judgment (see ADR-023).
+- **Graduation log:** _(empty)_

@@ -26,3 +26,8 @@ Implement primary authorization logic directly within the PostgreSQL database us
 *   **Debugging:** Diagnosing authorization issues may require inspecting database logs and policy definitions in addition to application code.
 *   **Performance:** Requires careful policy design and appropriate indexing to avoid performance degradation on queries.
 *   **SECURITY DEFINER:** May necessitate the use of `SECURITY DEFINER` functions for specific scenarios (e.g., checking permissions based on related tables), which must be implemented carefully to avoid security vulnerabilities.
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Not machine-checkable:** RLS policy *correctness and coverage* per table is semantic — a grep for `ENABLE ROW LEVEL SECURITY` would prove presence, not protection, and false confidence is worse than none. Careful use of `SECURITY DEFINER` is review territory. Behavioural coverage lives in the env-gated repository integration tests.
+- **Graduation log:** _(empty)_

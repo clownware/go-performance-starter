@@ -128,3 +128,12 @@ Rationale:
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
 - [MIT License](https://opensource.org/licenses/MIT)
 - [Twelve-Factor App Configuration](https://12factor.net/config)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: The repo builds with the Go toolchain pinned in `go.mod`, with Chi as the router.
+- **Checks:**
+  - TC-1 → `go build` via `task ci`; CI reads the toolchain from `go.mod` (status: **block**, pre-existing)
+- **Not machine-checkable:** §3 (logging) is superseded by ADR-026 and §5 (deployment) by ADR-025 — their enforcement lives there. Secrets-handling intent is enforced under ADR-015.
+- **Graduation log:** _(empty)_

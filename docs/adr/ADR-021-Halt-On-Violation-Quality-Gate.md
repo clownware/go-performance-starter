@@ -39,3 +39,14 @@ If it exits non-zero, the agent halts and fixes the failure. It must not lower a
 
 - [ADR-000](ADR-000-Performance-Budgets-and-Quality-Attributes.md), [ADR-010](ADR-010-Testing-and-Code-Quality.md), [ADR-022](ADR-022-Cross-Tool-Agents-Spine.md)
 - `Taskfile.yml` (`ci` task), `.github/workflows/ci.yml`
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `task ci` chains the full gate (fmt, lint, race+coverage tests, agents:check, versions:check, binary/asset budgets, vuln scan).
+  - TC-2: `.github/workflows/ci.yml` invokes `task ci` rather than re-implementing its steps.
+- **Checks:**
+  - TC-1 → the Taskfile definition itself; any removal is a public diff (status: **block**, pre-existing)
+  - TC-2 → `adr021-ci-invokes-gate` in `scripts/adrcheck` (status: **warn**)
+- **Not machine-checkable:** That an agent *actually ran* the gate before claiming done — approximated by the Stop-gate hook (ADR-033), which runs tests and the check suite when an agent tries to finish.
+- **Graduation log:** _(empty)_

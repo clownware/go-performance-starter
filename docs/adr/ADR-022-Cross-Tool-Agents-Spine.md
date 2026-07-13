@@ -39,3 +39,13 @@ The generator is written in Go (own package `scripts/agentsmd`) to match the exi
 - [ADR-018](ADR-018-Layered-AI-Constitution.md), [ADR-021](ADR-021-Halt-On-Violation-Quality-Gate.md)
 - `scripts/agentsmd/main.go`, `AGENTS.md`
 - `astro-performance-starter` ADR-045 (cross-tool spine)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `AGENTS.md` is identical to a fresh generation from `CLAUDE.md` + `.claude/{engineering,workflow,stack}.md`.
+- **Checks:**
+  - TC-1 → `task agents:check` in `task ci` and as its own CI step (status: **block**, pre-existing)
+  - TC-1 → PreToolUse guard (`scripts/adrguard`) denies direct agent edits to `AGENTS.md` (status: **block**, hook — see ADR-033)
+- **Not machine-checkable:** None — this ADR is fully structural.
+- **Graduation log:** _(empty)_

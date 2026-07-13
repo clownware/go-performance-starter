@@ -32,3 +32,12 @@ Use `Taskfile` (taskfile.dev) as the project's command and task runner. Define c
 
 *   **Tool Dependency:** Introduces a new development dependency (`go-task/task`) that needs to be installed by developers and in CI/CD environments.
 *   **Learning Curve:** Developers unfamiliar with `Taskfile` need to learn its basic syntax and concepts (though it is relatively straightforward).
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `Taskfile.yml` exists at the repo root and defines the `ci` gate.
+- **Checks:**
+  - TC-1 → every CI run invokes `task ci`; absence fails immediately (status: **block**, pre-existing)
+- **Not machine-checkable:** None — this ADR is fully structural.
+- **Graduation log:** _(empty)_

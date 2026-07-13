@@ -38,3 +38,12 @@ Adopt [go-gremlins](https://github.com/go-gremlins/gremlins) (v0.6.0, pinned), r
 ## References
 
 - [ADR-010](ADR-010-Testing-and-Code-Quality.md), [ADR-021](ADR-021-Halt-On-Violation-Quality-Gate.md), [ADR-023](ADR-023-Testing-Philosophy.md), [ADR-030](ADR-030-Versions-Manifest-Contract.md)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: `task ci` does not include mutation testing (first-order gate stays fast by decision §4).
+- **Checks:**
+  - TC-1 → visible in the Taskfile `ci` chain; any addition is a public diff (status: **block**, pre-existing, structural)
+- **Not machine-checkable:** By design — mutation runs are manual/scheduled, lived mutants are findings not thresholds, and "a package earns mutation testing after first-order coverage" is process judgment.
+- **Graduation log:** _(empty)_

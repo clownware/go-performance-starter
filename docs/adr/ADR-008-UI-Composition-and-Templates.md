@@ -22,3 +22,8 @@ The Alpine Go Performance Starter aims for a modern, maintainable, and accessibl
 - UI is modular and maintainable.
 - Progressive enhancement is easy; works with and without JS.
 - Security is improved via template escaping.
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Not machine-checkable:** Superseded by ADR-017 — the constraints in this ADR are no longer live. Enforcement of the successor pattern (templ, typed props, view layout) lives in ADR-017's Enforcement section.
+- **Graduation log:** _(empty)_
