@@ -47,3 +47,12 @@ The `Taskfile.yml` will include tasks to create new migration files and apply/re
 ## References
 
 - `golang-migrate` Repository: [https://github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate)
+
+## Enforcement
+<!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
+- **Testable consequences:**
+  - TC-1: Every `migrations/*.up.sql` has a matching `*.down.sql`, and vice versa; migrations are raw SQL files.
+- **Checks:**
+  - TC-1 → `adr002-migration-pairs` in `scripts/adrcheck` (status: **warn**)
+- **Not machine-checkable:** That a down migration actually reverts its up migration — revert safety is review territory.
+- **Graduation log:** _(empty)_
