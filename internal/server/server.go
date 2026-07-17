@@ -214,8 +214,8 @@ func (s *Server) setupRoutes() {
 			// per IP (ADR-014 §4), on top of the global limiter.
 			authRouter.Group(func(strict chi.Router) {
 				strict.Use(mw.RateLimiter(5.0/60.0, 5))
-				strict.Post("/login", handler.AuthLoginPost(s.authClient))   // Handle login
-				strict.Post("/signup", handler.AuthSignupPost(s.authClient)) // Handle signup
+				strict.Post("/login", handler.AuthLoginPost(s.authClient, s.cfg.IsProduction())) // Handle login
+				strict.Post("/signup", handler.AuthSignupPost(s.authClient))                     // Handle signup
 			})
 			authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient, s.cfg.IsProduction())) // Handle logout
 		})

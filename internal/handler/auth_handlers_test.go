@@ -101,6 +101,7 @@ func TestAuthLoginPost(t *testing.T) {
 		wantStatus   int
 		wantRedirect string
 		wantToast    string
+		wantSession  bool // asserts sb-access-token/sb-refresh-token cookies are issued
 	}{
 		{
 			name:       "malformed form body returns 400",
@@ -136,6 +137,7 @@ func TestAuthLoginPost(t *testing.T) {
 			gotrueBody:   sessionBody,
 			wantStatus:   http.StatusOK,
 			wantRedirect: "/profile",
+			wantSession:  true,
 		},
 	}
 
@@ -149,7 +151,7 @@ func TestAuthLoginPost(t *testing.T) {
 			})
 			w := httptest.NewRecorder()
 
-			AuthLoginPost(client)(w, formRequest("/auth/login", tt.form))
+			AuthLoginPost(client, false)(w, formRequest("/auth/login", tt.form))
 
 			if w.Code != tt.wantStatus {
 				t.Fatalf("AuthLoginPost() status = %d, want %d", w.Code, tt.wantStatus)
@@ -158,6 +160,40 @@ func TestAuthLoginPost(t *testing.T) {
 				if got := w.Header().Get("HX-Redirect"); got != tt.wantRedirect {
 					t.Errorf("HX-Redirect = %q, want %q", got, tt.wantRedirect)
 				}
+			}
+			// A successful login must persist the session as cookies — without
+			// them AuthMiddleware rejects /profile and bounces the user straight
+			// back to the login form (the "spinner then flash back" regression).
+			cookies := map[string]*http.Cookie{}
+			for _, c := range w.Result().Cookies() {
+				cookies[c.Name] = c
+			}
+			if tt.wantSession {
+				access, ok := cookies["sb-access-token"]
+				if !ok {
+					t.Fatal("successful login did not set sb-access-token cookie")
+				}
+				if access.Value != "tok" {
+					t.Errorf("sb-access-token = %q, want %q", access.Value, "tok")
+				}
+				if !access.HttpOnly {
+					t.Error("sb-access-token must be HttpOnly")
+				}
+				if access.MaxAge != 3600 {
+					t.Errorf("sb-access-token MaxAge = %d, want 3600 (session expires_in)", access.MaxAge)
+				}
+				refresh, ok := cookies["sb-refresh-token"]
+				if !ok {
+					t.Fatal("successful login did not set sb-refresh-token cookie")
+				}
+				if refresh.Value != "ref" {
+					t.Errorf("sb-refresh-token = %q, want %q", refresh.Value, "ref")
+				}
+				if !refresh.HttpOnly {
+					t.Error("sb-refresh-token must be HttpOnly")
+				}
+			} else if _, ok := cookies["sb-access-token"]; ok {
+				t.Error("failed login must not set a session cookie")
 			}
 			if tt.wantToast != "" {
 				// The layout's toast listener treats HX-Trigger as the plain

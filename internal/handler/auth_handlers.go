@@ -3,6 +3,7 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/supabase-community/gotrue-go/types"
 
@@ -42,8 +43,11 @@ func authFeedback(w http.ResponseWriter, r *http.Request, status int, kind, mess
 	}
 }
 
-// AuthLoginPost handles the login form submission.
-func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
+// AuthLoginPost handles the login form submission. secureCookie marks the
+// issued session cookies Secure (true in production, where TLS terminates at
+// the edge and r.TLS is nil — ADR-025), matching the guest-session, upgrade,
+// and logout flows so every cookie mutation shares one security posture.
+func AuthLoginPost(authClient *auth.AuthClient, secureCookie bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			slog.Error("Failed to parse login form", "error", err)
@@ -59,11 +63,12 @@ func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 			return
 		}
 
-		// Use the SignInWithEmailPassword method from the supabase.Client
-		// It returns a session object, which we aren't directly using here yet
-		// because Supabase handles cookie setting server-side (usually).
-		_, err := authClient.Client.SignInWithEmailPassword(email, password)
-
+		// gotrue-go is a server-to-server HTTP client: it authenticates against
+		// GoTrue and returns the session, but it never touches this browser's
+		// response — so the handler must persist the tokens as cookies itself.
+		// AuthMiddleware reads sb-access-token on the next request; without this
+		// the browser lands on /profile with no session and bounces to login.
+		session, err := authClient.Client.SignInWithEmailPassword(email, password)
 		if err != nil {
 			// Email is intentionally not logged (ADR-014 §7: no PII in logs)
 			slog.Warn("Supabase login failed", "error", err)
@@ -72,10 +77,32 @@ func AuthLoginPost(authClient *auth.AuthClient) http.HandlerFunc {
 			return
 		}
 
+		// Same attributes as the guest-session/upgrade flows: the access token
+		// lives as long as GoTrue says (ExpiresIn), the refresh token for 30
+		// days so a returning user can mint a fresh access token.
+		http.SetCookie(w, &http.Cookie{
+			Name:     "sb-access-token",
+			Value:    session.AccessToken,
+			Path:     "/",
+			MaxAge:   session.ExpiresIn,
+			HttpOnly: true,
+			Secure:   secureCookie,
+			SameSite: http.SameSiteLaxMode,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "sb-refresh-token",
+			Value:    session.RefreshToken,
+			Path:     "/",
+			MaxAge:   int((30 * 24 * time.Hour).Seconds()),
+			HttpOnly: true,
+			Secure:   secureCookie,
+			SameSite: http.SameSiteLaxMode,
+		})
+
 		slog.Info("User login successful")
-		// Supabase client handles setting cookies.
-		// Trigger a full page reload or redirect client-side via HTMX header.
-		view.SetHXRedirect(w, "/profile") // Redirect to profile page after login
+		// HTMX performs a client-side navigation on HX-Redirect; the session
+		// cookies set above ride along on that request to /profile.
+		view.SetHXRedirect(w, "/profile")
 		w.WriteHeader(http.StatusOK)
 	}
 }
