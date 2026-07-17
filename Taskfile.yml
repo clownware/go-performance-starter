@@ -1,5 +1,8 @@
 version: '3'
 
+# Loads .env when present. For 1Password-backed secrets with nothing written
+# to disk, run tasks under: op run --env-file=.env.tpl -- task <name>
+# (a missing .env is a no-op here). See .env.tpl / .env.example.
 dotenv: ['.env']
 
 tasks:
