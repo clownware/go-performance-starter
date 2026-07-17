@@ -209,13 +209,19 @@ func (s *Server) setupRoutes() {
 	// --- Authentication Routes ---
 	if s.authClient != nil {
 		r.Route("/auth", func(authRouter chi.Router) {
-			authRouter.Get("/page", handler.AuthPage) // Show login/signup form
+			authRouter.Get("/page", handler.AuthPage)       // Show login/signup form
+			authRouter.Get("/recover", handler.RecoverPage) // Request-reset-link form (#71)
+			// Exchanges the email link's token_hash for a recovery session
+			// (sets cookies) and shows the update-password form.
+			authRouter.Get("/reset", handler.AuthResetPage(s.authClient, s.cfg.IsProduction()))
 			// Credential endpoints get the strict tier: 5 attempts/min
 			// per IP (ADR-014 §4), on top of the global limiter.
 			authRouter.Group(func(strict chi.Router) {
 				strict.Use(mw.RateLimiter(5.0/60.0, 5))
 				strict.Post("/login", handler.AuthLoginPost(s.authClient, s.cfg.IsProduction())) // Handle login
 				strict.Post("/signup", handler.AuthSignupPost(s.authClient))                     // Handle signup
+				strict.Post("/recover", handler.AuthRecoverPost(s.authClient))                   // Send reset email
+				strict.Post("/reset", handler.AuthResetPost(s.authClient))                       // Set new password
 			})
 			authRouter.Post("/logout", handler.AuthLogoutPost(s.authClient, s.cfg.IsProduction())) // Handle logout
 		})

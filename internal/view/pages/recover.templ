@@ -1,0 +1,108 @@
+package pages
+
+import (
+	"github.com/clownware/go-performance-starter/internal/view"
+	"github.com/clownware/go-performance-starter/internal/view/components"
+	"github.com/clownware/go-performance-starter/internal/view/layouts"
+)
+
+// RecoverPageProps holds data for the request-password-reset page.
+type RecoverPageProps struct {
+	view.BaseProps
+}
+
+templ RecoverPage(props RecoverPageProps) {
+	@layouts.Base(props.BaseProps) {
+		<div class="max-w-md mx-auto py-8">
+			<h1 class="text-2xl font-bold mb-2 text-center">Reset your password</h1>
+			<p class="text-center text-muted-foreground mb-6">
+				Enter your account email and we'll send you a link to choose a new password.
+			</p>
+			<div class="bg-surface text-foreground rounded-lg shadow-md overflow-hidden">
+				<div id="auth-messages" aria-live="polite" class="empty:hidden px-6 pt-4"></div>
+				<div class="p-6">
+					<form hx-post="/auth/recover" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-4">
+						@components.CSRFField()
+						<div>
+							<label for="recover-email" class="block text-foreground text-sm font-medium mb-1">Your Email Address</label>
+							<input
+								type="email"
+								id="recover-email"
+								name="email"
+								required
+								autocomplete="email"
+								class="input"
+							/>
+						</div>
+						<button type="submit" class="btn btn-primary w-full">
+							Send reset link
+						</button>
+					</form>
+					<p class="mt-4 text-sm text-center text-muted-foreground">
+						Remembered it? <a href="/auth/page" class="text-primary hover:underline">Back to sign in</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// ResetPageProps holds data for the choose-a-new-password page. Valid is set
+// only after the server has exchanged the email link's token_hash for a
+// recovery session; without it the page renders the invalid-link state.
+type ResetPageProps struct {
+	view.BaseProps
+	Valid bool
+}
+
+templ ResetPage(props ResetPageProps) {
+	@layouts.Base(props.BaseProps) {
+		<div class="max-w-md mx-auto py-8">
+			<h1 class="text-2xl font-bold mb-2 text-center">Choose a new password</h1>
+			<div class="bg-surface text-foreground rounded-lg shadow-md overflow-hidden mt-6">
+				<div id="auth-messages" aria-live="polite" class="empty:hidden px-6 pt-4"></div>
+				if props.Valid {
+					<div class="p-6">
+						<form hx-post="/auth/reset" hx-target="#auth-messages" hx-swap="innerHTML" autocomplete="on" class="space-y-4">
+							@components.CSRFField()
+							<div>
+								<label for="reset-password" class="block text-foreground text-sm font-medium mb-1">New Password</label>
+								<input
+									type="password"
+									id="reset-password"
+									name="password"
+									required
+									autocomplete="new-password"
+									class="input"
+								/>
+							</div>
+							<div>
+								<label for="reset-password-confirm" class="block text-foreground text-sm font-medium mb-1">Confirm New Password</label>
+								<input
+									type="password"
+									id="reset-password-confirm"
+									name="password_confirm"
+									required
+									autocomplete="new-password"
+									class="input"
+								/>
+							</div>
+							<button type="submit" class="btn btn-primary w-full">
+								Update password
+							</button>
+						</form>
+					</div>
+				} else {
+					<div class="p-6 text-center space-y-4">
+						<p role="alert" class="p-3 rounded bg-danger/10 text-danger">
+							This reset link is invalid or has expired.
+						</p>
+						<a href="/auth/recover" class="btn btn-primary w-full inline-block">
+							Request a new reset link
+						</a>
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
