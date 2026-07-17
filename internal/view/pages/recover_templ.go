@@ -60,7 +60,7 @@ func RecoverPage(props RecoverPageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div><label for=\"recover-email\" class=\"block text-foreground text-sm font-medium mb-1\">Your Email Address</label> <input type=\"email\" id=\"recover-email\" name=\"email\" required autocomplete=\"email\" class=\"input\"></div><button type=\"submit\" class=\"btn btn-primary w-full\">Send reset link</button></form><p class=\"mt-4 text-sm text-center text-muted-foreground\">Remembered it? <a href=\"/auth/page\" class=\"text-primary hover:underline\">Back to sign in</a></p></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div><label for=\"recover-email\" class=\"block text-foreground text-sm font-medium mb-1\">Your Email Address</label> <input type=\"email\" id=\"recover-email\" name=\"email\" required autocomplete=\"email\" class=\"input\"></div><button type=\"submit\" class=\"btn btn-primary w-full\">Send reset link</button></form><p class=\"mt-4 text-sm text-center text-muted-foreground\">Remembered it? <a href=\"/auth/page\" class=\"text-link hover:underline\">Back to sign in</a></p></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -133,7 +133,7 @@ func ResetPage(props ResetPageProps) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"p-6 text-center space-y-4\"><p role=\"alert\" class=\"p-3 rounded bg-danger/10 text-danger\">This reset link is invalid or has expired.</p><a href=\"/auth/recover\" class=\"btn btn-primary w-full inline-block\">Request a new reset link</a></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"p-6 text-center space-y-4\"><p role=\"alert\" class=\"p-3 rounded bg-danger/10 text-danger-emphasis\">This reset link is invalid or has expired.</p><a href=\"/auth/recover\" class=\"btn btn-primary w-full inline-block\">Request a new reset link</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

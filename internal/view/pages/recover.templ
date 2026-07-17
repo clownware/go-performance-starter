@@ -39,7 +39,7 @@ templ RecoverPage(props RecoverPageProps) {
 						</button>
 					</form>
 					<p class="mt-4 text-sm text-center text-muted-foreground">
-						Remembered it? <a href="/auth/page" class="text-primary hover:underline">Back to sign in</a>
+						Remembered it? <a href="/auth/page" class="text-link hover:underline">Back to sign in</a>
 					</p>
 				</div>
 			</div>
@@ -94,7 +94,7 @@ templ ResetPage(props ResetPageProps) {
 					</div>
 				} else {
 					<div class="p-6 text-center space-y-4">
-						<p role="alert" class="p-3 rounded bg-danger/10 text-danger">
+						<p role="alert" class="p-3 rounded bg-danger/10 text-danger-emphasis">
 							This reset link is invalid or has expired.
 						</p>
 						<a href="/auth/recover" class="btn btn-primary w-full inline-block">

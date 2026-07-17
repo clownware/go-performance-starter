@@ -113,14 +113,14 @@ func HomePage(props HomePageProps) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"block bg-surface rounded-lg shadow-md p-5 hover:shadow-lg border border-transparent hover:border-primary transition-shadow focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary\"><h2 class=\"text-lg font-semibold mb-1 text-primary\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"block bg-surface rounded-lg shadow-md p-5 hover:shadow-lg border border-transparent hover:border-primary transition-shadow focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary\"><h2 class=\"text-lg font-semibold mb-1 text-link\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 73, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 73, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {

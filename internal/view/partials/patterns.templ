@@ -153,7 +153,7 @@ templ PatternTabPanel(props PatternTabProps) {
 }
 
 templ PatternBulkResult(count int) {
-	<p class="text-sm text-primary" role="status">
+	<p class="text-sm text-link" role="status">
 		{ fmt.Sprintf("Archived %d item(s) in one request.", count) }
 	</p>
 }
@@ -195,7 +195,7 @@ templ PatternCounterBadge(count int, oob bool) {
 		if oob {
 			hx-swap-oob="true"
 		}
-		class="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary tabular-nums"
+		class="px-3 py-1 rounded-full text-sm bg-primary/10 text-link tabular-nums"
 	>
 		{ fmt.Sprintf("%d added", count) }
 	</span>

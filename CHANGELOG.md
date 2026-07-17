@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- WCAG AA contrast across both modes (2026-07-17 audit; every Lighthouse
+  a11y deduction was this): `--color-teal` darkened `#468189` → `#427a82`
+  (white button text 4.41→4.84:1), small-text `text-primary` usages moved
+  to the flipping `text-link` role, alert text rides a new
+  `--color-danger-emphasis` token (5.5:1 on the danger tint), and `.input`
+  borders ride `--color-border-input` (≥3.6:1, WCAG 1.4.11). Ratios are
+  now CI-enforced by `internal/view/tokens_contrast_test.go`.
+
 ### Added
 - Password reset flow (#71): request page (`/auth/recover`, anti-enumeration
   generic response), server-side `token_hash` verification via direct GoTrue

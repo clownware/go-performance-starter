@@ -20,7 +20,7 @@ func alertContainerClass(props AlertProps) string {
 	case AlertWarning:
 		return base + "bg-warning/10 text-warning"
 	case AlertError:
-		return base + "bg-danger/10 text-danger"
+		return base + "bg-danger/10 text-danger-emphasis"
 	default:
 		return base + "bg-primary/10 text-link"
 	}

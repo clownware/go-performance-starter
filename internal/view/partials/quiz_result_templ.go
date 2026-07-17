@@ -139,7 +139,7 @@ func QuizResult(props QuizResultProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if props.Done {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div data-testid=\"quiz-done\"><p class=\"font-medium mb-2\">That was the last question — quiz complete.</p><a href=\"/patterns\" class=\"text-primary underline\">Explore the pattern showcase</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div data-testid=\"quiz-done\"><p class=\"font-medium mb-2\">That was the last question — quiz complete.</p><a href=\"/patterns\" class=\"text-link underline\">Explore the pattern showcase</a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

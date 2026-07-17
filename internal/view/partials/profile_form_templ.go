@@ -79,7 +79,7 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"mt-1 block w-full border-border rounded-md focus:ring-primary focus:border-primary\"><div class=\"mt-2\"><button type=\"submit\" class=\"px-4 py-2 bg-teal text-white rounded\" hx-indicator=\".indicator\">Save</button> <span class=\"indicator hidden text-muted-foreground ml-2\">Saving...</span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" autocomplete=\"name\" class=\"input mt-1\"><div class=\"mt-2\"><button type=\"submit\" class=\"btn btn-primary\" hx-indicator=\".indicator\">Save</button> <span class=\"indicator hidden text-muted-foreground ml-2\">Saving...</span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
