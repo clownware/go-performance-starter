@@ -378,14 +378,14 @@ func patternSection(s view.PatternSection) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, f := range s.HTMXFeatures {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<code class=\"text-xs px-2 py-1 rounded bg-primary/10 text-primary\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<code class=\"text-xs px-2 py-1 rounded bg-primary/10 text-link\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(f)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 83, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/patterns.templ`, Line: 83, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -711,7 +711,7 @@ func patternDemo(slug string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "global-store":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<div class=\"flex items-center justify-between gap-4\"><div x-data=\"{}\"><button @click=\"$store.demo.inc()\" class=\"btn btn-primary\">+1 from component A</button></div><div x-data=\"{}\" class=\"px-3 py-1 rounded-full text-sm bg-primary/10 text-primary tabular-nums\">Component B sees: <span x-text=\"$store.demo.count\"></span></div></div><p class=\"mt-3 text-xs text-muted-foreground\">Two unrelated x-data islands sharing one Alpine.store registered in app.js.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<div class=\"flex items-center justify-between gap-4\"><div x-data=\"{}\"><button @click=\"$store.demo.inc()\" class=\"btn btn-primary\">+1 from component A</button></div><div x-data=\"{}\" class=\"px-3 py-1 rounded-full text-sm bg-primary/10 text-link tabular-nums\">Component B sees: <span x-text=\"$store.demo.count\"></span></div></div><p class=\"mt-3 text-xs text-muted-foreground\">Two unrelated x-data islands sharing one Alpine.store registered in app.js.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

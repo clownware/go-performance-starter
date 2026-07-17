@@ -18,7 +18,10 @@
  */
 @theme {
   /* Base palette */
-  --color-teal: #468189;
+  /* teal darkened from #468189 (4.41:1 with white — fails AA) to reach
+     4.84:1 with white text and 4.59:1 as text on nyanza (2026-07-17 audit).
+     Ratios pinned by tokens_contrast_test.go. */
+  --color-teal: #427a82;
   --color-teal-strong: #3a6b6f;
   --color-teal-soft: #8fc0c7;
   --color-bittersweet: #bf4342;
@@ -40,8 +43,15 @@
   --color-accent: var(--color-sage);
   --color-link: var(--color-teal-strong);
   --color-danger: var(--color-bittersweet);
+  /* Alert text on the bg-danger/10 tint: plain danger only hits 4.45:1 in
+     light mode, so alerts use this stronger shade (5.55:1 on the tint). */
+  --color-danger-emphasis: var(--color-bittersweet-strong);
   --color-success: #15803d;
   --color-warning: #b45309;
+  /* Form-control boundaries need 3:1 (WCAG 1.4.11); the decorative border
+     token is far too subtle for that. 4.83:1 on white, 3.60:1 on #1a1a1a,
+     so one value serves both modes. */
+  --color-border-input: #6b7280;
 }
 
 /*
@@ -57,6 +67,8 @@
   --color-border: #2e2e2e;
   --color-link: var(--color-teal-soft);
   --color-danger: var(--color-bittersweet-soft);
+  /* The soft danger already clears AA on the dark tint (5.58:1). */
+  --color-danger-emphasis: var(--color-bittersweet-soft);
   --color-success: #4ade80;
   --color-warning: #f59e0b;
 }
@@ -104,7 +116,7 @@
     @apply bg-bittersweet text-white hover:bg-bittersweet-strong focus:ring-danger;
   }
   .input {
-    @apply w-full rounded-md border-border bg-surface text-foreground shadow-sm focus:border-primary focus:ring-primary;
+    @apply w-full rounded-md border-border-input bg-surface text-foreground shadow-sm focus:border-primary focus:ring-primary;
   }
 }
 

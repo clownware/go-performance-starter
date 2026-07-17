@@ -90,7 +90,7 @@ templ AuthPage(props AuthPageProps) {
 templ loginPanel(flash string) {
 	<div class="p-6">
 		if flash != "" {
-			<div class="mb-4 p-3 rounded bg-danger/10 text-danger" role="alert">
+			<div class="mb-4 p-3 rounded bg-danger/10 text-danger-emphasis" role="alert">
 				{ flash }
 			</div>
 		}
@@ -118,7 +118,7 @@ templ loginPanel(flash string) {
 					class="input"
 				/>
 				<p class="mt-1 text-right">
-					<a href="/auth/recover" class="text-sm text-primary hover:underline">Forgot your password?</a>
+					<a href="/auth/recover" class="text-sm text-link hover:underline">Forgot your password?</a>
 				</p>
 			</div>
 			<button
@@ -134,7 +134,7 @@ templ loginPanel(flash string) {
 templ signupPanel(flash string) {
 	<div class="p-6">
 		if flash != "" {
-			<div class="mb-4 p-3 rounded bg-danger/10 text-danger" role="alert">
+			<div class="mb-4 p-3 rounded bg-danger/10 text-danger-emphasis" role="alert">
 				{ flash }
 			</div>
 		}

@@ -80,7 +80,7 @@ templ patternSection(s view.PatternSection) {
 		<p class="text-muted-foreground mb-3 max-w-2xl">{ s.Summary }</p>
 		<div class="flex flex-wrap gap-2 mb-4">
 			for _, f := range s.HTMXFeatures {
-				<code class="text-xs px-2 py-1 rounded bg-primary/10 text-primary">{ f }</code>
+				<code class="text-xs px-2 py-1 rounded bg-primary/10 text-link">{ f }</code>
 			}
 			for _, f := range s.AlpineFeatures {
 				<code class="text-xs px-2 py-1 rounded bg-accent/30 text-foreground">{ f }</code>
@@ -338,7 +338,7 @@ templ patternDemo(slug string) {
 				<div x-data="{}">
 					<button @click="$store.demo.inc()" class="btn btn-primary">+1 from component A</button>
 				</div>
-				<div x-data="{}" class="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary tabular-nums">
+				<div x-data="{}" class="px-3 py-1 rounded-full text-sm bg-primary/10 text-link tabular-nums">
 					Component B sees: <span x-text="$store.demo.count"></span>
 				</div>
 			</div>

@@ -39,7 +39,7 @@ templ UpgradeForm(props UpgradeFormProps) {
 				class="space-y-4"
 			>
 				if errMsg, ok := props.Errors["form"]; ok {
-					<p class="p-3 rounded-md bg-danger/10 text-danger text-sm" role="alert">{ errMsg }</p>
+					<p class="p-3 rounded-md bg-danger/10 text-danger-emphasis text-sm" role="alert">{ errMsg }</p>
 				}
 				@components.CSRFField()
 				<div>

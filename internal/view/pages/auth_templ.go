@@ -187,7 +187,7 @@ func loginPanel(flash string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if flash != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"mb-4 p-3 rounded bg-danger/10 text-danger\" role=\"alert\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"mb-4 p-3 rounded bg-danger/10 text-danger-emphasis\" role=\"alert\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -213,7 +213,7 @@ func loginPanel(flash string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div><label for=\"login-email\" class=\"block text-foreground text-sm font-medium mb-1\">Your Email Address</label> <input type=\"email\" id=\"login-email\" name=\"email\" required autocomplete=\"email\" class=\"input\"></div><div><label for=\"login-password\" class=\"block text-foreground text-sm font-medium mb-1\">Your Password</label> <input type=\"password\" id=\"login-password\" name=\"password\" required autocomplete=\"current-password\" class=\"input\"><p class=\"mt-1 text-right\"><a href=\"/auth/recover\" class=\"text-sm text-primary hover:underline\">Forgot your password?</a></p></div><button type=\"submit\" class=\"btn btn-primary w-full\">Sign in to your account</button></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div><label for=\"login-email\" class=\"block text-foreground text-sm font-medium mb-1\">Your Email Address</label> <input type=\"email\" id=\"login-email\" name=\"email\" required autocomplete=\"email\" class=\"input\"></div><div><label for=\"login-password\" class=\"block text-foreground text-sm font-medium mb-1\">Your Password</label> <input type=\"password\" id=\"login-password\" name=\"password\" required autocomplete=\"current-password\" class=\"input\"><p class=\"mt-1 text-right\"><a href=\"/auth/recover\" class=\"text-sm text-link hover:underline\">Forgot your password?</a></p></div><button type=\"submit\" class=\"btn btn-primary w-full\">Sign in to your account</button></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -247,7 +247,7 @@ func signupPanel(flash string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if flash != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"mb-4 p-3 rounded bg-danger/10 text-danger\" role=\"alert\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"mb-4 p-3 rounded bg-danger/10 text-danger-emphasis\" role=\"alert\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

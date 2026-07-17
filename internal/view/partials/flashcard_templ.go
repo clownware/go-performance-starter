@@ -283,7 +283,7 @@ func FlashcardsEmptyState() templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div data-testid=\"flashcards-empty\" class=\"bg-surface rounded-lg shadow-md p-6 text-center text-muted-foreground\"><p class=\"mb-2\">No flashcards yet.</p><p class=\"text-sm\">Miss a question on the <a href=\"/learn/quiz\" class=\"text-primary underline\">architecture quiz</a> and save it here to review later.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div data-testid=\"flashcards-empty\" class=\"bg-surface rounded-lg shadow-md p-6 text-center text-muted-foreground\"><p class=\"mb-2\">No flashcards yet.</p><p class=\"text-sm\">Miss a question on the <a href=\"/learn/quiz\" class=\"text-link underline\">architecture quiz</a> and save it here to review later.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -314,7 +314,7 @@ func FlashcardSaved() templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div data-testid=\"flashcard-saved\" class=\"mt-4 p-4 rounded-md border border-primary text-sm\" role=\"status\">Saved — review it any time on <a href=\"/learn/flashcards\" class=\"text-primary underline\">your flashcards</a>.</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div data-testid=\"flashcard-saved\" class=\"mt-4 p-4 rounded-md border border-primary text-sm\" role=\"status\">Saved — review it any time on <a href=\"/learn/flashcards\" class=\"text-link underline\">your flashcards</a>.</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
