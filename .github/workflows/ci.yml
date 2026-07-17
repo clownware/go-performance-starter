@@ -21,7 +21,9 @@ jobs:
       pull-requests: write
     services:
       postgres:
-        image: postgres:15
+        # Tracks production (Supabase runs Postgres 16 on Alpine) and
+        # docker-compose.yml — keep all three on the same major (#84).
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -62,7 +64,9 @@ jobs:
 
     - name: Install tools (templ, govulncheck, migrate, psql)
       run: |
-        go install github.com/a-h/templ/cmd/templ@v0.3.1001
+        # go.mod is the single source of the templ version — a version pinned
+        # here went stale once already (v0.3.1001 vs go.mod's v0.3.1020, #83).
+        go install github.com/a-h/templ/cmd/templ@$(go list -m -f '{{.Version}}' github.com/a-h/templ)
         go install golang.org/x/vuln/cmd/govulncheck@latest
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xz migrate
         sudo mv migrate /usr/local/bin/

@@ -17,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        # Tracks production (Supabase runs Postgres 16 on Alpine) and
+        # docker-compose.yml — keep all three on the same major (#84).
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
