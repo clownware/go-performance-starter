@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Password reset flow (#71): request page (`/auth/recover`, anti-enumeration
+  generic response), server-side `token_hash` verification via direct GoTrue
+  REST (`/auth/reset` — no client JS; requires the Reset Password email
+  template to link `{{ .SiteURL }}/auth/reset?token_hash={{ .TokenHash }}&type=recovery`,
+  see README), update-password form on the recovery session, and the restored
+  "Forgot your password?" link on the login card
 - ADR enforcement architecture (ADR-033): `## Enforcement` sections on
   all 33 ADRs, a warn-only check suite (`scripts/adrcheck`, ten checks,
   wired into `task ci` as `check:adr`), per-check graduation via

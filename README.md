@@ -69,6 +69,19 @@ task dev                # Start dev server with hot reload
 
 The application runs at [http://localhost:4000](http://localhost:4000) by default (`HTTP_PORT`).
 
+**Password reset (one-time Supabase config):** the reset flow verifies the
+email link's `token_hash` server-side, so the *Reset Password* email template
+must link to this app instead of GoTrue's redirect flow. In the Supabase
+dashboard → Authentication → Email Templates → Reset Password, set the link to:
+
+```
+{{ .SiteURL }}/auth/reset?token_hash={{ .TokenHash }}&type=recovery
+```
+
+(Site URL must point at your deployment — it already does if signup
+confirmation emails work. No redirect-URL allowlist entry is needed; the link
+goes straight to this app, which exchanges the hash via `POST /auth/v1/verify`.)
+
 Making this template your own (module rename, deploy identity, branding)? Follow the [personalization guide](docs/personalization-guide.md) — ~30 minutes of required changes.
 
 ## Available Tasks
