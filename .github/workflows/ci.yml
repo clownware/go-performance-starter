@@ -43,7 +43,7 @@ jobs:
     - uses: actions/checkout@v7
 
     - name: Set up Go
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@v7
       with:
         # go.mod's toolchain directive is the single source of the Go version;
         # a version pinned here went stale once already (GO-2026-5856 bump).
@@ -51,7 +51,7 @@ jobs:
         cache: true
 
     - name: Set up Node (Tailwind build for the asset-budget gate)
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '20'
         cache: 'npm'
