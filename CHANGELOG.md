@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   see README), update-password form on the recovery session, and the restored
   "Forgot your password?" link on the login card
 - ADR enforcement architecture (ADR-033): `## Enforcement` sections on
-  all 33 ADRs, a warn-only check suite (`scripts/adrcheck`, ten checks,
+  all 34 ADRs (the 33 pre-existing plus ADR-033 itself), a warn-only check suite (`scripts/adrcheck`, ten checks,
   wired into `task ci` as `check:adr`), per-check graduation via
   `checks/enforcement.config.json`, and two blocking hooks — a
   Stop-gate (tests + suite on agent turn completion) and a PreToolUse
@@ -351,7 +351,15 @@ enforcement, unified logging, guest-mode backend, and a release pipeline.
   injection works correctly
 - Build commands in Taskfile now include `-ldflags` version injection
 
-[Unreleased]: https://github.com/clownware/go-performance-starter/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/clownware/go-performance-starter/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/clownware/go-performance-starter/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/clownware/go-performance-starter/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/clownware/go-performance-starter/compare/v0.5.2...v0.6.0
+[0.5.2]: https://github.com/clownware/go-performance-starter/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/clownware/go-performance-starter/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/clownware/go-performance-starter/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/clownware/go-performance-starter/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/clownware/go-performance-starter/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/clownware/go-performance-starter/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/clownware/go-performance-starter/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/clownware/go-performance-starter/compare/v0.1.0...v0.2.0

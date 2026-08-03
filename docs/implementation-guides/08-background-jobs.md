@@ -14,7 +14,7 @@ Implement asynchronous processing for longer-running tasks.
 | 7.06 | Add retry and error handling | Handle failures gracefully |
 | 7.07 | Implement scheduled jobs | Periodic tasks |
 | 7.08 | Add graceful shutdown | Clean termination |
-| 7.09 | Consider simpler alternatives | Scheduled tasks via Cloudflare |
+| 7.09 | Consider simpler alternatives | GitHub Actions cron for scheduled work |
 
 ## Core Principles
 
@@ -22,7 +22,8 @@ Implement asynchronous processing for longer-running tasks.
 - Only add Asynq+Redis when you need reliable delivery, retries, and monitoring
 - Implement proper resource cleanup and graceful shutdown
 - Use context cancellation to prevent goroutine leaks
-- Consider serverless scheduled tasks for simpler needs
+- For scheduled work that can run outside the server, use a GitHub Actions cron — Cloudflare is edge proxy/CDN only, not a scheduled-task runtime (ADR-025)
+- The shipped patterns: the anonymous-guest reaper is an in-process goroutine with a ticker (`internal/jobs`), and the nightly demo reset is a GitHub Actions cron (`.github/workflows/demo-reset.yml`)
 
 ## Common Pitfalls
 

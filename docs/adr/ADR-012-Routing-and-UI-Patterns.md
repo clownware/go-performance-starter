@@ -18,6 +18,8 @@ Consistent routing, handler structure, and UI update patterns are important for 
 - Alpine.js is used only for client-side interactivity that cannot be handled server-side.
 - Error feedback to users is delivered via HTMX triggers and reusable error partials.
 
+> **Amended 2026-08-02**: [ADR-017](ADR-017-Templ-Adoption.md) superseded ADR-008's `html/template` — HTMX fragments are rendered by templ partials in `internal/view/partials/` (raw `html/template` is forbidden; Constitution rule 2, `adr017-no-html-template`). The HTMX-first pattern itself is unchanged.
+
 ## Consequences
 
 - Routing and handlers are easy to follow and extend.

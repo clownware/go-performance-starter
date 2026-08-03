@@ -1,4 +1,4 @@
-# ADR-000: Template for Architecture Decision Records
+# ADR-XXX: Template for Architecture Decision Records
 
 ## Status
 

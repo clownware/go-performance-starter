@@ -17,7 +17,7 @@ Claude Code reads `CLAUDE.md` and `.claude/` natively, but other agent tools (Cu
 Treat `AGENTS.md` as a **generated artefact**, never hand-edited. `scripts/agentsmd` concatenates `CLAUDE.md` + `.claude/engineering.md` + `.claude/workflow.md` + `.claude/stack.md`, demoting each source's headings one level (code fences left intact) under a single H1 with a "do not edit" banner.
 
 - `task agents:build` regenerates `AGENTS.md`.
-- `task agents:check` exits non-zero if `AGENTS.md` differs from a fresh generation; it is part of `task ci` and runs as its own CI job.
+- `task agents:check` exits non-zero if `AGENTS.md` differs from a fresh generation; it is part of `task ci` and runs as its own CI job. *(Amended 2026-08-02: the standalone CI job was consolidated by the ADR-021 2026-07 amendment — the workflow now invokes `task ci`, which includes `agents:check`; there is no separate job or step.)*
 - `.windsurfrules` is reduced to a thin pointer at `AGENTS.md` plus one Cascade-specific directive.
 
 The generator is written in Go (own package `scripts/agentsmd`) to match the existing `scripts/check-binary-size.go` precedent and keep the toolchain Go-native.
@@ -45,7 +45,7 @@ The generator is written in Go (own package `scripts/agentsmd`) to match the exi
 - **Testable consequences:**
   - TC-1: `AGENTS.md` is identical to a fresh generation from `CLAUDE.md` + `.claude/{engineering,workflow,stack}.md`.
 - **Checks:**
-  - TC-1 → `task agents:check` in `task ci` and as its own CI step (status: **block**, pre-existing)
+  - TC-1 → `task agents:check` in `task ci`, which the CI workflow invokes — no standalone step (status: **block**, pre-existing)
   - TC-1 → PreToolUse guard (`scripts/adrguard`) denies direct agent edits to `AGENTS.md` (status: **block**, hook — see ADR-033)
 - **Not machine-checkable:** None — this ADR is fully structural.
 - **Graduation log:** _(empty)_

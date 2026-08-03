@@ -22,39 +22,60 @@ Set up infrastructure for code quality and developer productivity.
 - Use Taskfile (or Make) to automate common development operations
 - Configure air for hot reloading during development
 - Set up a CI pipeline for automated quality checks
-- For database connection pooling, see Phase 1 → Connection pool sizing for the actual numbers
+- For database connection pooling, the actual numbers live in `internal/config/config.go` (`DB_MAX_CONNS`, `DB_MIN_CONNS`, `DB_MAX_CONN_LIFETIME`, `DB_MAX_CONN_IDLE_TIME`)
 
-## Minimal golangci-lint Configuration
+## golangci-lint Configuration
+
+This is the repo's actual `.golangci.yml` (golangci-lint v2 format — v1-style configs are rejected):
 
 ```yaml
 # .golangci.yml
+version: "2"
 run:
-  timeout: 2m
-  go: '1.22'
-  
+  go: "1.25"
+  modules-download-mode: readonly
 linters:
+  default: none
   enable:
-    - errcheck      # Check for unchecked errors
-    - gosimple      # Simplify code
-    - govet         # Report suspicious constructs
-    - ineffassign   # Detect unused assignments
-    - staticcheck   # Go static analysis 
-    - unused        # Find unused variables/functions
-    - typecheck     # Check type errors
-    - gofmt         # Check formatting
-    
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-  govet:
-    check-shadowing: true
-  gofmt:
-    simplify: true
-    
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unused
+    - whitespace
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+        path: _test\.go
+      - path: (.+)\.go$
+        text: should have a package comment
+      - path: (.+)\.go$
+        text: exported .* should have comment or be unexported
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/clownware/go-performance-starter
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 ```
 
 ## Common Pitfalls

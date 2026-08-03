@@ -16,7 +16,7 @@ This ADR documents these critical choices to ensure alignment and provide ration
 
 ### 1. Go Version & Module Path
 
-We will use **Go 1.24+** with the module path `github.com/clownware/alpine-go-performance-starter`.
+We will use **Go 1.24+** with the module path `github.com/clownware/go-performance-starter`.
 
 Rationale:
 - Go 1.22+ includes improved handler signatures that simplify HTTP request handling

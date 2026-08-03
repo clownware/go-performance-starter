@@ -10,7 +10,7 @@ Nothing in this guide needs to happen before local development works — `task d
 
 ### 1. Go module path (~10 min — do this first)
 
-The big one for a Go template: the module path `github.com/clownware/go-performance-starter` appears in `go.mod` and in the import blocks of ~67 Go files, plus the `.templ` sources. Everything else imports through it.
+The big one for a Go template: the module path `github.com/clownware/go-performance-starter` appears in `go.mod` and in the import blocks of ~77 Go files, plus the `.templ` sources. Everything else imports through it.
 
 ```bash
 OLD=github.com/clownware/go-performance-starter
@@ -94,7 +94,7 @@ The deploy/reset workflows are inert until you opt in ([ADR-031](adr/ADR-031-Pub
 
 - **`CHANGELOG.md`** — this template's history; start your own.
 - **`LICENSE`** — MIT; update the copyright holder.
-- **`docs/adr/`** — the ADRs document why the architecture is the way it is; we recommend keeping them and appending your own from ADR-032.
+- **`docs/adr/`** — the ADRs document why the architecture is the way it is; we recommend keeping them and appending your own from ADR-034.
 - **`.claude/` + `AGENTS.md`** — the AI constitution is removable if you don't develop with agents (README table); if you keep it, `AGENTS.md` regenerates via `task agents:build`.
 
 ## Verify

@@ -1,5 +1,7 @@
 # Phase 3 Implementation Report
 
+> **Status: Historical (2025-05).** This report describes the codebase as it stood when Phase 3 shipped and is retained as an implementation note for historical context. The "current" details below have since been superseded: `htmx_helpers.go` no longer exists (the HTMX helpers live in `internal/view/helpers.go`), test coverage has grown well beyond the initial file (51 `_test.go` files as of 2026-08), and the quality tools are wired into CI via the `task ci` gate and `.github/workflows/ci.yml` (ADR-021).
+
 This document tracks our progress implementing the Phase 3: Tooling & Quality plan.
 
 ## Tasks Completed

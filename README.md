@@ -45,7 +45,7 @@ Forking this for your own product? The governance apparatus is modular ([ADR-019
 
 ## Prerequisites
 
-- Go 1.26+
+- Go 1.25+
 - Docker & Docker Compose (for local development database)
 - [Task](https://taskfile.dev) (task runner)
 - Node.js 20+ (for Tailwind CSS build)
@@ -93,7 +93,7 @@ Run `task --list` to see all available tasks. Key ones:
 | `task dev` | Start dev server with hot reload |
 | `task ci` | Halt-on-violation quality gate (fmt, lint, race tests, agent-spine + versions drift, binary size, vuln scan) |
 | `task build` | Compile optimized binary to `./dist/app` |
-| `task test` | Run test suite with coverage |
+| `task test` | Run test suite (`task test:coverage` for coverage) |
 | `task test:performance` | Check performance budgets |
 | `task test:binary-size` | Validate binary size < 20MB |
 | `task lint` | Run golangci-lint |
@@ -111,14 +111,16 @@ internal/
   config/             Environment-based configuration
   database/           sqlc-generated types and queries (generated)
   handler/            HTTP handlers
+  jobs/               Background jobs (guest TTL reaper)
   middleware/         Auth, metrics, logging, request ID
   performance/        Performance budget definitions
   repository/         Data access interfaces + implementations
   server/             Router setup and middleware stack
+  validate/           Input validation helpers
   view/               templ UI: layouts/, pages/, partials/, components/ (+ render, props)
   webutil/            HTMX + context helpers
 web/
-  static/             CSS, JS, images, fonts
+  static/             CSS, JS, images
 migrations/           golang-migrate SQL files
 sql/                  sqlc query and schema definitions
 docs/                 ADRs, implementation guides, product docs
@@ -153,7 +155,7 @@ It cannot drift: `task versions:check` (part of `task ci`) fails when any key di
 
 This project uses Architecture Decision Records (ADRs) to document key technical choices. See [docs/adr/](docs/adr/) for the full set, including:
 
-- [ADR-001](docs/adr/ADR-001-Foundation.md) -- Foundation (Go, Chi, zerolog)
+- [ADR-001](docs/adr/ADR-001-Foundation.md) -- Foundation (Go, Chi; logging now log/slog per [ADR-026](docs/adr/ADR-026-Logging-Standardization.md))
 - [ADR-000](docs/adr/ADR-000-Performance-Budgets-and-Quality-Attributes.md) -- Performance budgets
 - [ADR-007](docs/adr/ADR-007-Frontend-Stack-Selection.md) -- Frontend stack (HTMX + Alpine + Tailwind)
 - [ADR-014](docs/adr/ADR-014-Security-Patterns-and-Threat-Model.md) -- Security patterns

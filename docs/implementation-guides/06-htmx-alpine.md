@@ -35,85 +35,68 @@ Implement smooth user interactions with minimal JavaScript.
 
 ## CSRF Protection with HTMX
 
-Implement CSRF protection for all state-changing HTMX requests to prevent cross-site request forgery attacks.
+Implement CSRF protection for all state-changing HTMX requests to prevent cross-site request forgery attacks. The starter uses the double-submit-cookie pattern (ADR-014 §3) — there is no server-side token store.
 
 ### Token Generation and Storage
 
-Generate CSRF tokens server-side for each session and include them in your templates:
+The CSRF middleware (`internal/middleware/csrf.go`) issues a random 32-byte token in an HttpOnly `csrf_token` cookie (12h max-age, reissued transparently on expiry) and places the same token in the request context, where templ components read it. Templates are templ components — raw `html/template` syntax is forbidden (ADR-017):
 
-```html
-<!-- Include CSRF token in meta tag for global access -->
-<head>
-    <meta name="csrf-token" content="{{ .CSRFToken }}">
-</head>
+```templ
+// Hidden input for form submissions — components.CSRFField()
+// (internal/view/components/csrf.templ)
+templ CSRFField() {
+	<input type="hidden" name="csrf_token" value={ webutil.CSRFTokenFromContext(ctx) }/>
+}
+```
 
-<!-- Or include in hidden form field for form submissions -->
+Use it inside any state-changing form:
+
+```templ
 <form hx-post="/api/items" hx-target="#result">
-    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
-    <input type="text" name="item_name" placeholder="Item name">
-    <button type="submit">Create Item</button>
+	@components.CSRFField()
+	<input type="text" name="item_name" placeholder="Item name"/>
+	<button type="submit">Create Item</button>
 </form>
 ```
 
 ### HTMX Configuration
 
-Configure HTMX to send the CSRF token with all requests:
+The base layout (`internal/view/layouts/base.templ`) sets `hx-headers` on `<body>` so every HTMX request carries the token — `hx-headers` is inherited by all descendants:
 
-```html
-<!-- Option 1: Global configuration using hx-headers on body -->
-<body hx-headers='{"X-CSRF-Token": "{{ .CSRFToken }}"}'>
-    <!-- All HTMX requests will include the token -->
-</body>
-
-<!-- Option 2: Per-request using hx-headers attribute -->
-<button 
-    hx-post="/api/items/delete/123"
-    hx-headers='{"X-CSRF-Token": "{{ .CSRFToken }}"}'
-    hx-target="#item-123"
-    hx-swap="outerHTML">
-    Delete
-</button>
-
-<!-- Option 3: Using JavaScript to read from meta tag -->
-<script>
-    document.body.addEventListener('htmx:configRequest', (event) => {
-        // Get token from meta tag
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        // Add to request headers for non-GET requests
-        if (event.detail.verb !== 'get') {
-            event.detail.headers['X-CSRF-Token'] = token;
-        }
-    });
-</script>
+```templ
+<body hx-headers={ csrfHxHeaders(webutil.CSRFTokenFromContext(ctx)) }>
 ```
+
+where `csrfHxHeaders` builds the `{"X-CSRF-Token": "<token>"}` JSON. Forms rendered with `@components.CSRFField()` also work without JavaScript: HTMX serializes form fields, and the middleware falls back to the `csrf_token` form field when the header is absent.
 
 ### Server-Side Validation
 
-Validate the CSRF token on the server for all state-changing operations (implemented in Phase 6):
+For unsafe methods, the middleware compares the submitted header/form value against the cookie the browser sent, in constant time (implemented in Phase 6):
 
 ```go
-// Example validation in middleware
-func ValidateCSRF(r *http.Request) bool {
-    // Get token from header (sent by HTMX)
-    requestToken := r.Header.Get("X-CSRF-Token")
-    if requestToken == "" {
-        // Fallback to form field
-        requestToken = r.FormValue("csrf_token")
-    }
-    
-    // Validate against session token
-    sessionToken := getSessionCSRFToken(r)
-    return requestToken == sessionToken && requestToken != ""
+// internal/middleware/csrf.go (abridged)
+cookie, err := r.Cookie(CSRFCookieName)
+if err != nil || !isValidTokenFormat(cookie.Value) {
+    http.Error(w, "Forbidden: missing CSRF cookie", http.StatusForbidden)
+    return
+}
+sent := r.Header.Get(CSRFHeaderName) // X-CSRF-Token, set via hx-headers
+if sent == "" {
+    sent = r.PostFormValue(CSRFFormField) // csrf_token hidden input
+}
+if subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(sent)) != 1 {
+    http.Error(w, "Forbidden: CSRF token mismatch", http.StatusForbidden)
+    return
 }
 ```
 
 ### Best Practices
 
-- **Token rotation**: Regenerate tokens on login/logout
-- **Skip safe methods**: Only validate non-GET requests
-- **Consistent approach**: Use one method (headers or form fields) consistently
-- **Error handling**: Return clear 403 Forbidden for invalid tokens
-- **Token expiry**: Consider time-based token expiration for sensitive operations
+- **Skip safe methods**: Only validate non-GET/HEAD/OPTIONS/TRACE requests
+- **HttpOnly cookie**: The token reaches markup via server rendering, never via script access
+- **Constant-time comparison**: Use `subtle.ConstantTimeCompare` to avoid timing leaks
+- **Error handling**: Return clear 403 Forbidden for missing or mismatched tokens
+- **Token expiry**: The cookie's 12h max-age bounds token lifetime; expired tokens are reissued transparently
 
 This CSRF implementation will be fully wired up in Phase 6 (Authentication & Security).
 

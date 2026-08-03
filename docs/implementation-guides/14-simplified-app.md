@@ -33,14 +33,14 @@ For cross-reference and search purposes, simplified steps use the S.xx prefix:
 
 | Component | Technology | Notes |
 |-----------|------------|-------|
-| **Language** | Go 1.22+ | Improved handler signatures |
+| **Language** | Go 1.25+ | Matches the repo's `go.mod` minimum |
 | **Web Framework** | Chi | Standard library alignment |
 | **Frontend** | HTMX + Alpine.js | Minimal JavaScript approach |
-| **HTML Generation** | html/template | Standard library |
+| **HTML Generation** | templ | Type-safe templates (ADR-017) |
 | **CSS Framework** | Tailwind CSS | Utility-first approach |
 | **Database & Auth** | Supabase | Integrated PostgreSQL & Auth |
 | **Testing** | Go standard testing | Table-driven tests |
-| **Deployment** | Cloudflare Pages/Workers | Simple deployment |
+| **Deployment** | Fly.io (Docker image) | Worked example (ADR-025); any container host works |
 
 ## Implementation Priorities
 
@@ -88,12 +88,12 @@ For cross-reference and search purposes, simplified steps use the S.xx prefix:
 
 ## Example Starter Application
 
-A minimal starter application example would include the project structure and basic implementation of all essential components. Such a starter template is planned for future development (TBD). This would provide:
+This repository now ships a working demo application (ADR-024) that covers exactly this scope:
 
 - Basic project structure following this guide
-- Minimal working CRUD example
-- Supabase Auth integration
-- Deployment configuration for Cloudflare
+- Working CRUD handlers in `internal/handler/`
+- Supabase Auth integration in `internal/auth/`
+- Deployment configuration for Fly.io (`fly.toml`, `.github/workflows/deploy.yml`)
 
 ## Remember
 

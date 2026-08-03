@@ -7,83 +7,51 @@ This document outlines the recommended project structure for the Alpine Go Perfo
 ## Project Structure
 
 ```
-microsaas-starter-kit/
+go-performance-starter/
 ├── cmd/
 │   └── api/
 │       └── main.go               # Application entrypoint
-├── internal/                     # Private application code 
-│   ├── auth/                     # Authentication related code
-│   │   ├── middleware.go         # JWT verification middleware
-│   │   ├── handler.go            # Auth handlers (login, register, etc.)
-│   │   └── models.go             # Auth-related types
-│   ├── billing/                  # Billing related code
-│   │   ├── interface.go          # BillingProvider interface
-│   │   └── stripe.go             # Stripe implementation
-│   ├── config/                   # Configuration handling
-│   │   └── config.go             # Environment config loader
-│   ├── database/                 # Database connections/utilities
-│   │   └── db.go                 # DB setup and connection pooling
-│   ├── email/                    # Email sending functionality 
-│   │   ├── interface.go          # EmailProvider interface
-│   │   └── console.go            # Development console email impl
-│   ├── handler/                  # HTTP handlers
-│   │   ├── handler.go            # Common handler utilities
-│   │   └── routes.go             # Route definition
-│   ├── items/                    # Example CRUD resource
-│   │   ├── handler.go            # Item CRUD handlers
-│   │   └── models.go             # Item-related types
-│   ├── middleware/               # Application middleware
-│   │   ├── logging.go            # Request logging
-│   │   ├── recover.go            # Panic recovery
-│   │   └── security.go           # Security headers, CSRF, etc.
-│   ├── server/                   # Server setup
-│   │   └── server.go             # HTTP server configuration
-│   └── view/                     # View rendering
-│       └── renderer.go           # HTML template renderer
-├── migrations/                   # Database migrations
-│   ├── 0001_init.up.sql
-│   └── 0001_init.down.sql
-├── sql/                          # SQLC query files
-│   ├── items.sql                 # Item queries
-│   ├── subscriptions.sql         # Subscription queries
-│   ├── users.sql                 # User settings queries
-│   └── schema.sql                # Combined schema for sqlc
+├── internal/                     # Private application code
+│   ├── auth/                     # Supabase auth client (anonymous sign-in, upgrade, recovery)
+│   ├── cache/                    # In-memory caching helpers
+│   ├── config/                   # Environment config loader
+│   ├── database/                 # sqlc-generated queries + connection pooling
+│   ├── handler/                  # HTTP handlers (auth, quiz, flashcards, patterns, profile, health)
+│   ├── jobs/                     # Background jobs (guest-session reaper)
+│   ├── middleware/               # Auth, CSRF, rate limiting, security headers, metrics, etc.
+│   ├── performance/              # Performance budget constants (ADR-000)
+│   ├── repository/               # Repository interfaces + Postgres implementations (ADR-003)
+│   ├── server/                   # HTTP server + route configuration
+│   ├── validate/                 # Input validation
+│   ├── view/                     # templ UI with typed props (ADR-017)
+│   │   ├── layouts/              # base.templ — shared page shell
+│   │   ├── pages/                # Full pages (home, auth, quiz, flashcards, dashboard, …)
+│   │   ├── partials/             # HTMX fragments
+│   │   ├── components/           # Reusable components (button, card, form, alert, …)
+│   │   └── render.go             # templ render helpers
+│   └── webutil/                  # Shared request/response utilities
+├── migrations/                   # golang-migrate SQL files (up/down pairs)
+├── sql/
+│   ├── queries/                  # sqlc query files (users, quiz, flashcards, organizations, …)
+│   ├── schema/                   # Combined schema for sqlc
+│   ├── demo/                     # Public-demo seed/reset scripts
+│   └── test/                     # Test fixtures (auth stub)
 ├── sqlc.yaml                     # SQLC configuration
 ├── web/
-│   ├── static/                   # Static assets
-│   │   ├── css/                  # CSS files
-│   │   │   └── output.css        # Compiled Tailwind CSS
-│   │   ├── js/                   # JavaScript files
-│   │   │   ├── htmx.min.js
-│   │   │   └── alpine.min.js
-│   │   └── img/                  # Image assets
-│   └── templates/                # HTML templates
-│       ├── layouts/              # Base layouts
-│       │   ├── guest.html        # Layout for unauthenticated users
-│       │   └── app.html          # Layout for authenticated users
-│       ├── partials/             # Reusable template parts
-│       │   ├── header.html
-│       │   ├── footer.html
-│       │   └── nav.html
-│       ├── auth/                 # Auth-related templates
-│       │   ├── login.html
-│       │   └── register.html
-│       ├── items/                # Item CRUD templates
-│       │   ├── list.html
-│       │   ├── create.html
-│       │   ├── edit.html
-│       │   └── item-row.html     # HTMX partial for single item
-│       └── pages/                # Static pages
-│           ├── home.html
-│           └── dashboard.html
+│   └── static/                   # Static assets
+│       ├── css/                  # input.css (Tailwind v4 source) + app.css (compiled)
+│       ├── js/                   # htmx.min.js, alpine.min.js, app.js
+│       └── img/                  # Image assets
 ├── .air.toml                     # Hot reload configuration
 ├── .env.example                  # Example environment variables
 ├── .golangci.yml                 # Linting configuration
 ├── docker-compose.yml            # Local development setup
 ├── Dockerfile                    # Production container
+├── fly.toml                      # Worked-example deploy config (ADR-025)
 ├── go.mod                        # Go module definition
 ├── go.sum                        # Go module checksums
 ├── Taskfile.yml                  # Development tasks
+├── versions.json                 # Version manifest (ADR-030)
 └── README.md                     # Project documentation
 ```
 

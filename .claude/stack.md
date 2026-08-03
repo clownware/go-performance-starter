@@ -18,7 +18,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 
 ```bash
 task dev               # hot-reload dev server (air); watches .go, .templ
-task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + binary-size + vuln
+task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + check:adr + binary-size + asset-budgets + vuln
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
@@ -49,7 +49,7 @@ task demo:reset        # purge guests' demo content + re-seed (refuses without D
 | JavaScript (gzip) | < 50KB |
 | CSS (gzip) | < 30KB |
 
-Budgets are enforced in CI via `task test:performance` / `task test:binary-size`. The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
+Budgets are enforced in CI via `task ci`: the `go test` leg runs the `internal/performance` budget tests, and `test:binary-size` / `test:asset-budgets` gate binary and gzipped JS/CSS sizes (`task test:performance` bundles the same checks for local runs). The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
 
 ## Key ADRs
 

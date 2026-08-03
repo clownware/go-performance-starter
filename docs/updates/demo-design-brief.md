@@ -1,5 +1,7 @@
 # Demo Design Brief
 
+> **Status: Historical (noted 2026-08-02).** This brief fed the design/mockup phase, which is complete and built. Concrete pointers below (token file, role variable names, teal value, fonts, auth route) have been corrected to match the implementation; where this brief and the code still disagree, the code is the source of truth.
+
 > Input for the design/mockup phase (Claude Design). Defines the screens to mock and the constraints that make mockups buildable against the existing templ + Tailwind stack. Decision context: [ADR-024](../adr/ADR-024-Demo-Application-Direction.md).
 
 ## Concept in one line
@@ -14,22 +16,22 @@ A self-documenting, server-rendered tour of this starter's own architecture — 
 4. **Accessibility is non-negotiable** (ADR-009): WCAG 2.1 AA, semantic HTML, visible focus, keyboard-operable, labelled controls, contrast-checked tokens.
 5. **Dark mode is first-class** — every screen must be mocked in both light and dark (the app already switches via the `.dark` class).
 
-## Design tokens (source of truth: `web/static/css/semantic-colors.css`)
+## Design tokens (source of truth: the `@theme` block in `web/static/css/input.css`, ADR-029)
 
 Mock against these *roles*, not raw hex — they flip in dark mode.
 
 | Role | Light | Dark | Tailwind/CSS var |
 |---|---|---|---|
-| Primary | `#468189` (teal) | teal | `--color-primary` |
+| Primary | `#427a82` (teal) | teal | `--color-primary` |
 | Danger | `#bf4342` (bittersweet) | bittersweet | `--color-danger` |
 | Background | `#f0ffce` (nyanza) | `#0c0c0c` (night) | `--color-background` |
 | Surface | `#ffffff` | `#1a1a1a` | `--color-surface` |
-| Text | `#0c0c0c` (night) | `#f0ffce` (nyanza) | `--color-text` |
-| Accent / Muted | `#d2cca1` (sage) | sage / teal | `--color-accent`, `--color-muted` |
+| Text | `#0c0c0c` (night) | `#f0ffce` (nyanza) | `--color-foreground` |
+| Accent / Muted | `#d2cca1` (sage) | sage / teal | `--color-accent`, `--color-muted-foreground` |
 
-Base palette: **teal `#468189`, bittersweet `#bf4342`, night `#0c0c0c`, nyanza `#f0ffce`, sage `#d2cca1`.** Type: Inter (body) + Oxanium (display/headings) — both already bundled. Styling is Tailwind v4 utilities; **no hardcoded colors, no manual `dark:` overrides** — use the role tokens so dark mode is automatic.
+Base palette: **teal `#427a82` (darkened from `#468189` in the 2026-07-17 WCAG AA contrast audit), bittersweet `#bf4342`, night `#0c0c0c`, nyanza `#f0ffce`, sage `#d2cca1`.** Type: the system font stack (Tailwind default) — Inter and Oxanium were proposed here but never bundled. Styling is Tailwind v4 utilities; **no hardcoded colors, no manual `dark:` overrides** — use the role tokens so dark mode is automatic.
 
-> Gap to close in parallel: these roles should be promoted into a formal token doc + Tailwind `@theme` mapping (mirroring the astro starter's role-based token ADR). Flagged for an engineering follow-up; mockups can proceed against the table above now.
+> Gap since closed: these roles were promoted into the `@theme` mapping in `input.css` ([ADR-029](../adr/ADR-029-Role-Based-Design-Tokens.md)), mirroring the astro starter's role-based token ADR.
 
 ## Components to reuse (don't redesign these)
 
@@ -47,7 +49,7 @@ Existing templ components in `internal/view/components/`: **button, input, form,
 | **1** | Flashcards | `/learn/flashcards` | Grid/list of saved cards; flip interaction; mark-known; delete; empty state. |
 | 2 | Guest banner + upgrade | (global) | Persistent "You're browsing as a guest — save your progress" affordance; upgrade modal (email/password) that links the account. |
 | 2 | Dashboard | `/dashboard` | Progress widgets (quiz score history, cards-to-review), skeleton loaders. |
-| 3 | Auth (sign in / create) | `/auth` | Tabbed card (Alpine `x-show`); only reached via upgrade or direct nav. |
+| 3 | Auth (sign in / create) | `/auth/page` | Tabbed card (Alpine `x-show`); only reached via upgrade or direct nav. `/auth/*` is reserved for the POST endpoints. |
 | 3 | Profile | `/profile` | Reuse existing; minor polish. |
 
 ## Explainer content map (the teachable spine)

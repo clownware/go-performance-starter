@@ -27,7 +27,7 @@ Adopt [go-gremlins](https://github.com/go-gremlins/gremlins) (v0.6.0, pinned), r
 
 - Assertion gaps in security- and boot-critical logic (session validation, rate limits, config validation) surface mechanically instead of in incident review.
 - A new pinned dev tool (`gremlins`) joins the toolchain; it is not required for `task ci`, so CI and new contributors are unaffected until they opt in.
-- Timed-out mutants (negated loop conditions become infinite loops) are counted as caught; the task passes `--timeout-coefficient 5` so slow-but-legitimate kills are not misreported.
+- Timed-out mutants (negated loop conditions become infinite loops) are counted as caught; the task passes `--timeout-coefficient 20` so slow-but-legitimate kills are not misreported.
 
 ## Alternatives Considered
 

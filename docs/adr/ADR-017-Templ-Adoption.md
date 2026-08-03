@@ -33,7 +33,7 @@ internal/view/
 ├── render.go                 # view.Render(w, r, status, component)
 ├── props.go                  # BaseProps + NewBaseProps helper
 ├── helpers.go                # HTMX request/response utilities
-└── models.go                 # Shared view models (Item, UserProfile, etc.)
+└── models.go                 # Shared view models (PatternSection, QuizScore, etc.)
 ```
 
 ### Key patterns
@@ -57,7 +57,7 @@ internal/view/
 
 ### What was kept
 
-- `webutil` HTMX helpers (`SetHXTrigger`, `SetHXRedirect`, etc.)
+- HTMX helpers (`SetHXTrigger`, `SetHXRedirect`, etc.) — now in `internal/view/helpers.go`
 - `webutil` context helpers (`GetUserFromContext`, `GetUserRepoFromContext`)
 - HTMX + Alpine.js frontend architecture (unchanged)
 

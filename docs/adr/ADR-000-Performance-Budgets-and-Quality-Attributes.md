@@ -76,11 +76,11 @@ task ci   # includes test:binary-size and test:asset-budgets
 #### Automated Monitoring
 - Performance tests run in CI on every pull request
 - Binary size checked and reported as comment on PR
-- Memory profiling executed during integration tests
-- Lighthouse CI runs on every deployment to staging
+- Memory profiling available manually via `task test:memory-profile` — not wired into `task ci` or any workflow
+- No Lighthouse CI is wired and no staging environment exists — Lighthouse targets are aspirational (see Enforcement)
 
 #### Budget Violation Policy
-- **Hard Fail**: Binary size, memory usage, critical response times
+- **Hard Fail**: Binary size, Docker image size, and gzipped JS/CSS asset budgets — the Enforced tier in §1. Memory usage and response times are Monitored, not gated.
 - **Warning**: Nice-to-have metrics (can merge with justification)
 - **Review Required**: Any budget increase requires explicit ADR update
 
@@ -98,9 +98,7 @@ task ci   # includes test:binary-size and test:asset-budgets
 - Chrome DevTools for network waterfall analysis
 
 #### Load Testing
-- `vegeta` for HTTP load testing
-- `k6` for scenario-based performance testing
-- Continuous load testing in staging environment
+No load-test harness is wired — vegeta, k6, and the staging environment were never built. The scalability targets in §1 stay Aspirational until one exists.
 
 ## Consequences
 
@@ -171,6 +169,8 @@ This ADR should be reviewed quarterly to ensure budgets remain aligned with:
 **2026-04 Note**: Budgets have not yet been validated against real production measurements. Binary size and Docker image budgets are enforced in CI. Response time and memory budgets are tracked via Prometheus metrics middleware but lack baseline data from production load.
 
 **2026-07 Note**: Every budget is now explicitly classified in §1 as Enforced, Monitored, or Aspirational — the ADR previously claimed all budgets "MUST be enforced in CI" while only binary and image size were. The frontend JS/CSS budgets joined the Enforced tier: `task test:asset-budgets` (wired into `task ci`) fails if the assets shipped by the base layout exceed the budgets gzipped, using the constants in `internal/performance` as the single source of truth. The unexecuted phase plan in Implementation Notes was replaced with the graduation rule, and the placeholder reference URL was corrected to the real sibling repo.
+
+**2026-08 Note**: The Enforcement Strategy (§3) and Load Testing tooling (§4) text was aligned with the Enforcement section below — earlier revisions claimed staging Lighthouse runs, integration-test memory profiling, vegeta/k6 load testing, and hard-fail gates on memory and response times, none of which were ever wired.
 
 ---
 

@@ -91,7 +91,7 @@ A check is promoted from **warn** to **block** after **7+ days with no false pos
   - TC-1: Every ADR file contains an `## Enforcement` section.
   - TC-2: Every entry in `checks/enforcement.config.json` names a wired check.
 - **Checks:**
-  - TC-1 → covered by `adr011-adr-metadata`'s scope going forward; verified 33/33 at launch (status: **warn**)
+  - TC-1 → not wired — `adr011-adr-metadata` checks only the `ADR-NNN-Title.md` filename pattern and a Status marker, not Enforcement-section presence (acknowledged gap; entry corrected 2026-08-02, it originally overstated the check's scope); verified 33/33 manually at launch (status: **warn**)
   - TC-2 → adrcheck itself — an unwired config entry is a BLOCKER (status: **block**, structural)
 - **Not machine-checkable:** Whether a TC honestly captures its ADR's intent, and whether graduation decisions follow the 7-day/real-catch rule — operator judgment, evidenced by the public graduation logs.
 - **Graduation log:** _(empty)_

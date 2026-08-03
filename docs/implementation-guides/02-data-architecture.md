@@ -40,7 +40,6 @@ Lock the data schema before writing handlers.
 
 - Use Supabase's PostgreSQL database for data storage
 - Configure appropriate RLS policies for data security (will be tested in Phase 6)
-- Leverage PostgREST for optimized queries when possible
 - Use Supabase Storage for file uploads when needed
 - Implement appropriate indexing and constraints
 
