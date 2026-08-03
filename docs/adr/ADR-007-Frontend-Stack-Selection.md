@@ -20,6 +20,8 @@ We will adopt the following frontend stack:
 2.  **HTMX:** For enhancing server-rendered HTML with dynamic behaviors triggered via attributes (AJAX, CSS Transitions, WebSockets, etc.) directly from HTML.
 3.  **Alpine.js:** For minimal, declarative client-side interactivity when needed (e.g., dropdowns, modals, simple component state) directly within the HTML markup.
 
+> **Amended 2026-08-02**: The rendering engine below is superseded by [ADR-017](ADR-017-Templ-Adoption.md) — server-side rendering now uses templ, and raw `html/template` is forbidden. The Tailwind/HTMX/Alpine.js stack is unchanged.
+
 These technologies will be used in conjunction with Go's `html/template` engine for server-side rendering.
 
 ## Consequences

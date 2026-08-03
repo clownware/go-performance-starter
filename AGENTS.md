@@ -41,7 +41,7 @@ Strong defaults for writing code in this repo. These rules apply with the same f
 ### Package Layout
 
 - `cmd/api/` — entrypoint only: config load, wiring, graceful shutdown. No business logic.
-- `internal/` is the application. Keep packages focused: `handler` (HTTP), `server` (router + middleware stack), `repository` (data access interfaces + postgres impls), `database` (sqlc-generated — never hand-edit), `view` (templ UI), `middleware`, `auth`, `cache`, `config`, `performance`, `validate`, `webutil`.
+- `internal/` is the application. Keep packages focused: `handler` (HTTP), `server` (router + middleware stack), `repository` (data access interfaces + postgres impls), `database` (sqlc-generated — never hand-edit), `view` (templ UI), `middleware`, `auth`, `cache`, `config`, `jobs` (background jobs), `performance`, `validate`, `webutil`.
 - Dependencies point inward. Handlers depend on repository *interfaces*, not concrete postgres types.
 
 ### Go Style
@@ -94,7 +94,7 @@ How work moves through the repo. These rules apply with the same force as `CLAUD
 | Generated — never hand-edit | `internal/database/*` (sqlc), `internal/view/*_templ.go` (templ), `AGENTS.md` (agents:build) | Edit the source, then regenerate |
 | Don't create | Deployment infra, marketing content, maintenance scripts | Suggest adding to `docs/` instead |
 
-Full rationale in [ADR-019](../docs/adr/ADR-019-Template-Scope-Boundary.md).
+Full rationale in [ADR-019](docs/adr/ADR-019-Template-Scope-Boundary.md).
 
 ### Non-trivial Feature Workflow (ADR-020)
 
@@ -106,7 +106,7 @@ For any feature that touches multiple ADRs, has non-obvious acceptance criteria,
 
 Each pass produces a concrete artefact and announces hand-off explicitly. The operator (human) enforces the hand-off: refuse to merge work that skipped a pass. Trivial changes (typo, single-line, single rename) can skip the pattern.
 
-Full rationale in [ADR-020](../docs/adr/ADR-020-Agent-Roles.md).
+Full rationale in [ADR-020](docs/adr/ADR-020-Agent-Roles.md).
 
 ### Quality Gate (ADR-021)
 
@@ -116,11 +116,11 @@ Before claiming a change is complete, run:
 task ci
 ```
 
-It runs `fmt` (check) + `lint` + `test` (`-race -cover`) + `agents:check` + `test:binary-size` + `scan:vuln`. If it exits non-zero, halt and fix the failure. Do not work around it by lowering thresholds, excluding files, or skipping git hooks with `--no-verify`.
+It runs `fmt` (check) + `lint` + `test` (`-race -cover`) + `agents:check` + `versions:check` + `check:adr` + `test:binary-size` + `test:asset-budgets` + `scan:vuln`. If it exits non-zero, halt and fix the failure. Do not work around it by lowering thresholds, excluding files, or skipping git hooks with `--no-verify`.
 
 The fast inner loop is `task test` and `task lint` individually. Reserve `task ci` for the final gate before claiming done.
 
-Full rationale in [ADR-021](../docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md).
+Full rationale in [ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md).
 
 ### ADR Discipline
 
@@ -157,7 +157,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 
 ```bash
 task dev               # hot-reload dev server (air); watches .go, .templ
-task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + binary-size + vuln
+task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + check:adr + binary-size + asset-budgets + vuln
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
@@ -188,7 +188,7 @@ task demo:reset        # purge guests' demo content + re-seed (refuses without D
 | JavaScript (gzip) | < 50KB |
 | CSS (gzip) | < 30KB |
 
-Budgets are enforced in CI via `task test:performance` / `task test:binary-size`. The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
+Budgets are enforced in CI via `task ci`: the `go test` leg runs the `internal/performance` budget tests, and `test:binary-size` / `test:asset-budgets` gate binary and gzipped JS/CSS sizes (`task test:performance` bundles the same checks for local runs). The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
 
 ### Key ADRs
 
@@ -219,4 +219,4 @@ Budgets are enforced in CI via `task test:performance` / `task test:binary-size`
 
 ### Cross-tool spine
 
-The cross-tool agent context lives in [`AGENTS.md`](../AGENTS.md) at the repo root. It is generated from `CLAUDE.md` plus `.claude/engineering.md`, `.claude/workflow.md`, and this file via `task agents:build`. CI fails if `AGENTS.md` drifts from its sources (see [ADR-022](../docs/adr/ADR-022-Cross-Tool-Agents-Spine.md)). Do not edit `AGENTS.md` directly; edit the source layer instead.
+The cross-tool agent context lives in [`AGENTS.md`](AGENTS.md) at the repo root. It is generated from `CLAUDE.md` plus `.claude/engineering.md`, `.claude/workflow.md`, and this file via `task agents:build`. CI fails if `AGENTS.md` drifts from its sources (see [ADR-022](docs/adr/ADR-022-Cross-Tool-Agents-Spine.md)). Do not edit `AGENTS.md` directly; edit the source layer instead.

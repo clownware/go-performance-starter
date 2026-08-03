@@ -4,6 +4,8 @@
 
 Accepted
 
+> **Amended 2026-08-02**: the code and env samples in this ADR predate the adoption of `kelseyhightower/envconfig` — the authoritative config surface is `internal/config/config.go` and `.env.example`. The real variables are `ENV` (not `ENVIRONMENT`), `HTTP_PORT` (default `4000`, not `PORT=8080`), `DATABASE_URL`, `SUPABASE_URL`/`SUPABASE_ANON_KEY` (set both or neither — auth is disabled when both are empty), optional `SUPABASE_SERVICE_ROLE_KEY` and `METRICS_TOKEN` (there is no separate metrics port), and pool tuning via `DB_MAX_CONNS`/`DB_MIN_CONNS`/`DB_MAX_CONN_LIFETIME`. `JWT_SECRET`, `JWT_EXPIRY`, `ENABLE_CACHE`, and `CACHE_TTL` do not exist. Production env vars are set on the container host per [ADR-025](./ADR-025-Deployment-Target.md) (Fly.io worked example), not in Cloudflare. The §3 env samples and §5 production story below have been corrected; the §2 Go sample stands as the original decision illustration.
+
 ## Context
 
 Applications require different configuration across environments (development, staging, production). Configuration must be secure, manageable, and follow the [Twelve-Factor App](https://12factor.net/config) principle of storing config in the environment. This ADR establishes patterns for configuration management, secrets handling, and environment-specific settings.
@@ -162,68 +164,52 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 
 ```bash
 # .env (local development only - never commit!)
-ENVIRONMENT=development
-PORT=8080
+ENV=development
+HTTP_PORT=4000
 
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 
-# Authentication (use weak secret in dev)
-JWT_SECRET=dev-secret-not-for-production
-
-# Supabase
+# Supabase (set both or neither — auth is disabled when both are empty)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 
-# Performance
-ENABLE_CACHE=true
-CACHE_TTL=5m
-
-# Observability
+# Observability (read by the logger bootstrap in cmd/api/main.go)
 LOG_LEVEL=debug
-METRICS_PORT=9090
 ```
 
 #### Example Configuration (`.env.example`)
 
 ```bash
-# .env.example (committed to repository as template)
-ENVIRONMENT=development
-PORT=8080
+# .env.example (committed to repository as template — the real file at the
+# repo root carries the full annotated surface)
+ENV=development
+HTTP_PORT=4000
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/alpine_saas?sslmode=disable
 
-# Authentication
-JWT_SECRET=generate-strong-secret-for-production
+# Supabase (set both or neither — auth is disabled when both are empty)
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
 
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-
-# Performance
-ENABLE_CACHE=true
-CACHE_TTL=5m
-
-# Observability
-LOG_LEVEL=info
-METRICS_PORT=9090
+# Optional overrides (compiled-in defaults shown)
+# DB_MAX_CONNS=25
+# DB_MIN_CONNS=2
+# DB_MAX_CONN_LIFETIME=30m
+# METRICS_TOKEN=
 ```
 
-#### Production Environment (Cloudflare Environment Variables)
+#### Production Environment (container host secrets — ADR-025)
 
 ```bash
-# Set via Cloudflare Dashboard or CLI
-ENVIRONMENT=production
-PORT=8080
-DATABASE_URL=<managed-db-connection-string>
-JWT_SECRET=<strong-secret-from-secret-manager>
-SUPABASE_URL=<production-supabase-url>
-SUPABASE_ANON_KEY=<production-key>
-ENABLE_CACHE=true
-CACHE_TTL=10m
-LOG_LEVEL=info
-METRICS_PORT=9090
+# Secrets go in the container host's secret store (Fly.io worked example);
+# non-secret vars (ENV=production, HTTP_PORT) live in fly.toml [env].
+fly secrets set \
+  DATABASE_URL=<managed-db-connection-string> \
+  SUPABASE_URL=<production-supabase-url> \
+  SUPABASE_ANON_KEY=<production-key> \
+  METRICS_TOKEN=<bearer-token-gating-/metrics>
 ```
 
 ### 4. Loading Configuration
@@ -265,7 +251,7 @@ func main() {
 - Rotate development secrets quarterly
 
 #### Production
-- Use **Cloudflare Environment Variables** or equivalent platform
+- Use the **container host's secret store** (`fly secrets set` in the ADR-025 worked example) or equivalent platform
 - Use **secret rotation** (every 90 days minimum)
 - Use **per-environment secrets** (staging ≠ production)
 - Consider **secret management service** (AWS Secrets Manager, HashiCorp Vault)
@@ -402,7 +388,7 @@ Maintain configuration documentation in:
 - [ ] Add `.env` to `.gitignore`
 - [ ] Document configuration in README.md
 - [ ] Add configuration tests
-- [ ] Set up production environment variables in Cloudflare
+- [ ] Set up production environment variables on the container host (Fly.io per ADR-025)
 - [ ] Implement secret rotation process
 - [ ] Create configuration troubleshooting guide
 
@@ -411,7 +397,8 @@ Maintain configuration documentation in:
 - [The Twelve-Factor App: Config](https://12factor.net/config)
 - [ADR-001: Foundation](./ADR-001-Foundation.md) (Secret management strategy)
 - [godotenv](https://github.com/joho/godotenv)
-- [Cloudflare Environment Variables](https://developers.cloudflare.com/workers/configuration/environment-variables/)
+- [ADR-025: Deployment Target](./ADR-025-Deployment-Target.md) (production env/secrets on the container host)
+- [Fly.io Secrets](https://fly.io/docs/apps/secrets/)
 
 ## Review Cadence
 

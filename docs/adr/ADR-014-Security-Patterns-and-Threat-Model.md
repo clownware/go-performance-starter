@@ -355,17 +355,19 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
 
 > **Amended 2026-07-05**: statuses corrected against the deployment-readiness audit. The original table marked several mitigations "Implemented" that exist in this ADR but not in code. Do not mark a row ✅ until the code and a test exist.
 
+> **Amended 2026-08-02**: statuses re-verified against the current tree. The hardening-phase gaps from the 2026-07-05 correction have since landed: per-request JWT-claim propagation (A01), HSTS gating and server timeouts (A05), route-scoped rate-limit tiers (A07, partial), CSRF middleware (A08), and slog standardization per ADR-026 (A09).
+
 | Threat | Mitigation | Status |
 |--------|-----------|--------|
-| A01: Broken Access Control | RLS + Authentication middleware | ⚠️ Partial — RLS policies proven in integration tests, but the app does not yet propagate JWT claims to the database per request, so RLS is not engaged at runtime (hardening phase) |
+| A01: Broken Access Control | RLS + Authentication middleware | ✅ Implemented — every repository method runs through `inScope()` (`internal/repository/postgres/scope.go`), which applies `SET LOCAL ROLE` + `request.jwt.claims` per transaction so RLS evaluates against the requester at runtime |
 | A02: Cryptographic Failures | HTTPS, encrypted secrets, JWT | ✅ Implemented (TLS terminates at the edge per ADR-025) |
 | A03: Injection | Parameterized queries, input validation | ✅ Implemented |
 | A04: Insecure Design | Threat modeling, secure defaults | ✅ Implemented |
-| A05: Security Misconfiguration | Security headers, hardened defaults | ⚠️ Partial — headers middleware exists; HSTS `ENV=production` gating and server timeouts pending |
+| A05: Security Misconfiguration | Security headers, hardened defaults | ✅ Implemented — `SecurityHeaders(isProd)` gates HSTS on `ENV=production` (§6); server timeouts set in `cmd/api/main.go` (ReadHeaderTimeout 5s, ReadTimeout 15s, WriteTimeout 45s, IdleTimeout 120s) |
 | A06: Vulnerable Components | Dependency scanning, pinning | ✅ Implemented |
-| A07: Authentication Failures | Rate limiting, JWT expiration | ⚠️ Partial — global IP rate limiter only; the tiered limits in §4 (auth, per-user, per-email) are not yet wired |
-| A08: Data Integrity Failures | CSRF tokens, signed requests | ❌ Not implemented — no CSRF middleware exists; interim mitigation is `SameSite=Lax` cookies (hardening phase) |
-| A09: Logging Failures | Structured logging, log scrubbing | ⚠️ Partial — structured logging present but split across libraries until ADR-026 lands |
+| A07: Authentication Failures | Rate limiting, JWT expiration | ⚠️ Partial — route-scoped tiers wired: global IP limiter (50 rps, burst 10), learn routes 30/min, auth-sensitive actions 5/min (the §4 auth tier); the §4 per-user and per-email tiers are not yet implemented |
+| A08: Data Integrity Failures | CSRF tokens, signed requests | ✅ Implemented — double-submit cookie CSRF middleware (`internal/middleware/csrf.go`, §3) applied globally in the server middleware stack |
+| A09: Logging Failures | Structured logging, log scrubbing | ✅ Implemented — logging standardized on `log/slog` (ADR-026); zerolog removed, enforced by the `adr026-slog-only` check |
 | A10: Server-Side Request Forgery | URL validation, allowlist | ⚠️ Review per feature |
 
 ## Consequences
@@ -441,5 +443,5 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
   - TC-1 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
   - TC-2 → `task scan:vuln` (govulncheck) in `task ci` (status: **block**, pre-existing)
   - TC-3 → sqlc by construction + `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **warn**; owned by ADR-003)
-- **Not machine-checkable:** The OWASP table in this ADR honestly records partially-implemented mitigations (e.g. CSRF ❌, JWT-claim propagation ⚠️) — those are implementation gaps, not check gaps; a check can't gate what doesn't exist. Rate-limit tier values, secret rotation cadence, and log-scrubbing coverage are ops/review territory.
+- **Not machine-checkable:** The OWASP table in this ADR honestly records partially-implemented mitigations (e.g. the §4 per-user/per-email rate-limit tiers in A07) — those are implementation gaps, not check gaps; a check can't gate what doesn't exist. Rate-limit tier values, secret rotation cadence, and log-scrubbing coverage are ops/review territory.
 - **Graduation log:** _(empty)_

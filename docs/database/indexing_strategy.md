@@ -20,13 +20,13 @@ The following constraints are applied to ensure data integrity:
     *   A composite UNIQUE constraint exists on `organization_members(user_id, organization_id)` to prevent duplicate memberships.
 *   **Check Constraints:**
     *   `organizations.plan_type` likely has constraints (defined implicitly by application logic or to be added based on specific plan types).
-    *   `organization_members.role` has a CHECK constraint (`role IN ('owner', 'admin', 'member')`).
+    *   `organization_members.role` has no CHECK constraint — the allowed values (`'owner'`, `'admin'`, `'member'`) are documented only in a column comment and enforced by application logic; the database accepts any string.
 *   **Defaults:** `created_at`, `updated_at`, and `is_active` fields typically have default values.
 
 ## Indexing
 
 *   **Primary Keys:** Automatically indexed by PostgreSQL.
-*   **Foreign Keys:** Foreign key columns (`organization_members.user_id`, `organization_members.organization_id`) are automatically indexed by Supabase/PostgreSQL by default, which is beneficial for joins and cascading deletes.
+*   **Foreign Keys:** PostgreSQL does not automatically index foreign-key columns (only the referenced side's primary/unique key), so the migration creates explicit indexes on `organization_members.organization_id` and `organization_members.user_id` (`idx_org_members_org_id`, `idx_org_members_user_id`), which is beneficial for joins and cascading deletes.
 *   **Unique Constraints:** Columns with UNIQUE constraints (`users.email`, `users.auth_id`, `organizations.slug`, and the composite key on `organization_members`) are automatically indexed.
 *   **RLS Indexes:** Indexes are implicitly necessary for efficient RLS policy evaluation, particularly on columns used in `WHERE` clauses within policies (e.g., `user_id` in `organization_members`).
 *   **Future Considerations:** As application query patterns emerge, additional indexes will be added based on:

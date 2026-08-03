@@ -33,7 +33,7 @@ Implement secure user authentication and permission control using Supabase Auth.
 - **CSRF protection**: Add token validation for non-GET operations (see Phase 5 for client-side implementation)
 - **Row Level Security**: Enforce RLS policies designed in Phase 1
 - **Error messages**: Return generic errors for auth failures
-- **Rate limiting**: Prevent brute force attacks with middleware like ulule/limiter
+- **Rate limiting**: Prevent brute force attacks with the in-memory `golang.org/x/time/rate` middleware (ADR-014 §4)
 - **Audit logging**: Track authentication and authorization events
 
 ## CSRF Integration with HTMX
@@ -75,35 +75,21 @@ func CSRFProtection(next http.Handler) http.Handler {
 
 ## Rate Limiting Implementation
 
-Implement rate limiting for sensitive endpoints, especially authentication:
+Implement rate limiting for sensitive endpoints, especially authentication. The starter's rate limiter is an in-memory per-IP token bucket built on `golang.org/x/time/rate` (ADR-014 §4) — no Redis and no third-party limiter; the stack has no Redis (caching is in-memory plus the Cloudflare edge per ADR-016):
 
 ```go
-// Example using ulule/limiter with Redis store
-import (
-    "github.com/ulule/limiter/v3"
-    "github.com/ulule/limiter/v3/drivers/store/redis"
-)
+// internal/middleware/ratelimit.go — RateLimiter(rps, burst) keeps a
+// token bucket per client IP and evicts stale entries in the background.
+import "golang.org/x/time/rate"
 
-// Configure rate limiter (e.g., 5 attempts per minute)
-rate := limiter.Rate{
-    Period: 1 * time.Minute,
-    Limit:  5,
-}
-
-// Create Redis store for distributed rate limiting
-store, err := redis.NewStore(redisClient)
-if err != nil {
-    log.Fatal(err)
-}
-
-// Create middleware instance
-rateLimiterMiddleware := stdlib.NewMiddleware(
-    limiter.New(store, rate),
-    stdlib.WithForwardHeader(true),
-)
-
-// Apply to sensitive routes
-authGroup.Use(rateLimiterMiddleware.Handler)
+// A global RateLimiter(50, 10) is already applied in the server
+// middleware stack; add stricter tiers on route groups:
+r.Route("/auth", func(authRouter chi.Router) {
+    authRouter.Group(func(strict chi.Router) {
+        strict.Use(mw.RateLimiter(5.0/60.0, 5)) // 5 attempts/min, burst 5
+        // login, signup, password reset...
+    })
+})
 ```
 
 ## Implementation Strategy

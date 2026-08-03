@@ -50,7 +50,7 @@ When using Cloudflare as your edge provider:
 
 ## Timeout Configuration
 
-Configure specific timeout values (non-Workers deployments):
+Configure specific timeout values:
 ```go
 server := &http.Server{
     ReadTimeout:  5 * time.Second,   // Max time to read request
@@ -59,8 +59,6 @@ server := &http.Server{
     Handler:      router,
 }
 ```
-
-Note: This server configuration is for traditional Go HTTP server deployments; Cloudflare Workers environments use different timeout mechanisms.
 
 ## Common Pitfalls
 

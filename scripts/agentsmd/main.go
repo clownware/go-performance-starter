@@ -83,7 +83,7 @@ func generate(root string) ([]byte, error) {
 		}
 		b.WriteString("\n---\n\n")
 		fmt.Fprintf(&b, "<!-- source: %s -->\n\n", rel)
-		b.WriteString(demoteHeadings(string(raw)))
+		b.WriteString(rewriteParentLinks(demoteHeadings(string(raw))))
 	}
 
 	out := strings.TrimRight(b.String(), "\n") + "\n"
@@ -112,6 +112,18 @@ func demoteHeadings(s string) string {
 		}
 	}
 	return strings.Join(lines, "\n")
+}
+
+// rewriteParentLinks rewrites markdown link targets that climb out of the
+// source file's directory ("](../X" → "](X") so they resolve from the repo
+// root, where the generated AGENTS.md lives. Source layers under .claude/
+// link to repo-root files via ../; copied verbatim, those links would point
+// above the repository.
+func rewriteParentLinks(s string) string {
+	for strings.Contains(s, "](../") {
+		s = strings.ReplaceAll(s, "](../", "](")
+	}
+	return s
 }
 
 // repoRoot walks up from the working directory until it finds go.mod.

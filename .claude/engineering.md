@@ -5,7 +5,7 @@ Strong defaults for writing code in this repo. These rules apply with the same f
 ## Package Layout
 
 - `cmd/api/` — entrypoint only: config load, wiring, graceful shutdown. No business logic.
-- `internal/` is the application. Keep packages focused: `handler` (HTTP), `server` (router + middleware stack), `repository` (data access interfaces + postgres impls), `database` (sqlc-generated — never hand-edit), `view` (templ UI), `middleware`, `auth`, `cache`, `config`, `performance`, `validate`, `webutil`.
+- `internal/` is the application. Keep packages focused: `handler` (HTTP), `server` (router + middleware stack), `repository` (data access interfaces + postgres impls), `database` (sqlc-generated — never hand-edit), `view` (templ UI), `middleware`, `auth`, `cache`, `config`, `jobs` (background jobs), `performance`, `validate`, `webutil`.
 - Dependencies point inward. Handlers depend on repository *interfaces*, not concrete postgres types.
 
 ## Go Style

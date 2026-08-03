@@ -24,6 +24,8 @@ The goal is to minimize database queries and expensive computations while mainta
 - **Computed results**: Cache expensive calculations
 - **Session data**: Store in memory for fast access
 
+> **Amended 2026-08-02**: the session-data bullet does not apply — sessions are stateless Supabase JWTs carried in cookies with **no server-side session state** ([ADR-025 §3](ADR-025-Deployment-Target.md)); storing session data in application memory would break the stateless multi-instance design. In-memory caching remains for computed results and hot read paths.
+
 #### Level 3: Build-Time Precomputation
 - **Static content**: Generate at build time, not runtime
 - **Navigation structures**: Compute once at startup

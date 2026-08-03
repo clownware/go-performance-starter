@@ -1,6 +1,6 @@
 # UX Overhaul: Product Spec
 
-> **Status: Partially superseded by [ADR-024](../adr/ADR-024-Demo-Application-Direction.md) (2026-06-11).** The demo direction changed: the per-user **bookmarks** domain and the landing-page scope are replaced by an architecture-explainer + quiz + saveable-flashcards concept with anonymous-guest auth. **The `/patterns` showcase section of this document is retained** as the pattern catalogue for that surface. See [`demo-design-brief.md`](demo-design-brief.md) for the current screen inventory and data model.
+> **Status: Partially superseded by [ADR-024](../adr/ADR-024-Demo-Application-Direction.md) (2026-06-11).** The demo direction changed: the per-user **bookmarks** domain and the landing-page scope are replaced by an architecture-explainer + quiz + saveable-flashcards concept with anonymous-guest auth. **The `/patterns` showcase section of this document is retained** as the pattern catalogue for that surface. See [`demo-design-brief.md`](demo-design-brief.md) for the screen inventory and data model that phase worked from (now historical — the shipped implementation is the source of truth).
 
 Target state for the Alpine Go Performance Starter demo application. This spec defines the page inventory, routes, data models, and showcase content that will be built after the Tailwind v4 and templ migrations are complete.
 

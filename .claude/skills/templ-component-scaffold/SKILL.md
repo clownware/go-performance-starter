@@ -15,7 +15,7 @@ Scaffold a new view in `internal/view/` that matches this repo's templ conventio
    - Pages: `!ls internal/view/pages/*.templ`
    - Partials: `!ls internal/view/partials/*.templ`
    - Components: `!ls internal/view/components/*.templ`
-2. Read `internal/view/props.go` (`BaseProps`, `NewBaseProps`) and `internal/view/render.go` (`Render`, `IsHTMXRequest`).
+2. Read `internal/view/props.go` (`BaseProps`, `NewBaseProps`), `internal/view/render.go` (`Render`), and `internal/view/helpers.go` (`IsHTMXRequest`).
 
 ## Decide the kind
 
@@ -35,7 +35,7 @@ Scaffold a new view in `internal/view/` that matches this repo's templ conventio
 
 ## After scaffolding
 
-1. Add the props struct to `internal/view/props.go` (or alongside the component) with concrete fields.
+1. Define the props struct with concrete fields where existing views put theirs: pages and partials declare it at the top of their own `.templ` file; components add it to `internal/view/components/props.go`.
 2. Run `task templ:generate` to produce the `*_templ.go`. Never hand-edit generated files.
 3. If it's a page, wire the handler to call `view.Render(w, r, status, pages.Foo(props))`, branching on `view.IsHTMXRequest(r)` when a partial variant exists.
 4. Run `task ci` before claiming done.

@@ -17,8 +17,10 @@ Accepted
 Define a single halt-on-violation gate, `task ci`, that an agent must run before claiming any change complete (Constitution rule 9). It chains:
 
 ```
-fmt:check → lint → go test -race -cover ./... → agents:check → test:binary-size → test:asset-budgets → scan:vuln
+fmt:check → lint → go test -race -covermode=atomic ./... → agents:check → versions:check → check:adr → test:binary-size → test:asset-budgets → scan:vuln
 ```
+
+*(Chain as of 2026-08-02 — `versions:check` (ADR-030) and `check:adr` (ADR-033) joined the gate after acceptance; `Taskfile.yml` is authoritative.)*
 
 If it exits non-zero, the agent halts and fixes the failure. It must not lower a threshold, exclude files, or bypass git hooks with `--no-verify`.
 
@@ -43,7 +45,7 @@ If it exits non-zero, the agent halts and fixes the failure. It must not lower a
 ## Enforcement
 <!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
 - **Testable consequences:**
-  - TC-1: `task ci` chains the full gate (fmt, lint, race+coverage tests, agents:check, versions:check, binary/asset budgets, vuln scan).
+  - TC-1: `task ci` chains the full gate (fmt, lint, race+coverage tests, agents:check, versions:check, check:adr, binary/asset budgets, vuln scan).
   - TC-2: `.github/workflows/ci.yml` invokes `task ci` rather than re-implementing its steps.
 - **Checks:**
   - TC-1 → the Taskfile definition itself; any removal is a public diff (status: **block**, pre-existing)

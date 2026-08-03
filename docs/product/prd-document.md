@@ -1,8 +1,10 @@
 # Micro SaaS Starter Kit – Product Requirements Document
 
+> **Status: Superseded in part by [ADR-024](../adr/ADR-024-Demo-Application-Direction.md) (2026-06-11).** The "Items" CRUD resource, billing stub, console email implementation, and welcome-email background job described below were the original demo plan; the shipped demo is an architecture explainer with a quiz and saveable flashcards, and no billing or email packages exist. The stack facts in §6 are kept current; the rest is retained as the original product framing.
+
 ## 1. Executive Summary
 
-The Micro SaaS Starter Kit (MSSK) is an opinionated boilerplate that enables solo developers and small teams to bootstrap a subscription-based SaaS product in minutes. It combines a Go (Chi) backend, HTMX + Alpine.js frontend, Tailwind CSS styling, and Supabase-powered authentication/PostgreSQL—deployed to Cloudflare's edge.
+The Micro SaaS Starter Kit (MSSK) is an opinionated boilerplate that enables solo developers and small teams to bootstrap a subscription-based SaaS product in minutes. It combines a Go (Chi) backend, HTMX + Alpine.js frontend, Tailwind CSS styling, and Supabase-powered authentication/PostgreSQL—shipped as a single Docker image, with Fly.io as the worked-example deploy target (ADR-025).
 
 The kit focuses on core plumbing (auth, CRUD pattern, billing stub, testing, CI) so builders can spend their time on application logic, not infrastructure setup. MSSK ships as an MIT-licensed GitHub template with comprehensive docs and example code.
 
@@ -15,7 +17,7 @@ Setting up a production-viable SaaS baseline is repetitive and error-prone. Deve
 ### Goals
 - Provide secure email/password auth via Supabase with server-side JWT validation
 - Demonstrate user-scoped CRUD ("Items") with HTMX forms and progressive enhancement
-- Ship batteries-included DX (hot reload, linting, tests, CI, container, Cloudflare deploy guide)
+- Ship batteries-included DX (hot reload, linting, tests, CI, container, Fly.io deploy guide)
 - Offer stubs and interfaces for billing, email, background jobs
 - Keep codebase under 2,000 LOC and first-run setup under 15 minutes
 
@@ -59,13 +61,13 @@ Both value clear docs, fast onboarding, and opinionated defaults that map to bes
 - air, Taskfile, sqlc, golangci-lint, unit + integration tests
 
 ### Deployment Story
-- Dockerfile, Cloudflare Pages + Workers guide
+- Dockerfile as the portable contract, Fly.io worked-example deploy (ADR-025)
 
 ## 6. Technical Requirements
 
-- **Language/Frameworks**: Go ≥ 1.22, Chi router, HTMX 1.x, Alpine 3.x, Tailwind 3.x
-- **Database**: PostgreSQL 15 (Supabase), migration via golang-migrate, type-safe access via sqlc
-- **Observability**: zerolog logging, OpenTelemetry hooks (exporter toggle)
+- **Language/Frameworks**: Go ≥ 1.25, Chi router, HTMX 1.x, Alpine 3.x, Tailwind 4.x (CSS-first config)
+- **Database**: PostgreSQL 16 (Supabase), migration via golang-migrate, type-safe access via sqlc
+- **Observability**: structured logging via stdlib log/slog (ADR-026), Prometheus metrics via client_golang
 - **Security**: CSRF tokens on form posts, rate-limit middleware, secure headers
 - **Config**: 12-Factor env var loader with .env.example + direnv
 
@@ -102,7 +104,7 @@ Both value clear docs, fast onboarding, and opinionated defaults that map to bes
 | Risk | Mitigation |
 |------|------------|
 | Supabase pricing changes | Abstract auth via interface; docs note alternative altruAuth |
-| Cloudflare Workers Go SDK breaking changes | Pin SDK version; CI fails on breaking API |
+| Fly.io platform changes | Docker image is the portable contract (ADR-025); any container host works |
 | Scope creep | Strict PR gate: non-goals table must stay intact |
 
 ## 11. Out-of-Scope (Reiterated)

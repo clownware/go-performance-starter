@@ -11,7 +11,7 @@ Define immutable decisions first; changing these later is painful.
 | 0.03 | Decide development workflow | Consistent reloading and automation saves time |
 | 0.04 | Initialize project structure | Structure affects maintainability |
 | 0.05 | Setup git hooks & CI | Early quality gates prevent issues |
-| 0.06 | Choose structured logger | This starter uses zerolog for performance |
+| 0.06 | Choose structured logger | This starter uses the standard library's log/slog (ADR-026) |
 | 0.07 | Create Architecture Decision Record | Document foundational choices |
 | 0.08 | Pick base linting tool | Select golangci-lint for code quality |
 | 0.09 | Define secret management strategy | Never use .env files in production |
@@ -31,15 +31,15 @@ Define immutable decisions first; changing these later is painful.
 ## Deployment Considerations in ADR
 
 When creating your ADR, document deployment considerations:
-- Cloudflare Workers Classic has a 1MB WASM binary size limit
-- Consider code size when selecting dependencies
-- For larger applications, plan for Durable Objects or alternative deployments
+- This starter deploys as a single stateless container on Fly.io behind the Cloudflare proxy (ADR-025)
+- Consider binary size when selecting dependencies — `task ci` enforces a 20MB binary budget (`test:binary-size`), and CI's docker job adds a 30MB image budget
+- Cloudflare terminates TLS and serves as CDN; Workers is not an application runtime
 
 ## Security Strategy Hand-off
 
 Document your secret management approach in the ADR, covering:
-- Development environment: godotenv or similar for local development only
-- Staging/Production: Managed secrets (Cloudflare environment variables)
+- Development environment: 1Password injection via `op run --env-file=.env.tpl` — no plaintext secrets on disk
+- Staging/Production: Fly.io secrets (`fly secrets`) and GitHub Actions secrets
 - Runtime injection: How environment variables will be loaded at runtime
 - Rotation strategy: How secrets will be rotated in production
 
@@ -59,24 +59,28 @@ This documentation will be referenced in the Deployment phase (Phase 10).
 This starter kit uses the following structure:
 
 ```
-starter-alpine-go-performance/
+go-performance-starter/
 ├── cmd/
 │   └── api/         # Application entry point (main.go)
 ├── internal/        # Private application code
 │   ├── auth/        # Authentication related code
+│   ├── cache/       # In-memory caching
 │   ├── config/      # Configuration handling
-│   ├── database/    # Database connection and models
+│   ├── database/    # Database connection and sqlc-generated models
 │   ├── handler/     # HTTP handlers
+│   ├── jobs/        # Background jobs
 │   ├── middleware/  # Application middleware
-│   ├── model/       # Domain models
+│   ├── performance/ # Performance budget tests
 │   ├── repository/  # Data access layer
-│   └── server/      # Server configuration
+│   ├── server/      # Server configuration
+│   ├── validate/    # Input validation
+│   ├── view/        # templ pages, partials, and components (ADR-017)
+│   └── webutil/     # Shared HTTP helpers
 ├── migrations/      # Database migrations
 ├── sql/             # SQLC query files
 │   ├── queries/     # SQL queries for SQLC
 │   └── schema/      # Database schema
 ├── web/             # Web assets
-│   ├── templates/   # HTML templates
 │   └── static/      # Static assets (css, js, images)
 ├── .air.toml        # Hot reload config
 ├── .golangci.yml    # Linting rules

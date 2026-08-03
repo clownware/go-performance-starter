@@ -8,7 +8,7 @@ This document outlines the security practices implemented in the Alpine Go Perfo
 - **Implementation**: Supabase Auth provides JWT tokens
 - **Validation**: Server-side validation of JWT signatures
 - **Storage**: Tokens stored in HttpOnly cookies
-- **Refresh**: Token refresh strategy with sliding expiration
+- **Refresh**: No sliding expiration — an expired or invalid session is logged out (both cookies cleared, redirect to `/auth/page`). The `sb-refresh-token` cookie is used exactly once, during guest-to-registered upgrade, to re-mint tokens so the `is_anonymous` claim reflects the upgrade immediately (`internal/auth/upgrade.go`)
 - **Protection**: Protection against common JWT attacks (algorithm confusion, etc.)
 
 ### Configuration
@@ -36,16 +36,16 @@ func JWTMiddleware(next http.Handler) http.Handler {
 ## CSRF Protection
 
 ### Implementation
-- Tokens generated per-session
-- Transmitted via HTML meta tag (for HTMX) or hidden form fields
+- Stateless double-submit cookie (ADR-014 §3): a random 32-byte token in an HttpOnly cookie, 12h max-age, reissued transparently on expiry
+- Transmitted to HTMX via an `hx-headers` attribute on `<body>` (sent as the `X-CSRF-Token` header) or a hidden `csrf_token` form field
 - Verified on all state-changing operations (non-GET requests)
-- Token rotation on authentication events
+- No per-session binding and no rotation — the submitted token is compared against the cookie in constant time
 
 ### Implementation Pattern
 ```go
-// Generate CSRF token
-func generateCSRFToken(userID string) string {
-    // Generate a unique token with expiration
+// Generate CSRF token — random 32 bytes, stored in the double-submit cookie
+func generateCSRFToken() string {
+    // crypto/rand bytes, hex-encoded
     // ...
 }
 
@@ -64,8 +64,8 @@ func CSRFProtection(next http.Handler) http.Handler {
             requestToken = r.FormValue("csrf_token")
         }
         
-        // Validate token
-        if !validateCSRFToken(requestToken) {
+        // Validate token against the double-submit cookie (constant-time compare)
+        if !matchesCSRFCookie(r, requestToken) {
             http.Error(w, "Invalid CSRF token", http.StatusForbidden)
             return
         }
@@ -84,23 +84,14 @@ func CSRFProtection(next http.Handler) http.Handler {
 
 ### Configuration
 ```go
-// Example rate limiting middleware (using ulule/limiter)
-rate := limiter.Rate{
-    Period: 1 * time.Minute,
-    Limit:  5, // 5 attempts per minute
-}
+// Per-IP token bucket built on golang.org/x/time/rate
+// (internal/middleware/ratelimit.go), tiered via route groups (ADR-014)
 
-// Create store (memory for development, Redis for production)
-store := memory.NewStore()
+// Global limit: 50 req/sec, burst 10
+r.Use(mw.RateLimiter(50, 10))
 
-// Create middleware
-rateLimiterMiddleware := stdlib.NewMiddleware(
-    limiter.New(store, rate),
-    stdlib.WithForwardHeader(true),
-)
-
-// Apply to sensitive routes
-authGroup.Use(rateLimiterMiddleware.Handler)
+// Strict tier on credential endpoints: 5 attempts per minute, burst 5
+strict.Use(mw.RateLimiter(5.0/60.0, 5))
 ```
 
 ## Database Security
@@ -135,11 +126,15 @@ CREATE POLICY user_items_policy ON public.items
 // Secure headers middleware
 func SecureHeaders(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
+        // script-src carries 'unsafe-eval' for Alpine expression compilation
+        // (ADR-028); inline <script> stays forbidden — no 'unsafe-inline' for scripts.
+        w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
         w.Header().Set("X-Frame-Options", "DENY")
         w.Header().Set("X-Content-Type-Options", "nosniff")
         w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-        w.Header().Set("X-XSS-Protection", "1; mode=block")
+        // Set to 0 per OWASP recommendation — CSP supersedes it, and non-zero
+        // values can introduce XSS vulnerabilities in older browsers.
+        w.Header().Set("X-XSS-Protection", "0")
         
         next.ServeHTTP(w, r)
     })
@@ -177,7 +172,7 @@ func validateItem(item *Item) error {
 ## Additional Security Measures
 
 - All dependencies regularly updated and scanned
-- Production secrets managed through Cloudflare environments, not .env files
+- Production secrets managed through `fly secrets set` on Fly.io (ADR-015, ADR-025), not .env files
 - Structured logging with sensitive data redaction
 - Panic recovery middleware to prevent information disclosure
 - Database connection parameters properly tuned

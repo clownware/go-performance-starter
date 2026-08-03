@@ -19,7 +19,7 @@ Establish the structural foundation of your application.
 ## Core Principles
 
 - Group routes by feature for better organization
-- Implement middleware in the correct order (recovery, logging, etc.)
+- Implement middleware in the correct order (see Middleware Order below)
 - Create a consistent error handler that responds appropriately to content types
 - Use view models to separate database models from presentation
 - Implement proper request validation with meaningful error messages
@@ -33,16 +33,21 @@ Establish the structural foundation of your application.
 - **Poor validation**: Validate all input with clear error messages
 - **Inadequate logging**: Ensure logs include request context
 
-## Recommended Middleware Order
+## Middleware Order
 
-1. Recovery (panic handling) - comes first so that panics still need request IDs in logs
+The shipped stack (`setupMiddleware` in `internal/server/server.go`), outermost first:
+
+1. Security headers - set on every response, even errors (ADR-014; HSTS in prod per ADR-025)
 2. Request ID generation - ensures every request gets a unique identifier
-3. Logging - captures request metadata with the request ID
-4. Request timeout - prevents long-running requests
-5. CORS (if needed) - handles cross-origin requests
-6. Authentication (if applicable) - validates user identity 
-7. Request body limiting - prevents request body attacks
-8. Content type validation - ensures proper request format
+3. Real IP resolution - resolves the client IP via trusted proxies (ADR-027; must precede the rate limiter)
+4. Request body limiting - caps request body size before anything reads it
+5. Rate limiting - global per-IP token bucket (ADR-014)
+6. Compression - gzip/deflate responses
+7. Metrics - tracks request metrics (uses the request ID)
+8. Logging - captures request metadata with the request ID
+9. Recovery (panic handling) - sits inside Request ID so panic logs carry request IDs, and inside Logging so a recovered panic is logged as a completed 500 instead of a dropped connection
+10. Request timeout - prevents long-running requests
+11. CSRF - double-submit-cookie validation (ADR-014 §3)
 
 ## Exit Criteria
 

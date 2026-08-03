@@ -6,14 +6,14 @@ This document outlines the technology stack and methodology for building high-pe
 
 | Component | Technology | Key Benefit |
 |-----------|------------|-------------|
-| **Language** | Go 1.22+ | Improved handler signatures, generics |
+| **Language** | Go 1.25+ | Improved handler signatures, generics |
 | **Web Framework** | Chi | Standard lib alignment |
 | **Frontend** | HTMX + Alpine.js | Minimal JavaScript approach |
-| **HTML Generation** | html/template | Standard library integration |
+| **HTML Generation** | templ | Type-safe compiled templates (ADR-017) |
 | **Development Tools** | air, taskfile | Fast reloading, automation |
 | **Database & Auth** | Supabase | Integrated PostgreSQL and auth |
 | **Background Jobs** | Goroutines/Asynq | Simple or advanced processing |
-| **Deployment** | Cloudflare Pages/Workers | Edge distribution |
+| **Deployment** | Fly.io container + Cloudflare proxy | Single stateless container, CDN at the edge (ADR-025) |
 | **Observability** | Structured logging | Base monitoring |
 
 ## Adapting the Methodology
@@ -35,13 +35,12 @@ This document outlines the technology stack and methodology for building high-pe
 ## Key Technology Decisions
 
 - **Chi over Fiber**: Better standard library alignment and HTTP/2 support
-- **html/template over custom solutions**: Wider developer familiarity
+- **templ over html/template**: Type-safe, compiled templates; raw html/template is forbidden (ADR-017)
 - **Supabase for backend services**: Provides PostgreSQL database, authentication, and storage
 - **Goroutines for simple tasks**: No dependencies for basic background jobs
 - **Asynq + Redis** for complex background processing (when needed)
-- **Cloudflare Pages/Workers**: Edge distribution with global distribution
-  - **Note**: Workers Classic has a 1MB size limit for WASM binaries; plan deployment accordingly
-- **Logging choice**: This starter kit uses zerolog for performance; zap is a viable alternative
+- **Fly.io container behind the Cloudflare proxy**: Single stateless container; Cloudflare terminates TLS and serves as CDN (ADR-025)
+- **Logging choice**: This starter kit uses the standard library's log/slog (ADR-026)
 
 ## Common Pitfalls & Prevention
 

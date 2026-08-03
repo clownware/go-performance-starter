@@ -41,6 +41,6 @@ Investigated whether modern sqlc versions have resolved the CTE parsing limitati
 - **Testable consequences:**
   - TC-1: The named queries `SetPrimaryOrganizationStep1`/`SetPrimaryOrganizationStep2` exist and compile.
 - **Checks:**
-  - TC-1 → sqlc generation + `go build` in `task ci` (status: **block**, pre-existing)
+  - TC-1 → `go build`/`go test` in `task ci`, which compile the committed sqlc-generated code (status: **block**, pre-existing). sqlc generation itself does not run in CI; regeneration drift is unchecked (see ADR-003 Enforcement).
 - **Not machine-checkable:** The <10ms combined-latency budget (monitored via ADR-000 instrumentation, not gated).
 - **Graduation log:** _(empty)_
