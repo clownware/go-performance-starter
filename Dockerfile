@@ -22,7 +22,7 @@ COPY internal/view ./internal/view
 RUN npx @tailwindcss/cli -i ./web/static/css/input.css -o ./web/static/css/app.css --minify
 
 # Stage 2: Build Go application
-FROM golang:1.25-alpine AS go-builder
+FROM golang:1.26-alpine AS go-builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
