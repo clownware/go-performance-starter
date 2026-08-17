@@ -67,7 +67,8 @@ jobs:
         # go.mod is the single source of the templ version — a version pinned
         # here went stale once already (v0.3.1001 vs go.mod's v0.3.1020, #83).
         go install github.com/a-h/templ/cmd/templ@$(go list -m -f '{{.Version}}' github.com/a-h/templ)
-        go install golang.org/x/vuln/cmd/govulncheck@latest
+        # govulncheck is a `tool` directive in go.mod for the same reason.
+        go install tool
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xz migrate
         sudo mv migrate /usr/local/bin/
         sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
