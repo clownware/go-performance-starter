@@ -2,7 +2,7 @@ module github.com/clownware/go-performance-starter
 
 go 1.25.0
 
-toolchain go1.26.5
+toolchain go1.26.6
 
 require (
 	github.com/a-h/templ v0.3.1020
@@ -32,8 +32,14 @@ require (
 	github.com/supabase-community/postgrest-go v0.0.12 // indirect
 	github.com/supabase-community/storage-go v0.8.1 // indirect
 	github.com/tomnomnom/linkheader v0.0.0-20250811210735-e5fe3b51442e // indirect
+	golang.org/x/mod v0.39.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	golang.org/x/telemetry v0.0.0-20260811182544-a038080d80e5 // indirect
+	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/vuln v1.7.0 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 )
+
+tool golang.org/x/vuln/cmd/govulncheck
