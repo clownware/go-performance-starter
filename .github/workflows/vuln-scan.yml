@@ -1,0 +1,35 @@
+# Weekly vulnerability scan. CI runs govulncheck on every push/PR, but a quiet
+# repo stays green while new CVEs accumulate — this catches advisories (like the
+# go1.26.x stdlib batches) without waiting for the next push. The govulncheck
+# version comes from go.mod's `tool` directive, the single source of tool
+# versions (see the pin-staleness notes in ci.yml).
+name: Vulnerability Scan
+
+on:
+  schedule:
+    - cron: '0 7 * * 1' # weekly, Monday 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Generate templ (govulncheck needs a buildable package graph)
+        run: |
+          go install github.com/a-h/templ/cmd/templ@$(go list -m -f '{{.Version}}' github.com/a-h/templ)
+          templ generate
+
+      - name: Run govulncheck
+        run: go tool govulncheck ./...
