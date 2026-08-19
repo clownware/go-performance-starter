@@ -114,15 +114,21 @@ func main() {
 	slog.Info("Memory metrics collector started")
 
 	// Guest mode: reap expired anonymous accounts (ADR-024). Auth-side
-	// cleanup runs only when the service role key is configured.
+	// cleanup — deleting reaped guests' GoTrue twins and sweeping orphaned
+	// anonymous identities that never got a public row (#82) — runs only
+	// when the service role key is configured.
 	if cfg.GuestModeEnabled {
 		var deleteAuthUser jobs.AuthUserDeleter
+		var listAuthUsers jobs.AuthUserLister
 		if ac := srv.AuthClient(); ac != nil && ac.HasServiceRoleKey() {
 			deleteAuthUser = ac.AdminDeleteUser
+			listAuthUsers = ac.AdminListAnonymousUsers
 		}
-		reaper := jobs.NewReaper(postgres.NewReaperRepo(db), deleteAuthUser, cfg.GuestTTL, cfg.ReaperInterval)
+		reaper := jobs.NewReaper(postgres.NewReaperRepo(db), deleteAuthUser, cfg.GuestTTL, cfg.ReaperInterval).
+			WithAuthLister(listAuthUsers)
 		reaper.Start(ctx)
-		slog.Info("Anonymous-user reaper started", "ttl", cfg.GuestTTL, "interval", cfg.ReaperInterval)
+		slog.Info("Anonymous-user reaper started", "ttl", cfg.GuestTTL, "interval", cfg.ReaperInterval,
+			"auth_side_cleanup", deleteAuthUser != nil)
 	}
 
 	// Set up the HTTP server

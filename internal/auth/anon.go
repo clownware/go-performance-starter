@@ -107,6 +107,97 @@ func (a *AuthClient) AdminDeleteUser(ctx context.Context, userID string) error {
 	return nil
 }
 
+// AdminUser is the slice of a GoTrue admin user record the reaper needs:
+// identity and age. Everything else GoTrue returns is ignored on purpose.
+type AdminUser struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// adminListPageSize is GoTrue's maximum per_page for the admin list.
+const adminListPageSize = 1000
+
+// maxAdminListPages bounds the walk so a GoTrue that never returns a short
+// page (or a paging bug) cannot spin a background job forever. 100 pages ×
+// 1000 users is far beyond a demo's guest population; hitting it is an error
+// worth a log line, not silent truncation.
+const maxAdminListPages = 100
+
+// AdminListAnonymousUsers lists every anonymous GoTrue identity via the admin
+// REST API (GET /auth/v1/admin/users, paginated). It exists for the reaper's
+// orphan pass (#82): anonymous auth users with no public.users row — failed
+// provisioning, or a sign-in that never reached a UserLoader route — are
+// invisible to the row-driven reap and would otherwise linger forever.
+// Requires the service role key. gotrue-go v1.2.1's AdminListUsers has
+// neither pagination nor is_anonymous, hence the direct REST call, same as
+// SignInAnonymously and AdminDeleteUser.
+func (a *AuthClient) AdminListAnonymousUsers(ctx context.Context) ([]AdminUser, error) {
+	return a.adminListAnonymousUsers(ctx, adminListPageSize)
+}
+
+func (a *AuthClient) adminListAnonymousUsers(ctx context.Context, perPage int) ([]AdminUser, error) {
+	if a.serviceRoleKey == "" {
+		return nil, fmt.Errorf("admin list users: service role key not configured")
+	}
+	var out []AdminUser
+	for page := 1; ; page++ {
+		if page > maxAdminListPages {
+			return nil, fmt.Errorf("admin list users: more than %d pages of %d — refusing to walk further", maxAdminListPages, perPage)
+		}
+		users, err := a.adminListUsersPage(ctx, page, perPage)
+		if err != nil {
+			return nil, err
+		}
+		for _, u := range users {
+			if u.IsAnonymous {
+				out = append(out, AdminUser{ID: u.ID, CreatedAt: u.CreatedAt})
+			}
+		}
+		// A short (or empty) page is the last one. GoTrue also sends a Link
+		// header, but counting is simpler and needs no header parsing.
+		if len(users) < perPage {
+			return out, nil
+		}
+	}
+}
+
+type adminUserRecord struct {
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	IsAnonymous bool      `json:"is_anonymous"`
+}
+
+func (a *AuthClient) adminListUsersPage(ctx context.Context, page, perPage int) ([]adminUserRecord, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/auth/v1/admin/users?page=%d&per_page=%d", strings.TrimRight(a.baseURL, "/"), page, perPage), nil)
+	if err != nil {
+		return nil, fmt.Errorf("admin list users: build request: %w", err)
+	}
+	req.Header.Set("apikey", a.serviceRoleKey)
+	req.Header.Set("Authorization", "Bearer "+a.serviceRoleKey)
+
+	resp, err := anonHTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("admin list users: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20)) // 1000 users × ~2KB each fits comfortably
+	if err != nil {
+		return nil, fmt.Errorf("admin list users: read response: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("admin list users: gotrue returned %d: %s", resp.StatusCode, truncate(string(body), 200))
+	}
+	var payload struct {
+		Users []adminUserRecord `json:"users"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return nil, fmt.Errorf("admin list users: decode response: %w", err)
+	}
+	return payload.Users, nil
+}
+
 // TokenClaims extracts the sub and is_anonymous claims from a JWT payload
 // WITHOUT verifying the signature — callers must only use it on tokens
 // already validated (AuthMiddleware validates via GoTrue GetUser first).

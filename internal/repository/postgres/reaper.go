@@ -48,3 +48,34 @@ func (r *ReaperRepo) DeleteExpiredAnonymousUsers(ctx context.Context, olderThan 
 	}
 	return rows, nil
 }
+
+// ListExistingAuthIDs returns the subset of authIDs that have a public users
+// row (orphan pass, #82). Runs as service_role for the same reason the
+// delete does: RLS scopes users_self_access to one identity, and this has
+// to see every row to answer "does anyone own this auth id" truthfully —
+// a false "no" would delete a live guest's identity.
+func (r *ReaperRepo) ListExistingAuthIDs(ctx context.Context, authIDs []string) ([]string, error) {
+	if len(authIDs) == 0 {
+		return nil, nil
+	}
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("reaper: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx, "SET LOCAL ROLE service_role"); err != nil {
+		return nil, fmt.Errorf("reaper: set service_role: %w", err)
+	}
+	rows, err := database.New(tx).ListExistingAuthIDs(ctx, authIDs)
+	if err != nil {
+		return nil, fmt.Errorf("reaper: list existing auth ids: %w", err)
+	}
+	out := make([]string, 0, len(rows))
+	for _, row := range rows {
+		if row.Valid {
+			out = append(out, row.String)
+		}
+	}
+	return out, nil
+}

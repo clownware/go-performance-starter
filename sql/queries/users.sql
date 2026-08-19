@@ -90,3 +90,12 @@ WHERE id = $1;
 DELETE FROM users
 WHERE is_anonymous AND created_at < $1
 RETURNING id, auth_id;
+
+-- name: ListExistingAuthIDs :many
+-- Reaper orphan pass (#82): of the given GoTrue auth ids, which have a
+-- public users row. Anonymous auth users with no row (provisioning failed,
+-- or signed in but never hit a UserLoader route) are invisible to
+-- DeleteExpiredAnonymousUsers and must be reaped from the auth side.
+SELECT auth_id
+FROM users
+WHERE auth_id = ANY(sqlc.arg(auth_ids)::text[]);

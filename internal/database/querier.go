@@ -41,6 +41,11 @@ type Querier interface {
 	GetUserByAuthID(ctx context.Context, authID pgtype.Text) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserPrimaryOrganization(ctx context.Context, userID uuid.UUID) (Organization, error)
+	// Reaper orphan pass (#82): of the given GoTrue auth ids, which have a
+	// public users row. Anonymous auth users with no row (provisioning failed,
+	// or signed in but never hit a UserLoader route) are invisible to
+	// DeleteExpiredAnonymousUsers and must be reaped from the auth side.
+	ListExistingAuthIDs(ctx context.Context, authIds []string) ([]pgtype.Text, error)
 	ListFlashcardsByUser(ctx context.Context, userID uuid.UUID) ([]Flashcard, error)
 	ListOrganizationMembers(ctx context.Context, arg ListOrganizationMembersParams) ([]OrganizationMember, error)
 	ListOrganizationMembershipsForUser(ctx context.Context, userID uuid.UUID) ([]ListOrganizationMembershipsForUserRow, error)

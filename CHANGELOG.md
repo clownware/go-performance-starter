@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pre-ADR leftovers it surfaced (profile-form success box, first-run CTA
   card, two `bg-blue-600` empty-state buttons) now ride `bg-success/10
   text-success` and `.btn-primary` (#85)
+- The guest reaper now sweeps the auth side too (#82): anonymous GoTrue
+  identities older than the TTL with no `public.users` row — orphans from
+  failed provisioning (the #81 window) or sign-ins that never hit a
+  UserLoader route — were invisible to the row-driven reap and lingered
+  forever. A second pass lists anonymous users via the admin API
+  (paginated, page-capped), asks the database which have rows under
+  `service_role`, and deletes only the positively row-less ones; failures
+  are logged, never guessed through
 - WCAG AA contrast across both modes (2026-07-17 audit; every Lighthouse
   a11y deduction was this): `--color-teal` darkened `#468189` → `#427a82`
   (white button text 4.41→4.84:1), small-text `text-primary` usages moved

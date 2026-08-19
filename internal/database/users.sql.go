@@ -182,6 +182,36 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const listExistingAuthIDs = `-- name: ListExistingAuthIDs :many
+SELECT auth_id
+FROM users
+WHERE auth_id = ANY($1::text[])
+`
+
+// Reaper orphan pass (#82): of the given GoTrue auth ids, which have a
+// public users row. Anonymous auth users with no row (provisioning failed,
+// or signed in but never hit a UserLoader route) are invisible to
+// DeleteExpiredAnonymousUsers and must be reaped from the auth side.
+func (q *Queries) ListExistingAuthIDs(ctx context.Context, authIds []string) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, listExistingAuthIDs, authIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []pgtype.Text{}
+	for rows.Next() {
+		var auth_id pgtype.Text
+		if err := rows.Scan(&auth_id); err != nil {
+			return nil, err
+		}
+		items = append(items, auth_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, email, name, avatar_url, auth_id, is_active, last_login_at, created_at, updated_at, first_run_complete, is_anonymous
 FROM users
