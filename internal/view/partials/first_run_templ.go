@@ -160,7 +160,7 @@ func firstRunCTAs(errorMsg string) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<!-- Step 3: CTAs --><div id=\"first-run-ctas\" class=\"rounded bg-green-50 border border-green-200 p-6\"><h3 class=\"text-lg font-semibold mb-2 text-green-700\">You're all set!</h3><p class=\"mb-4 text-green-900\">Protect your account by enabling two-factor authentication and reviewing your security settings.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<!-- Step 3: CTAs --><div id=\"first-run-ctas\" class=\"rounded bg-success/10 p-6\"><h3 class=\"text-lg font-semibold mb-2 text-success\">You're all set!</h3><p class=\"mb-4 text-foreground\">Protect your account by enabling two-factor authentication and reviewing your security settings.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -183,7 +183,7 @@ func firstRunCTAs(errorMsg string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"flex flex-col sm:flex-row gap-3\"><a href=\"/settings/security\" class=\"px-4 py-2 rounded bg-green-600 text-white font-medium shadow hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-green-600 text-center\">Set Up 2FA</a> <a href=\"/dashboard\" class=\"px-4 py-2 rounded bg-surface text-green-700 border border-green-600 font-medium shadow hover:bg-green-50 focus:outline-hidden focus:ring-2 focus:ring-green-600 text-center\">Go to Dashboard</a></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"flex flex-col sm:flex-row gap-3\"><a href=\"/settings/security\" class=\"px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-teal-strong focus:outline-hidden focus:ring-2 focus:ring-primary text-center\">Set Up 2FA</a> <a href=\"/dashboard\" class=\"px-4 py-2 rounded bg-surface text-foreground border border-border font-medium shadow hover:bg-surface-hover focus:outline-hidden focus:ring-2 focus:ring-primary text-center\">Go to Dashboard</a></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

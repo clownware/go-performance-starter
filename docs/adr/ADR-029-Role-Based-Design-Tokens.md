@@ -93,4 +93,5 @@ so drift fails `task ci` (ADR-021).
 - **Checks:**
   - TC-1, TC-2 → `internal/view/tokens_test.go` via `task ci` (status: **block**, pre-existing)
 - **Not machine-checkable:** Rules 3–4 (brand constants on solid buttons; status feedback as tint + role text) — semantic composition judgment.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-08-19 — TC-2 widened (#85): the `tokens_test.go` scan now rejects raw utilities from **every** Tailwind palette family (`slate|gray|zinc|…|green|blue|…-N00`), not only gray — the original rule let a `bg-green-100` success box and two `bg-blue-600` CTAs survive as pre-ADR leftovers. Status unchanged (**block**, pre-existing); the widened rule shipped with the four leftovers fixed, so it landed green.
