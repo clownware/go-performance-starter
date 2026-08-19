@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- The ADR-029 token scan (`internal/view/tokens_test.go`) now rejects raw
+  utilities from every Tailwind palette family, not just gray; the four
+  pre-ADR leftovers it surfaced (profile-form success box, first-run CTA
+  card, two `bg-blue-600` empty-state buttons) now ride `bg-success/10
+  text-success` and `.btn-primary` (#85)
 - WCAG AA contrast across both modes (2026-07-17 audit; every Lighthouse
   a11y deduction was this): `--color-teal` darkened `#468189` → `#427a82`
   (white button text 4.41→4.84:1), small-text `text-primary` usages moved

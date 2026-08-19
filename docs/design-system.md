@@ -2,7 +2,7 @@
 
 The starter ships a role-based token system ([ADR-029](adr/ADR-029-Role-Based-Design-Tokens.md), mirroring astro-performance-starter's ADR-047): components never name colors, they name **roles** — `bg-surface`, `text-muted-foreground`, `border-border` — and the roles resolve to the palette. Dark mode flips the role variables, not the components. The practical payoff for a template: **restyle the entire app by editing one `@theme` block.**
 
-Everything below is enforced in CI, not aspirational: `internal/view/tokens_test.go` scans every `.templ` file and fails `task ci` on raw grays or `dark:` color variants.
+Everything below is enforced in CI, not aspirational: `internal/view/tokens_test.go` scans every `.templ` file and fails `task ci` on raw palette utilities (any Tailwind color family — `gray-500`, `green-100`, `blue-600` …) or `dark:` color variants.
 
 ## The roles
 
@@ -26,7 +26,7 @@ Defined once in [`web/static/css/input.css`](../web/static/css/input.css); the `
 ## The rules (CI-enforced)
 
 1. **Dark mode flips tokens, not utilities.** Components never write `dark:` color variants; the `.dark` block in `input.css` is the only place color forks per mode.
-2. **No raw grays in components.** `text-gray-500` is a violation; `text-muted-foreground` is the vocabulary.
+2. **No raw palette utilities in components.** `text-gray-500` is a violation and so is `bg-green-100`; `text-muted-foreground` and `bg-success/10 text-success` are the vocabulary. The scan covers every Tailwind color family, not just gray (#85).
 3. **Solid buttons ride brand constants** (`.btn-primary` stays teal with white text in both modes); **text and tints ride roles** and flip for contrast.
 4. **Status feedback is tint + role text** (`bg-danger/10 text-danger`), never a solid status background with white text.
 

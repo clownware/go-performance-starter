@@ -61,7 +61,7 @@ func ProfileForm(props ProfileFormProps) templ.Component {
 			}
 		}
 		if props.Success {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"{ show: true }\" x-show=\"show\" x-init=\"setTimeout(() => show = false, 3000)\" class=\"bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded\">Profile updated successfully!</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"{ show: true }\" x-show=\"show\" x-init=\"setTimeout(() => show = false, 3000)\" class=\"bg-success/10 text-success px-4 py-2 rounded\">Profile updated successfully!</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
