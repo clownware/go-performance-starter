@@ -8,19 +8,27 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// Pinger is the readiness dependency the detail probe checks. It is the
+// consumer-side seam that keeps this package driver-free (ADR-003): the
+// server passes its *pgxpool.Pool, which satisfies it; tests pass a fake.
+type Pinger interface {
+	Ping(ctx context.Context) error
+}
 
 var (
 	startTime  time.Time
 	startOnce  sync.Once
-	healthDB   *pgxpool.Pool
+	healthDB   Pinger
 	healthDBMu sync.RWMutex
 )
 
-// InitHealth records the server start time and stores the DB pool for health checks.
-func InitHealth(db *pgxpool.Pool) {
+// InitHealth records the server start time and stores the dependency the
+// detail probe pings. Pass nil when no database is configured — callers
+// holding a typed nil pointer must convert it to a nil interface themselves,
+// or the probe will ping a nil pool.
+func InitHealth(db Pinger) {
 	startOnce.Do(func() {
 		startTime = time.Now()
 	})

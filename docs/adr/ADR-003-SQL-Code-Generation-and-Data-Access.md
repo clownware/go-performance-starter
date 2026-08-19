@@ -61,4 +61,5 @@ Key considerations include:
 - **Checks:**
   - TC-1, TC-2 → `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **warn**)
 - **Not machine-checkable:** Repository-interface granularity and naming judgment. sqlc-regeneration drift (`task db:generate` output vs committed code) has no wired check — recorded as a TODO in ADR-033.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-08-19 — the one standing `adr003-no-sql-in-handlers` finding (health handler imported `pgxpool` to ping the pool, ADR-033 launch note) was resolved by refactoring the ping behind a consumer-side `handler.Pinger` seam (#92, #99); the check has reported clean since. Status stays **warn** — promotion per the 7-clean-days rule.

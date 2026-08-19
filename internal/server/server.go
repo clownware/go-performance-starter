@@ -59,8 +59,14 @@ func New(cfg *config.Config, db *pgxpool.Pool) (*Server, error) {
 		authClient: authClient,
 	}
 
-	// Initialize health check with DB pool for connectivity checks
-	handler.InitHealth(db)
+	// Initialize health check with DB pool for connectivity checks. The pool
+	// is handed over as a handler.Pinger (ADR-003 keeps the handler
+	// driver-free); a nil pool must become a nil interface, not a typed nil.
+	var pinger handler.Pinger
+	if db != nil {
+		pinger = db
+	}
+	handler.InitHealth(pinger)
 
 	s.setupMiddleware()
 	s.setupRoutes()
