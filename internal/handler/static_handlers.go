@@ -8,16 +8,6 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view/pages"
 )
 
-// DashboardPage renders the dashboard page.
-func DashboardPage(w http.ResponseWriter, r *http.Request) {
-	props := pages.DashboardPageProps{
-		BaseProps: view.NewBaseProps("Dashboard"),
-	}
-	if err := view.Render(w, r, http.StatusOK, pages.DashboardPage(props)); err != nil {
-		slog.Error("Failed to render dashboard page", "error", err)
-	}
-}
-
 // TermsPage renders the terms of service page.
 func TermsPage(w http.ResponseWriter, r *http.Request) {
 	props := view.NewBaseProps("Terms of Service")

@@ -1,8 +1,9 @@
 package partials
 
-// Signed-out previews for the /learn surfaces (browse-first UX): instead of
-// bouncing a curious visitor to the login page, show what's inside and why
-// it needs an identity. Mutations still redirect — these render on GET only.
+// Signed-out previews for the /learn surfaces and the dashboard (browse-first
+// UX): instead of bouncing a curious visitor to the login page, show what's
+// inside and why it needs an identity. Mutations still redirect — these
+// render on GET only.
 
 // QuizTeaser previews the quiz for signed-out visitors.
 templ QuizTeaser() {
@@ -47,6 +48,33 @@ templ FlashcardsTeaser() {
 		</p>
 		<div class="flex flex-wrap gap-3">
 			<a href="/auth/page" class="btn btn-primary inline-block">Sign in to review</a>
+			<a href="/auth/page?mode=signup" class="btn btn-secondary inline-block">Create an account</a>
+		</div>
+	</div>
+}
+
+// DashboardTeaser previews the progress dashboard for signed-out visitors
+// (#69). Also what the widget endpoints return to a session that lapsed
+// between the page load and the widget load.
+templ DashboardTeaser() {
+	<div
+		data-testid="dashboard-teaser"
+		class="bg-surface rounded-lg shadow-md p-6"
+	>
+		<h2 class="text-xl font-semibold mb-2">Your progress, in one place</h2>
+		<p class="mb-3 text-muted-foreground">
+			The dashboard pulls your <a href="/learn/quiz" class="text-link underline">quiz</a>
+			score history and the <a href="/learn/flashcards" class="text-link underline">flashcards</a>
+			you still have to review into two widgets — each a server-rendered
+			fragment loaded over HTMX behind a skeleton, reading rows that Row
+			Level Security scopes to you.
+		</p>
+		<p class="mb-5 text-muted-foreground">
+			That's why it needs to know who you are: there is no progress to show
+			until there is an identity to own it.
+		</p>
+		<div class="flex flex-wrap gap-3">
+			<a href="/auth/page" class="btn btn-primary inline-block">Sign in to see your progress</a>
 			<a href="/auth/page?mode=signup" class="btn btn-secondary inline-block">Create an account</a>
 		</div>
 	</div>

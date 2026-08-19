@@ -149,7 +149,6 @@ func (s *Server) setupRoutes() {
 	r := s.router // Use the router from the Server struct
 
 	// Static & Informational Pages
-	r.Get("/dashboard", handler.DashboardPage)
 	r.Get("/terms", handler.TermsPage)
 	r.Get("/privacy", handler.PrivacyPage)
 
@@ -181,13 +180,13 @@ func (s *Server) setupRoutes() {
 	// Pattern showcase (ADR-024 surface 2): public, stub data, no DB/auth.
 	handler.PatternsRoutes(r)
 
-	// Quiz + flashcards (ADR-024 surface 3): RLS-scoped persistence behind a
-	// browse-first identity chain. GuestSession issues anonymous identities
-	// only when guest mode is enabled (config-gated: requires anonymous
-	// sign-ins in Supabase). OptionalAuth/OptionalUserLoader load a valid
-	// session exactly like the strict pair but let signed-out GETs through —
-	// the handlers render a why-sign-in teaser for them and guard every
-	// mutation (nil user → redirect to login).
+	// Quiz + flashcards + dashboard (ADR-024 surface 3): RLS-scoped
+	// persistence behind a browse-first identity chain. GuestSession issues
+	// anonymous identities only when guest mode is enabled (config-gated:
+	// requires anonymous sign-ins in Supabase). OptionalAuth/OptionalUserLoader
+	// load a valid session exactly like the strict pair but let signed-out
+	// GETs through — the handlers render a why-sign-in teaser for them and
+	// guard every mutation (nil user → redirect to login).
 	if s.authClient != nil && s.db != nil {
 		r.Group(func(learn chi.Router) {
 			if s.cfg.GuestModeEnabled {
@@ -198,12 +197,21 @@ func (s *Server) setupRoutes() {
 			// Anonymous-writable surface: stricter tier on top of the global
 			// limiter (ADR-024 accompanying constraints).
 			learn.Use(mw.RateLimiter(30.0/60.0, 20))
-			handler.QuizRoutes(learn, postgres.NewQuizRepo(s.db, database.New(s.db)))
-			handler.FlashcardRoutes(learn, postgres.NewFlashcardRepo(s.db, database.New(s.db)))
+			quizRepo := postgres.NewQuizRepo(s.db, database.New(s.db))
+			cardRepo := postgres.NewFlashcardRepo(s.db, database.New(s.db))
+			handler.QuizRoutes(learn, quizRepo)
+			handler.FlashcardRoutes(learn, cardRepo)
+			// Progress dashboard (#69): reads the same RLS-scoped rows the
+			// quiz and flashcards write, so it rides the same identity chain.
+			handler.DashboardRoutes(learn, quizRepo, cardRepo)
 			// Guest → registered upgrade (#68): same identity chain as the
 			// other /learn surfaces; the POST adds the strict credential tier.
 			handler.UpgradeRoutes(learn, s.authClient, s.cfg.IsProduction())
 		})
+	} else {
+		// No identity chain to mount under: keep the dashboard shell routed
+		// (it renders the teaser) so the nav link never 404s.
+		r.Get("/dashboard", handler.DashboardPage)
 	}
 
 	// --- Authentication Routes ---

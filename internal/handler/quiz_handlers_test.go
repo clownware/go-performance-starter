@@ -23,11 +23,15 @@ import (
 type fakeQuizRepo struct {
 	questions    []database.QuizQuestion
 	correctCount int64
+	// history is the read-side attempt log (most recent first) served by
+	// ListAttemptsByUser; attempts below records the write side.
+	history []database.QuizAttempt
 
-	listErr   error
-	getErr    error
-	recordErr error
-	countErr  error
+	listErr         error
+	getErr          error
+	recordErr       error
+	countErr        error
+	listAttemptsErr error
 
 	attempts []database.CreateQuizAttemptParams
 }
@@ -79,8 +83,13 @@ func (f *fakeQuizRepo) RecordAttempt(_ context.Context, params database.CreateQu
 	}, nil
 }
 
-func (f *fakeQuizRepo) ListAttemptsByUser(_ context.Context, _ uuid.UUID, _, _ int32) ([]database.QuizAttempt, error) {
-	return nil, nil
+func (f *fakeQuizRepo) ListAttemptsByUser(_ context.Context, _ uuid.UUID, limit, offset int32) ([]database.QuizAttempt, error) {
+	if f.listAttemptsErr != nil {
+		return nil, f.listAttemptsErr
+	}
+	start := min(int(offset), len(f.history))
+	end := min(start+int(limit), len(f.history))
+	return f.history[start:end], nil
 }
 
 func (f *fakeQuizRepo) CountCorrectByUser(_ context.Context, _ uuid.UUID) (int64, error) {
