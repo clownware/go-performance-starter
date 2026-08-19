@@ -12,10 +12,17 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Cancel superseded runs on the same PR; never cancel default-branch pushes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ci:
     name: Quality Gate (task ci)
     runs-on: ubuntu-latest
+    # Without a cap a hung step runs to GitHub's 360-minute default; this job averages ~3 min.
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -112,6 +119,7 @@ jobs:
   docker:
     name: Docker Image
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v7
 
