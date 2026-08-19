@@ -7,23 +7,37 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/clownware/go-performance-starter/internal/config"
 	mw "github.com/clownware/go-performance-starter/internal/middleware"
 )
 
-func newTestServer(t *testing.T, env string) *Server {
-	t.Helper()
-	cfg := &config.Config{
-		Env:         env,
-		HTTPPort:    "4000",
-		DatabaseURL: "postgres://localhost:5432/test",
-		DBMaxConns:  25,
+// testConfig returns the baseline auth-disabled config for the given env.
+// Tests that need other knobs (trusted proxies, metrics token, Supabase)
+// mutate the returned value before calling newServer.
+func testConfig(env string) *config.Config {
+	return &config.Config{
+		Env:                 env,
+		HTTPPort:            "4000",
+		DatabaseURL:         "postgres://localhost:5432/test",
+		DBMaxConns:          25,
+		MaxRequestBodyBytes: 1 << 20,
 	}
-	srv, err := New(cfg, nil)
+}
+
+func newServer(t *testing.T, cfg *config.Config, db *pgxpool.Pool) *Server {
+	t.Helper()
+	srv, err := New(cfg, db)
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}
 	return srv
+}
+
+func newTestServer(t *testing.T, env string) *Server {
+	t.Helper()
+	return newServer(t, testConfig(env), nil)
 }
 
 // TestServer_CSRFWiring proves the CSRF middleware is wired into the router,
@@ -97,21 +111,35 @@ func TestServer_StubDemosRetired(t *testing.T) {
 	}
 }
 
-// TestServer_MetricsGating proves /metrics visibility follows environment.
+// TestServer_MetricsGating proves /metrics visibility follows environment and
+// METRICS_TOKEN: open in development, hidden (404) in production without a
+// token, and bearer-gated (401 on mismatch) in either env once a token is set.
 func TestServer_MetricsGating(t *testing.T) {
 	tests := []struct {
-		name       string
-		env        string
-		wantStatus int
+		name          string
+		env           string
+		token         string
+		authorization string
+		wantStatus    int
 	}{
-		{"open in development", "development", http.StatusOK},
-		{"hidden in production without token", "production", http.StatusNotFound},
+		{"open in development", "development", "", "", http.StatusOK},
+		{"hidden in production without token", "production", "", "", http.StatusNotFound},
+		{"token accepted in development", "development", "metrics-test-token", "Bearer metrics-test-token", http.StatusOK},
+		{"token accepted in production", "production", "metrics-test-token", "Bearer metrics-test-token", http.StatusOK},
+		{"missing bearer rejected when token set", "development", "metrics-test-token", "", http.StatusUnauthorized},
+		{"wrong bearer rejected in production", "production", "metrics-test-token", "Bearer nope", http.StatusUnauthorized},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := newTestServer(t, tt.env)
+			cfg := testConfig(tt.env)
+			cfg.MetricsToken = tt.token
+			srv := newServer(t, cfg, nil)
+			req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+			if tt.authorization != "" {
+				req.Header.Set("Authorization", tt.authorization)
+			}
 			rec := httptest.NewRecorder()
-			srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+			srv.ServeHTTP(rec, req)
 			if rec.Code != tt.wantStatus {
 				t.Errorf("GET /metrics status = %d, want %d", rec.Code, tt.wantStatus)
 			}
