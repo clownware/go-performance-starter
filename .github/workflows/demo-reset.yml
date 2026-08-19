@@ -18,6 +18,8 @@ jobs:
   gate:
     name: Check demo secrets
     runs-on: ubuntu-latest
+    # Without a cap a hung step runs to GitHub's 360-minute default.
+    timeout-minutes: 5
     outputs:
       has-db-url: ${{ steps.check.outputs.has-db-url }}
     steps:
@@ -36,6 +38,7 @@ jobs:
   reset:
     name: Reset demo data
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: gate
     if: needs.gate.outputs.has-db-url == 'true' && vars.DEMO_MODE == '1'
     env:

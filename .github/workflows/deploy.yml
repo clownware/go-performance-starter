@@ -21,6 +21,8 @@ jobs:
   gate:
     name: Check deploy secrets
     runs-on: ubuntu-latest
+    # Without a cap a hung step runs to GitHub's 360-minute default.
+    timeout-minutes: 5
     outputs:
       has-fly-token: ${{ steps.check.outputs.has-fly-token }}
     steps:
@@ -39,6 +41,7 @@ jobs:
   deploy:
     name: Deploy (Fly.io example)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: gate
     if: needs.gate.outputs.has-fly-token == 'true'
     env:

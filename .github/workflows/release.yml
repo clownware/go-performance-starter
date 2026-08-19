@@ -17,6 +17,8 @@ jobs:
   image:
     name: Build & Push Image
     runs-on: ubuntu-latest
+    # Without a cap a hung step runs to GitHub's 360-minute default.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -72,6 +74,7 @@ jobs:
   stamp:
     name: Stamp versions.json
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: image
     steps:
       # Stamp the manifest's "template" field on the default branch — the ref
@@ -101,6 +104,7 @@ jobs:
   migrate:
     name: Apply Migrations
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: image
     env:
       DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
@@ -124,6 +128,7 @@ jobs:
   deploy:
     name: Deploy (Fly.io example)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: migrate
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

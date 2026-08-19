@@ -17,6 +17,8 @@ jobs:
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
+    # Without a cap a hung step runs to GitHub's 360-minute default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 
