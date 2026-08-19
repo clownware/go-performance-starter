@@ -41,6 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   generated files; warn-only until graduated per ADR-033 §4 (#90). CI now
   installs sqlc and no longer regenerates templ before the gate (that step
   was hiding exactly this drift)
+- `adr015-no-hardcoded-secrets` in the ADR check suite (`task check:adr`,
+  warn-only): a minimal high-signal secret scanner over shipped source and
+  config — AWS/GitHub/Slack/Google/Stripe key shapes, private-key blocks
+  and JWT literals everywhere (tests included), plus secret-named
+  assignments to opaque literals outside tests with placeholders excused.
+  Go-native inside adrcheck per ADR-033 §5; gitleaks stays the escalation
+  if the graduation log shows gaps (#91). The suite's walkers now also skip
+  `.claude/` (agent worktrees were tripping `adr025-deploy-scope`)
 - Password reset flow (#71): request page (`/auth/recover`, anti-enumeration
   generic response), server-side `token_hash` verification via direct GoTrue
   REST (`/auth/reset` — no client JS; requires the Reset Password email

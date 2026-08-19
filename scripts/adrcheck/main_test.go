@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -551,6 +552,94 @@ func TestRunSuite(t *testing.T) {
 			}
 			if failed != tt.wantExitFail {
 				t.Errorf("failed = %v, want %v", failed, tt.wantExitFail)
+			}
+		})
+	}
+}
+
+func TestCheckNoHardcodedSecrets(t *testing.T) {
+	// Synthetic credentials assembled at runtime so this test file never
+	// itself contains a string the scanner would flag.
+	awsKey := "AKIA" + strings.Repeat("Q", 16)
+	ghPat := "ghp_" + strings.Repeat("a1", 18)
+	jwt := "eyJ" + strings.Repeat("A", 20) + "." + strings.Repeat("B", 20) + "." + strings.Repeat("C", 20)
+	pem := "-----BEGIN RSA " + "PRIVATE KEY-----\nMIIB...\n-----END RSA PRIVATE KEY-----"
+	opaque := "sk9Qm2Vt7ZpL4xR8cNb3Wy6Hd1" // 26 chars, no placeholder words
+
+	tests := []struct {
+		name  string
+		files map[string]string
+		want  int
+	}{
+		{
+			name: "clean tree passes",
+			files: map[string]string{
+				"internal/config/config.go": "package config\nvar key = os.Getenv(\"API_KEY\")\n",
+				".env.example":              "SUPABASE_ANON_KEY=your-anon-key-here\n",
+				".env.tpl":                  "SUPABASE_SERVICE_ROLE_KEY=op://Personal/go-perf-starter/service_role\n",
+			},
+		},
+		{
+			name:  "AWS access key id in Go source",
+			files: map[string]string{"internal/auth/x.go": "package auth\nconst k = \"" + awsKey + "\"\n"},
+			want:  1,
+		},
+		{
+			name:  "GitHub token in a workflow",
+			files: map[string]string{".github/workflows/ci.yml": "env:\n  TOKEN: " + ghPat + "\n"},
+			want:  1,
+		},
+		{
+			name:  "private key block in fly.toml",
+			files: map[string]string{"fly.toml": "[env]\nKEY='''\n" + pem + "\n'''\n"},
+			want:  1,
+		},
+		{
+			name:  "JWT literal (Supabase keys are JWTs) in SQL",
+			files: map[string]string{"sql/demo/seed.sql": "-- " + jwt + "\n"},
+			want:  1,
+		},
+		{
+			name:  "generic secret assignment with an opaque value",
+			files: map[string]string{"cmd/api/main.go": "package main\nvar apiKey = \"" + opaque + "\"\n"},
+			want:  1,
+		},
+		{
+			name:  "generic pattern ignores placeholders",
+			files: map[string]string{"cmd/api/main.go": "package main\nvar apiKey = \"your-api-key-goes-here-please\"\nvar pw = \"changeme-changeme-changeme\"\n"},
+			want:  0,
+		},
+		{
+			name:  "generic pattern skips test files (fixtures), vendor patterns do not",
+			files: map[string]string{"internal/auth/x_test.go": "package auth\nvar password = \"" + opaque + "\"\nvar k = \"" + awsKey + "\"\n"},
+			want:  1,
+		},
+		{
+			name: "generated, vendored, and doc files are out of scope",
+			files: map[string]string{
+				"internal/view/pages/x_templ.go": "package pages\nvar k = \"" + awsKey + "\"\n",
+				"web/static/js/htmx.min.js":      "var k=\"" + awsKey + "\"",
+				"docs/adr/ADR-099-X.md":          "Example: " + awsKey + "\n",
+				"node_modules/x/index.js":        "var k=\"" + awsKey + "\"",
+			},
+			want: 0,
+		},
+		{
+			name:  "one violation per line, line number reported",
+			files: map[string]string{"scripts/x/main.go": "package main\n\nvar a = \"" + awsKey + "\"\n"},
+			want:  1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeTree(t, root, tt.files)
+			got := checkNoHardcodedSecrets(root)
+			if len(got) != tt.want {
+				t.Errorf("got %d violations, want %d: %v", len(got), tt.want, got)
+			}
+			if tt.name == "one violation per line, line number reported" && len(got) == 1 && !strings.Contains(got[0], "scripts/x/main.go:3:") {
+				t.Errorf("violation should name file:line, got %q", got[0])
 			}
 		})
 	}
