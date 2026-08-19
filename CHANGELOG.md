@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `/health` readiness probe pings its dependency through a consumer-side
+  `handler.Pinger` seam instead of importing `pgxpool` directly — the one
+  standing `adr003-no-sql-in-handlers` warning from the ADR-033 launch is
+  resolved by refactor, not allowlist (#92, #99)
+
 ### Fixed
 - WCAG AA contrast across both modes (2026-07-17 audit; every Lighthouse
   a11y deduction was this): `--color-teal` darkened `#468189` → `#427a82`
