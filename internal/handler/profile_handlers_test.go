@@ -94,9 +94,28 @@ func TestProfileView(t *testing.T) {
 		user     *types.UserResponse
 		dbUser   *database.User
 		wantName string
+		wantBody []string // substrings the page must contain (#97)
+		wantNot  []string // substrings the page must not contain
 	}{
 		{name: "anonymous context"},
-		{name: "authenticated user", user: &types.UserResponse{User: types.User{Email: "ada@example.com"}}},
+		{
+			name: "authenticated user",
+			user: &types.UserResponse{User: types.User{Email: "ada@example.com"}},
+			// #97: account email shown read-only, password section and
+			// sign-out form present.
+			wantBody: []string{"ada@example.com", `id="password-form"`, `hx-post="/profile/password"`, `action="/auth/logout"`},
+			wantNot:  []string{"browsing as a guest"},
+		},
+		{
+			// #97: guests have no email or password in GoTrue — the account
+			// section points at the upgrade flow instead, and the password
+			// form is not rendered.
+			name:     "guest account sees upgrade prompt instead of email and password",
+			user:     &types.UserResponse{User: types.User{}},
+			dbUser:   &database.User{ID: uuid.New(), IsAnonymous: true},
+			wantBody: []string{"browsing as a guest", `href="/learn/upgrade"`, `action="/auth/logout"`},
+			wantNot:  []string{`id="password-form"`},
+		},
 		{
 			// The persisted row is the source of truth (#70): a saved name
 			// must survive reloads instead of reverting to token metadata.
@@ -134,6 +153,178 @@ func TestProfileView(t *testing.T) {
 			}
 			if tt.wantName != "" && !strings.Contains(w.Body.String(), tt.wantName) {
 				t.Errorf("ProfileView() body missing %q", tt.wantName)
+			}
+			for _, want := range tt.wantBody {
+				if !strings.Contains(w.Body.String(), want) {
+					t.Errorf("ProfileView() body missing %q", want)
+				}
+			}
+			for _, not := range tt.wantNot {
+				if strings.Contains(w.Body.String(), not) {
+					t.Errorf("ProfileView() body must not contain %q", not)
+				}
+			}
+		})
+	}
+}
+
+// TestProfilePasswordUpdate pins the authenticated change-password flow
+// (#97): it reuses the password-reset machinery — an authenticated
+// UpdateUser on the session token — with the same validation contract, and
+// refuses for guests, whose GoTrue identity has no password to change.
+func TestProfilePasswordUpdate(t *testing.T) {
+	registered := &database.User{ID: uuid.New()}
+	guest := &database.User{ID: uuid.New(), IsAnonymous: true}
+
+	tests := []struct {
+		name         string
+		dbUser       *database.User
+		cookie       string // sb-access-token; "" = absent
+		htmx         bool
+		form         string
+		gotrueStatus int // 0 = GoTrue must not be called
+		gotrueBody   string
+		wantStatus   int
+		wantLocation string
+		wantBody     string
+		wantToast    string
+	}{
+		{
+			name:         "no user in context redirects to login",
+			cookie:       "tok",
+			form:         "password=newpass123&password_confirm=newpass123",
+			wantStatus:   http.StatusSeeOther,
+			wantLocation: "/auth/page",
+		},
+		{
+			name:       "guest account cannot change a password it does not have",
+			dbUser:     guest,
+			cookie:     "tok",
+			htmx:       true,
+			form:       "password=newpass123&password_confirm=newpass123",
+			wantStatus: http.StatusForbidden,
+			wantBody:   "Guest accounts have no password",
+		},
+		{
+			name:         "missing session cookie redirects to login",
+			dbUser:       registered,
+			cookie:       "",
+			form:         "password=newpass123&password_confirm=newpass123",
+			wantStatus:   http.StatusSeeOther,
+			wantLocation: "/auth/page",
+		},
+		{
+			name:       "empty password is a 422 with a field error",
+			dbUser:     registered,
+			cookie:     "tok",
+			htmx:       true,
+			form:       "password=&password_confirm=",
+			wantStatus: http.StatusUnprocessableEntity,
+			wantBody:   "Password cannot be empty.",
+		},
+		{
+			name:       "mismatched confirmation is a 422 with a field error",
+			dbUser:     registered,
+			cookie:     "tok",
+			htmx:       true,
+			form:       "password=newpass123&password_confirm=other",
+			wantStatus: http.StatusUnprocessableEntity,
+			wantBody:   "Passwords do not match.",
+		},
+		{
+			name:         "gotrue policy rejection surfaces without internals",
+			dbUser:       registered,
+			cookie:       "tok",
+			htmx:         true,
+			form:         "password=short&password_confirm=short",
+			gotrueStatus: http.StatusUnprocessableEntity,
+			gotrueBody:   `{"error_description":"Password should be at least 6 characters"}`,
+			wantStatus:   http.StatusUnprocessableEntity,
+			wantBody:     "Could not update password",
+		},
+		{
+			name:         "success (HTMX) re-renders the form with success and a toast",
+			dbUser:       registered,
+			cookie:       "tok",
+			htmx:         true,
+			form:         "password=newpass123&password_confirm=newpass123",
+			gotrueStatus: http.StatusOK,
+			gotrueBody:   `{"id":"6d3f4c9a-92c8-4a2e-9b6e-0d6a3f1c2b4d","email":"a@b.com"}`,
+			wantStatus:   http.StatusOK,
+			wantBody:     "Password updated",
+			wantToast:    "Password updated.",
+		},
+		{
+			name:         "success (plain form) redirects back to the profile",
+			dbUser:       registered,
+			cookie:       "tok",
+			form:         "password=newpass123&password_confirm=newpass123",
+			gotrueStatus: http.StatusOK,
+			gotrueBody:   `{"id":"6d3f4c9a-92c8-4a2e-9b6e-0d6a3f1c2b4d","email":"a@b.com"}`,
+			wantStatus:   http.StatusSeeOther,
+			wantLocation: "/profile",
+		},
+		{
+			name:       "validation error on a plain form re-renders the full page",
+			dbUser:     registered,
+			cookie:     "tok",
+			form:       "password=&password_confirm=",
+			wantStatus: http.StatusUnprocessableEntity,
+			wantBody:   "<html",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotrueCalled := false
+			var gotPath, gotAuth string
+			client := newFakeGoTrue(t, func(w http.ResponseWriter, r *http.Request) {
+				gotrueCalled = true
+				gotPath = r.URL.Path
+				gotAuth = r.Header.Get("Authorization")
+				w.WriteHeader(tt.gotrueStatus)
+				_, _ = w.Write([]byte(tt.gotrueBody))
+			})
+
+			req := formRequest("/profile/password", tt.form)
+			if tt.dbUser != nil {
+				req = withDBUser(req, tt.dbUser, nil)
+			}
+			if tt.cookie != "" {
+				req.AddCookie(&http.Cookie{Name: "sb-access-token", Value: tt.cookie})
+			}
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
+			rec := httptest.NewRecorder()
+
+			ProfilePasswordUpdate(client)(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (body: %s)", rec.Code, tt.wantStatus, rec.Body.String())
+			}
+			if tt.wantLocation != "" && rec.Header().Get("Location") != tt.wantLocation {
+				t.Errorf("Location = %q, want %q", rec.Header().Get("Location"), tt.wantLocation)
+			}
+			if tt.wantBody != "" && !strings.Contains(rec.Body.String(), tt.wantBody) {
+				t.Errorf("body missing %q:\n%s", tt.wantBody, rec.Body.String())
+			}
+			if tt.wantToast != "" && !strings.Contains(rec.Header().Get("HX-Trigger"), tt.wantToast) {
+				t.Errorf("HX-Trigger = %q, want it to carry %q", rec.Header().Get("HX-Trigger"), tt.wantToast)
+			}
+			if tt.gotrueStatus == 0 && gotrueCalled {
+				t.Error("GoTrue was called but the request should have been rejected before that")
+			}
+			if tt.gotrueStatus != 0 {
+				if !gotrueCalled {
+					t.Fatal("GoTrue was not called")
+				}
+				if gotPath != "/auth/v1/user" {
+					t.Errorf("GoTrue path = %q, want /auth/v1/user (UpdateUser)", gotPath)
+				}
+				if gotAuth != "Bearer tok" {
+					t.Errorf("GoTrue Authorization = %q, want the session token", gotAuth)
+				}
 			}
 		})
 	}

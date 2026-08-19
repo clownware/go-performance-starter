@@ -15,12 +15,18 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
-// ProfilePageProps holds data for the profile page.
+// ProfilePageProps holds data for the profile page. Email and IsGuest come
+// from the authenticated identity; Errors/Success belong to the name form,
+// PasswordErrors/PasswordSuccess to the change-password form (#97).
 type ProfilePageProps struct {
 	view.BaseProps
-	Name    string
-	Errors  map[string]string
-	Success bool
+	Name            string
+	Email           string
+	IsGuest         bool
+	Errors          map[string]string
+	Success         bool
+	PasswordErrors  map[string]string
+	PasswordSuccess bool
 }
 
 func ProfilePage(props ProfilePageProps) templ.Component {
@@ -56,7 +62,40 @@ func ProfilePage(props ProfilePageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto bg-surface text-foreground rounded shadow p-6\"><h1 class=\"text-2xl font-semibold mb-4\">Profile</h1><form id=\"profile-form\" hx-post=\"/profile\" hx-target=\"#profile-form\" hx-swap=\"innerHTML\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto space-y-6\"><section class=\"bg-surface text-foreground rounded shadow p-6\" aria-labelledby=\"account-heading\"><h1 id=\"account-heading\" class=\"text-2xl font-semibold mb-4\">Profile</h1><dl class=\"mb-6\"><dt class=\"text-sm font-medium text-muted-foreground\">Account email</dt><dd class=\"mt-1\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if props.IsGuest {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<span class=\"text-foreground\">You're browsing as a guest — no email is attached to this account.</span> <a href=\"/learn/upgrade\" class=\"text-link hover:underline ml-1\">Create an account to keep your progress</a>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else if props.Email != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<span class=\"text-foreground\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 string
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(props.Email)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/profile.templ`, Line: 36, Col: 50}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<span class=\"text-muted-foreground\">No email on file</span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</dd></dl><form id=\"profile-form\" hx-post=\"/profile\" hx-target=\"#profile-form\" hx-swap=\"innerHTML\" method=\"post\" action=\"/profile\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -72,7 +111,40 @@ func ProfilePage(props ProfilePageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</form></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</form></section>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if !props.IsGuest {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<section class=\"bg-surface text-foreground rounded shadow p-6\" aria-labelledby=\"password-heading\"><h2 id=\"password-heading\" class=\"text-xl font-semibold mb-1\">Change password</h2><p class=\"text-sm text-muted-foreground mb-4\">Your signed-in session is the credential — you won't be asked for the current password.</p><form id=\"password-form\" hx-post=\"/profile/password\" hx-target=\"#password-form\" hx-swap=\"innerHTML\" method=\"post\" action=\"/profile/password\" autocomplete=\"on\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = components.CSRFField().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = partials.PasswordForm(partials.PasswordFormProps{
+					Errors:  props.PasswordErrors,
+					Success: props.PasswordSuccess,
+				}).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</form></section>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<section class=\"bg-surface text-foreground rounded shadow p-6\" aria-labelledby=\"session-heading\"><h2 id=\"session-heading\" class=\"text-xl font-semibold mb-1\">Session</h2><p class=\"text-sm text-muted-foreground mb-4\">Sign out of this browser.</p><form hx-post=\"/auth/logout\" hx-target=\"body\" method=\"post\" action=\"/auth/logout\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.CSRFField().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<button type=\"submit\" class=\"btn btn-secondary\">Sign out</button></form></section></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
