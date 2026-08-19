@@ -11,12 +11,18 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"github.com/clownware/go-performance-starter/internal/view"
 	"github.com/clownware/go-performance-starter/internal/view/layouts"
+	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
-// DashboardPageProps holds data for the dashboard page.
+// DashboardPageProps holds data for the progress dashboard (#69): the page
+// is the widgets host — each widget ships as a skeleton slot and loads its
+// fragment over HTMX (partials/dashboard_widgets.templ).
 type DashboardPageProps struct {
 	view.BaseProps
-	HasProjects bool
+	// Teaser marks a signed-out visit: preview the dashboard, sell the sign-in.
+	Teaser bool
+	// GuestBanner marks an anonymous identity: offer the upgrade (#68).
+	GuestBanner bool
 }
 
 func DashboardPage(props DashboardPageProps) templ.Component {
@@ -52,87 +58,50 @@ func DashboardPage(props DashboardPageProps) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto bg-surface text-foreground rounded shadow p-6 mt-12\"><h1 class=\"text-3xl font-bold\">Dashboard</h1><p>Welcome to your dashboard. This page is ready for your custom SaaS widgets and stats.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-3xl mx-auto\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if !props.HasProjects {
-				templ_7745c5c3_Err = emptyState().Render(ctx, templ_7745c5c3_Buffer)
+			if props.GuestBanner {
+				templ_7745c5c3_Err = partials.GuestBanner().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			if props.HasProjects {
-				templ_7745c5c3_Err = skeletonTable().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<h1 class=\"text-2xl font-semibold mb-2\">Dashboard</h1><p class=\"text-muted-foreground mb-6\">Your quiz score history and the flashcards left to review — each widget is a server-rendered fragment behind a skeleton, reading rows that Row Level Security scopes to you.</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if props.Teaser {
+				templ_7745c5c3_Err = partials.DashboardTeaser().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"grid gap-6 sm:grid-cols-2\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = partials.QuizWidgetSkeleton().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = partials.FlashcardWidgetSkeleton().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
 		templ_7745c5c3_Err = layouts.Base(props.BaseProps).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-func emptyState() templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var3 == nil {
-			templ_7745c5c3_Var3 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"flex flex-col items-center justify-center py-20 text-center\"><div class=\"mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10\"><svg class=\"h-8 w-8 text-link\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\" stroke=\"currentColor\" stroke-width=\"2\"></circle> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8v8m4-4H8\"></path></svg></div><h2 class=\"mb-2 text-2xl font-semibold text-foreground\">Welcome to Your Dashboard!</h2><p class=\"mb-6 max-w-md text-base text-muted-foreground\">You haven't added any projects yet. Get started by creating your first project and unlock the full power of your SaaS workspace.</p><a href=\"/projects/new\" class=\"btn btn-primary inline-block shadow focus:outline-hidden focus:ring-2 focus:ring-offset-2\">Create Project</a></section>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-func skeletonTable() templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div x-data=\"{ loading: true }\" class=\"mt-10\"><!-- Skeleton Loader --><div x-show=\"loading\" x-transition.opacity.duration.500ms class=\"space-y-2\" aria-hidden=\"true\"><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-border h-6 w-1/4\"></div><div class=\"rounded bg-border h-6 w-1/4\"></div><div class=\"rounded bg-border h-6 w-1/4\"></div></div><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-border h-6 w-1/4\"></div><div class=\"rounded bg-border h-6 w-1/4\"></div><div class=\"rounded bg-border h-6 w-1/4\"></div></div><div class=\"animate-pulse flex space-x-4\"><div class=\"rounded bg-border h-6 w-1/4\"></div><div class=\"rounded bg-border h-6 w-1/4\"></div><div class=\"rounded bg-border h-6 w-1/4\"></div></div></div><!-- Real Table Data (to be swapped in by HTMX) --><div x-show=\"!loading\" x-transition.opacity.duration.500ms id=\"dashboard-table\" hx-get=\"/dashboard/data\" hx-trigger=\"load\" hx-target=\"#dashboard-table\" hx-swap=\"outerHTML\"><!-- Table will be swapped in by HTMX --></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

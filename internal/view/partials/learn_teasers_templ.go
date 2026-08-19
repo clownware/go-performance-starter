@@ -8,9 +8,10 @@ package partials
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// Signed-out previews for the /learn surfaces (browse-first UX): instead of
-// bouncing a curious visitor to the login page, show what's inside and why
-// it needs an identity. Mutations still redirect — these render on GET only.
+// Signed-out previews for the /learn surfaces and the dashboard (browse-first
+// UX): instead of bouncing a curious visitor to the login page, show what's
+// inside and why it needs an identity. Mutations still redirect — these
+// render on GET only.
 
 // QuizTeaser previews the quiz for signed-out visitors.
 func QuizTeaser() templ.Component {
@@ -65,6 +66,38 @@ func FlashcardsTeaser() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div data-testid=\"flashcards-teaser\" class=\"bg-surface rounded-lg shadow-md p-6\"><h2 class=\"text-xl font-semibold mb-2\">Your wrong answers, working for you</h2><p class=\"mb-3 text-muted-foreground\">Miss a question on the <a href=\"/learn/quiz\" class=\"text-link underline\">architecture quiz</a> and you can save it as a flashcard — then review, flip, mark what you know, and delete what you don't need.</p><p class=\"mb-5 text-muted-foreground\">Each card is a row that belongs to you, enforced by Row Level Security at the database — which is why this page needs to know who you are.</p><div class=\"flex flex-wrap gap-3\"><a href=\"/auth/page\" class=\"btn btn-primary inline-block\">Sign in to review</a> <a href=\"/auth/page?mode=signup\" class=\"btn btn-secondary inline-block\">Create an account</a></div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// DashboardTeaser previews the progress dashboard for signed-out visitors
+// (#69). Also what the widget endpoints return to a session that lapsed
+// between the page load and the widget load.
+func DashboardTeaser() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div data-testid=\"dashboard-teaser\" class=\"bg-surface rounded-lg shadow-md p-6\"><h2 class=\"text-xl font-semibold mb-2\">Your progress, in one place</h2><p class=\"mb-3 text-muted-foreground\">The dashboard pulls your <a href=\"/learn/quiz\" class=\"text-link underline\">quiz</a> score history and the <a href=\"/learn/flashcards\" class=\"text-link underline\">flashcards</a> you still have to review into two widgets — each a server-rendered fragment loaded over HTMX behind a skeleton, reading rows that Row Level Security scopes to you.</p><p class=\"mb-5 text-muted-foreground\">That's why it needs to know who you are: there is no progress to show until there is an identity to own it.</p><div class=\"flex flex-wrap gap-3\"><a href=\"/auth/page\" class=\"btn btn-primary inline-block\">Sign in to see your progress</a> <a href=\"/auth/page?mode=signup\" class=\"btn btn-secondary inline-block\">Create an account</a></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

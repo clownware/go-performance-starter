@@ -111,6 +111,29 @@ func TestServer_StubDemosRetired(t *testing.T) {
 	}
 }
 
+// TestServer_DashboardWithoutAuth proves the dashboard stays routed when the
+// /learn identity chain is not mounted (no auth client, no DB): the nav link
+// lands on the teaser shell, never a 404, while the widget fragments — which
+// need repositories — are absent (#69).
+func TestServer_DashboardWithoutAuth(t *testing.T) {
+	srv := newTestServer(t, "development")
+
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/dashboard", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /dashboard status = %d, want 200", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `data-testid="dashboard-teaser"`) {
+		t.Error("GET /dashboard without auth should render the teaser shell")
+	}
+
+	rec = httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/dashboard/widgets/quiz", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("GET /dashboard/widgets/quiz without auth status = %d, want 404 (no repositories to serve it)", rec.Code)
+	}
+}
+
 // TestServer_MetricsGating proves /metrics visibility follows environment and
 // METRICS_TOKEN: open in development, hidden (404) in production without a
 // token, and bearer-gated (401 on mismatch) in either env once a token is set.

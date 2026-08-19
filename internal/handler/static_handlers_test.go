@@ -19,7 +19,6 @@ func TestStaticPages(t *testing.T) {
 		handler   http.HandlerFunc
 		wantTitle string
 	}{
-		{"dashboard", DashboardPage, "Dashboard"},
 		{"terms", TermsPage, "Terms of Service"},
 		{"privacy", PrivacyPage, "Privacy Policy"},
 		{"logout confirmation", LogoutPage, "Sign Out"},

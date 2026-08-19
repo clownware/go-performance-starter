@@ -41,6 +41,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Stop-gate (tests + suite on agent turn completion) and a PreToolUse
   guard denying hand-edits to existing ADRs, `AGENTS.md`, and
   sqlc/templ-generated code (`scripts/adrguard`)
+- Dashboard progress widgets (#69): `/dashboard` now rides the `/learn`
+  identity chain (GuestSession → OptionalAuth → OptionalUserLoader) and
+  hosts two skeleton slots that load over HTMX on page load —
+  `/dashboard/widgets/quiz` (correct/attempts/accuracy from
+  `CountCorrectByUser` + `ListAttemptsByUser`, its first production caller,
+  plus the five most recent attempts) and `/dashboard/widgets/flashcards`
+  (cards to review / known / total). Signed-out visitors get the
+  browse-first teaser; with auth disabled the shell stays routed so the nav
+  link never 404s. The pre-pivot "Create Project" empty state is gone
 
 ## [0.8.0] - 2026-07-12
 
