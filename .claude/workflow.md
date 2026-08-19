@@ -33,7 +33,7 @@ Before claiming a change is complete, run:
 task ci
 ```
 
-It runs `fmt` (check) + `lint` + `test` (`-race -cover`) + `agents:check` + `versions:check` + `check:adr` + `test:binary-size` + `test:asset-budgets` + `scan:vuln`. If it exits non-zero, halt and fix the failure. Do not work around it by lowering thresholds, excluding files, or skipping git hooks with `--no-verify`.
+It runs `fmt` (check) + `lint` + `test` (`-race -cover`) + `agents:check` + `versions:check` + `check:adr` + `check:generated` + `test:binary-size` + `test:asset-budgets` + `scan:vuln`. If it exits non-zero, halt and fix the failure. Do not work around it by lowering thresholds, excluding files, or skipping git hooks with `--no-verify`.
 
 The fast inner loop is `task test` and `task lint` individually. Reserve `task ci` for the final gate before claiming done.
 

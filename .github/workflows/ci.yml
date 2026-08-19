@@ -69,11 +69,17 @@ jobs:
     - name: Install Task
       run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
-    - name: Install tools (templ, govulncheck, migrate, psql)
+    - name: Install tools (templ, sqlc, govulncheck, migrate, psql)
       run: |
         # go.mod is the single source of the templ version — a version pinned
         # here went stale once already (v0.3.1001 vs go.mod's v0.3.1020, #83).
         go install github.com/a-h/templ/cmd/templ@$(go list -m -f '{{.Version}}' github.com/a-h/templ)
+        # sqlc is needed by check:generated (#90); versions.json is its single
+        # source here because versions:check already pins that key to the
+        # header sqlc stamps into internal/database/db.go (ADR-030).
+        SQLC_VERSION=$(jq -r .sqlc versions.json)
+        curl -L "https://github.com/sqlc-dev/sqlc/releases/download/v${SQLC_VERSION}/sqlc_${SQLC_VERSION}_linux_amd64.tar.gz" | tar xz sqlc
+        sudo mv sqlc /usr/local/bin/
         # govulncheck is a `tool` directive in go.mod for the same reason.
         go install tool
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xz migrate
@@ -87,8 +93,9 @@ jobs:
         fi
         psql --version
 
-    - name: Generate templ
-      run: templ generate
+    # No `templ generate` step here on purpose: *_templ.go is committed, and
+    # regenerating before the gate would hide exactly the drift that
+    # check:generated (inside task ci) exists to surface (#90).
 
     - name: Bootstrap test database (auth stub + migrations)
       run: task db:test:setup

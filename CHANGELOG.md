@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   refused — behind the strict credential rate tier at
   `POST /profile/password`, and a sign-out form lives on the page itself
   instead of only in the nav menu. Works as plain forms without JS
+- `task check:generated` (`scripts/checkgenerated`, in `task ci`): regenerates
+  sqlc and templ output into a scratch copy — never the working tree — and
+  diffs it against the committed code, flagging modified, missing, and stale
+  generated files; warn-only until graduated per ADR-033 §4 (#90). CI now
+  installs sqlc and no longer regenerates templ before the gate (that step
+  was hiding exactly this drift)
 - Password reset flow (#71): request page (`/auth/recover`, anti-enumeration
   generic response), server-side `token_hash` verification via direct GoTrue
   REST (`/auth/reset` — no client JS; requires the Reset Password email
