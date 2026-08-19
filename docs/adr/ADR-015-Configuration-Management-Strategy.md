@@ -416,5 +416,6 @@ Maintain configuration documentation in:
   - TC-2: `.env` is gitignored; `.env.example` exists at the repo root.
 - **Checks:**
   - TC-1, TC-2 → `adr015-env-only-config` in `scripts/adrcheck` (status: **warn**)
-- **Not machine-checkable:** "No hardcoded secrets" beyond structural patterns — no secret scanner is wired (recorded as a TODO in ADR-033). Environment parity is deployment discipline.
+- **Not machine-checkable:** Environment parity is deployment discipline. A secret that matches none of the scanner's shapes (TC-3) is still review territory.
+- **Amendment 2026-08-19 (#91):** TC-3 — no credential-shaped literal in shipped source/config (`cmd/`, `internal/`, `scripts/`, `sql/`, `migrations/`, `.github/`, Taskfile/fly.toml/Dockerfile/docker-compose/.env.example/.env.tpl/app.js; generated, vendored and docs files out of scope): AWS/GitHub/Slack/Google/Stripe key shapes, private-key blocks and JWT literals everywhere incl. tests; secret-named assignments to opaque ≥20-char literals outside tests, placeholders excused → `adr015-no-hardcoded-secrets` in `scripts/adrcheck` (status: **warn**, added 2026-08-19). Closes the ADR-033 TODO; gitleaks remains the escalation if the graduation log shows these shapes miss too much.
 - **Graduation log:** _(empty)_

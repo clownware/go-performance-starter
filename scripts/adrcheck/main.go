@@ -42,16 +42,25 @@ var checks = map[string]struct {
 	fn     checkFn
 	remedy string
 }{
-	"adr002-migration-pairs":     {checkMigrationPairs, "add the missing .up.sql/.down.sql twin in migrations/ (ADR-002)"},
-	"adr003-no-sql-in-handlers":  {checkNoSQLInHandlers, "move the query to sql/queries/, run `task db:generate`, call it through a repository interface (ADR-003)"},
-	"adr007-no-heavy-frameworks": {checkNoHeavyFrameworks, "remove the framework; UI is server-rendered templ + HTMX, Alpine for light interactivity (ADR-007)"},
-	"adr011-adr-metadata":        {checkADRMetadata, "rename to ADR-NNN-Title.md and/or add a Status marker (ADR-011)"},
-	"adr015-env-only-config":     {checkEnvOnlyConfig, "read the value in internal/config and pass it down; keep .env gitignored with .env.example current (ADR-015)"},
-	"adr017-no-html-template":    {checkNoHTMLTemplate, "render with templ in internal/view instead of html/template (ADR-017)"},
-	"adr017-typed-view-props":    {checkTypedViewProps, "define a typed props struct; map[string]interface{} is forbidden in internal/view (ADR-017)"},
-	"adr025-deploy-scope":        {checkDeployScope, "keep exactly one fly.toml at the repo root and no Terraform/k8s manifests (ADR-025)"},
-	"adr026-slog-only":           {checkSlogOnly, "use log/slog with structured fields; zerolog and log.Printf are retired (ADR-026)"},
-	"adr021-ci-invokes-gate":     {checkCIInvokesGate, "have .github/workflows/ci.yml run `task ci` instead of re-implementing gate steps (ADR-021)"},
+	"adr002-migration-pairs":      {checkMigrationPairs, "add the missing .up.sql/.down.sql twin in migrations/ (ADR-002)"},
+	"adr003-no-sql-in-handlers":   {checkNoSQLInHandlers, "move the query to sql/queries/, run `task db:generate`, call it through a repository interface (ADR-003)"},
+	"adr007-no-heavy-frameworks":  {checkNoHeavyFrameworks, "remove the framework; UI is server-rendered templ + HTMX, Alpine for light interactivity (ADR-007)"},
+	"adr011-adr-metadata":         {checkADRMetadata, "rename to ADR-NNN-Title.md and/or add a Status marker (ADR-011)"},
+	"adr015-env-only-config":      {checkEnvOnlyConfig, "read the value in internal/config and pass it down; keep .env gitignored with .env.example current (ADR-015)"},
+	"adr017-no-html-template":     {checkNoHTMLTemplate, "render with templ in internal/view instead of html/template (ADR-017)"},
+	"adr017-typed-view-props":     {checkTypedViewProps, "define a typed props struct; map[string]interface{} is forbidden in internal/view (ADR-017)"},
+	"adr025-deploy-scope":         {checkDeployScope, "keep exactly one fly.toml at the repo root and no Terraform/k8s manifests (ADR-025)"},
+	"adr026-slog-only":            {checkSlogOnly, "use log/slog with structured fields; zerolog and log.Printf are retired (ADR-026)"},
+	"adr021-ci-invokes-gate":      {checkCIInvokesGate, "have .github/workflows/ci.yml run `task ci` instead of re-implementing gate steps (ADR-021)"},
+	"adr015-no-hardcoded-secrets": {checkNoHardcodedSecrets, "move the value to an environment variable read in internal/config (ADR-015); rotate it if it was real (ADR-014)"},
+}
+
+// skipDirs are tool/build trees no check should walk. .claude holds the
+// constitution sources and hooks — and, during agent sessions, worktrees
+// that are whole repo copies (a second fly.toml there is not a deploy-scope
+// violation, it is the same file).
+var skipDirs = map[string]bool{
+	"node_modules": true, "vendor": true, "tmp": true, "dist": true, ".git": true, ".claude": true,
 }
 
 // walkGoFiles calls fn for every non-generated .go file under dir (relative
@@ -64,8 +73,7 @@ func walkGoFiles(root, dir string, includeTests bool, fn func(rel string, conten
 			return nil
 		}
 		if d.IsDir() {
-			name := d.Name()
-			if name == "node_modules" || name == "vendor" || name == "tmp" || name == "dist" || name == ".git" {
+			if skipDirs[d.Name()] {
 				return filepath.SkipDir
 			}
 			return nil
@@ -287,8 +295,7 @@ func checkDeployScope(root string) []string {
 			return nil
 		}
 		if d.IsDir() {
-			name := d.Name()
-			if name == "node_modules" || name == "vendor" || name == "tmp" || name == "dist" || name == ".git" {
+			if skipDirs[d.Name()] {
 				return filepath.SkipDir
 			}
 			return nil
@@ -337,6 +344,116 @@ func checkCIInvokesGate(root string) []string {
 		return []string{".github/workflows/ci.yml does not invoke `task ci`"}
 	}
 	return nil
+}
+
+// Secret scanner (ADR-014/ADR-015 "no hardcoded secrets", #91). A minimal,
+// high-signal pattern set kept inside the suite rather than a new CI
+// dependency — per ADR-033 §5 the check suite is Go-native and
+// dependency-free; gitleaks stays the documented escalation if the
+// graduation log shows these patterns miss too much.
+//
+// Two tiers: vendor-shaped credentials (unmistakable prefixes/structures)
+// are flagged everywhere in scope, tests included — nobody needs a real AWS
+// key in a fixture. The generic "name = <opaque literal>" rule is noisier,
+// so it skips _test.go and ignores placeholder-looking values.
+var secretPatterns = []struct {
+	re        *regexp.Regexp
+	what      string
+	skipTests bool
+}{
+	{regexp.MustCompile(`\bAKIA[0-9A-Z]{16}\b`), "AWS access key id", false},
+	{regexp.MustCompile(`\bgh[pousr]_[A-Za-z0-9]{36,}\b`), "GitHub token", false},
+	{regexp.MustCompile(`\bgithub_pat_[A-Za-z0-9_]{22,}\b`), "GitHub fine-grained PAT", false},
+	{regexp.MustCompile(`\bxox[baprs]-[0-9A-Za-z-]{10,}`), "Slack token", false},
+	{regexp.MustCompile(`\bAIza[0-9A-Za-z_-]{35}\b`), "Google API key", false},
+	{regexp.MustCompile(`\b(sk|rk)_(live|test)_[0-9a-zA-Z]{24,}\b`), "Stripe key", false},
+	{regexp.MustCompile(`-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----`), "private key block", false},
+	// Supabase anon/service-role keys are JWTs; a three-segment base64url
+	// literal in source is one of them or a fixture that should be forged.
+	{regexp.MustCompile(`\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b`), "JWT literal", false},
+	{regexp.MustCompile(`(?i)\b[a-z_]*(?:api[_-]?key|secret|password|passwd|token)[a-z_]*\s*[:=]\s*["'` + "`" + `]([^"'` + "`" + `\s]{20,})["'` + "`" + `]`), "secret-named assignment with an opaque literal", true},
+}
+
+// secretPlaceholderRe excuses values that are obviously not credentials:
+// example/placeholder words, template or env interpolation, 1Password refs.
+var secretPlaceholderRe = regexp.MustCompile(`(?i)(example|changeme|change-me|placeholder|your[-_]|xxx|dummy|sample|redacted|<[^>]+>|\{\{|\$\{|\$[A-Z_]|op://)`)
+
+// secretScanRoots and secretScanFiles bound the scan to shipped source and
+// config — not docs, not vendored bundles, not generated code.
+var (
+	secretScanRoots = []string{"cmd", "internal", "scripts", "sql", "migrations", ".github"}
+	secretScanFiles = []string{"Taskfile.yml", "fly.toml", "Dockerfile", "docker-compose.yml", ".env.example", ".env.tpl", "web/static/js/app.js"}
+	secretScanExts  = map[string]bool{".go": true, ".templ": true, ".yml": true, ".yaml": true, ".toml": true, ".sql": true, ".json": true, ".sh": true, ".js": true, ".tpl": true, ".example": true}
+)
+
+func isSecretScanTarget(rel string) bool {
+	base := filepath.Base(rel)
+	if strings.HasSuffix(base, "_templ.go") || strings.HasSuffix(base, ".min.js") {
+		return false
+	}
+	if base == "Dockerfile" {
+		return true
+	}
+	return secretScanExts[filepath.Ext(base)]
+}
+
+func scanForSecrets(rel string, content []byte) []string {
+	var violations []string
+	isTest := strings.HasSuffix(rel, "_test.go")
+	for i, line := range strings.Split(string(content), "\n") {
+		for _, p := range secretPatterns {
+			if p.skipTests && isTest {
+				continue
+			}
+			m := p.re.FindStringSubmatch(line)
+			if m == nil {
+				continue
+			}
+			if p.skipTests && len(m) > 1 && secretPlaceholderRe.MatchString(m[1]) {
+				continue
+			}
+			violations = append(violations, fmt.Sprintf("%s:%d: %s", rel, i+1, p.what))
+			break // one finding per line is enough to act on
+		}
+	}
+	return violations
+}
+
+func checkNoHardcodedSecrets(root string) []string {
+	var violations []string
+	visit := func(path string) {
+		rel, _ := filepath.Rel(root, path)
+		rel = filepath.ToSlash(rel)
+		if !isSecretScanTarget(rel) {
+			return
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return
+		}
+		violations = append(violations, scanForSecrets(rel, content)...)
+	}
+	for _, dir := range secretScanRoots {
+		_ = filepath.WalkDir(filepath.Join(root, dir), func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if d.IsDir() {
+				if skipDirs[d.Name()] {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			visit(path)
+			return nil
+		})
+	}
+	for _, f := range secretScanFiles {
+		if _, err := os.Stat(filepath.Join(root, f)); err == nil {
+			visit(filepath.Join(root, f))
+		}
+	}
+	return violations
 }
 
 // runSuite executes every configured check. failed is true iff a

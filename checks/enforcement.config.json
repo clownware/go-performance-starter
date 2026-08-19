@@ -8,5 +8,6 @@
   { "id": "adr017-typed-view-props", "adr": "ADR-017", "tc": "TC-2", "status": "warn", "added": "2026-07-12" },
   { "id": "adr021-ci-invokes-gate", "adr": "ADR-021", "tc": "TC-2", "status": "warn", "added": "2026-07-12" },
   { "id": "adr025-deploy-scope", "adr": "ADR-025", "tc": "TC-1", "status": "warn", "added": "2026-07-12" },
-  { "id": "adr026-slog-only", "adr": "ADR-026", "tc": "TC-1/TC-2", "status": "warn", "added": "2026-07-12" }
+  { "id": "adr026-slog-only", "adr": "ADR-026", "tc": "TC-1/TC-2", "status": "warn", "added": "2026-07-12" },
+  { "id": "adr015-no-hardcoded-secrets", "adr": "ADR-015", "tc": "TC-3", "status": "warn", "added": "2026-08-19" }
 ]
