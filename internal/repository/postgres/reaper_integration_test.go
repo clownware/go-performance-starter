@@ -93,4 +93,41 @@ func TestReaperRepoIntegration(t *testing.T) {
 	if cardExists {
 		t.Error("expired guest's flashcards did not cascade")
 	}
+
+	// Orphan pass (#82): the existence lookup must see every live row under
+	// service_role (the recent guest and the registered user still exist),
+	// must not report the reaped guest, and must ignore ids it has never
+	// seen — those are exactly the orphans the reaper then deletes.
+	var recentAuthID, registeredAuthID, reapedAuthID string
+	if err := pool.QueryRow(ctx, "SELECT auth_id FROM users WHERE id = $1", recentGuest).Scan(&recentAuthID); err != nil {
+		t.Fatal(err)
+	}
+	if err := pool.QueryRow(ctx, "SELECT auth_id FROM users WHERE id = $1", oldRegistered).Scan(&registeredAuthID); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range reaped {
+		if row.ID == expiredGuest {
+			reapedAuthID = row.AuthID.String
+		}
+	}
+	existing, err := repo.ListExistingAuthIDs(ctx, []string{recentAuthID, registeredAuthID, reapedAuthID, "never-seen-" + uuid.NewString()})
+	if err != nil {
+		t.Fatalf("ListExistingAuthIDs: %v", err)
+	}
+	got := map[string]bool{}
+	for _, id := range existing {
+		got[id] = true
+	}
+	if !got[recentAuthID] || !got[registeredAuthID] {
+		t.Errorf("live identities missing from existence lookup: %v", existing)
+	}
+	if got[reapedAuthID] {
+		t.Errorf("reaped identity %q reported as existing", reapedAuthID)
+	}
+	if len(existing) != 2 {
+		t.Errorf("got %d existing ids, want 2: %v", len(existing), existing)
+	}
+	if empty, err := repo.ListExistingAuthIDs(ctx, nil); err != nil || len(empty) != 0 {
+		t.Errorf("empty input should short-circuit: %v, %v", empty, err)
+	}
 }

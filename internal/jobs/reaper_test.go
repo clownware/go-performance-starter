@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/clownware/go-performance-starter/internal/auth"
 	"github.com/clownware/go-performance-starter/internal/database"
 )
 
@@ -21,11 +22,33 @@ type fakeReaperStore struct {
 	rows      []database.DeleteExpiredAnonymousUsersRow
 	err       error
 	gotCutoff time.Time
+
+	// Orphan pass (#82): auth ids that DO have a public row, and the ids the
+	// reaper asked about.
+	existing    []string
+	existingErr error
+	gotAsked    []string
 }
 
 func (f *fakeReaperStore) DeleteExpiredAnonymousUsers(ctx context.Context, olderThan time.Time) ([]database.DeleteExpiredAnonymousUsersRow, error) {
 	f.gotCutoff = olderThan
 	return f.rows, f.err
+}
+
+func (f *fakeReaperStore) ListExistingAuthIDs(ctx context.Context, authIDs []string) ([]string, error) {
+	f.gotAsked = append([]string(nil), authIDs...)
+	if f.existingErr != nil {
+		return nil, f.existingErr
+	}
+	var out []string
+	for _, id := range authIDs {
+		for _, e := range f.existing {
+			if id == e {
+				out = append(out, id)
+			}
+		}
+	}
+	return out, nil
 }
 
 func reapedRow(authID string) database.DeleteExpiredAnonymousUsersRow {
@@ -139,6 +162,10 @@ func (s *countingReaperStore) DeleteExpiredAnonymousUsers(ctx context.Context, o
 	return nil, nil
 }
 
+func (s *countingReaperStore) ListExistingAuthIDs(ctx context.Context, authIDs []string) ([]string, error) {
+	return nil, nil
+}
+
 // TestReaperStart pins the loop contract: an immediate first pass on start
 // (restarts must not postpone overdue cleanup), ticker-driven passes after,
 // and a clean stop on context cancellation.
@@ -231,5 +258,132 @@ func TestReaperLogsFailures(t *testing.T) {
 	}
 	if !strings.Contains(sink.String(), "Failed to delete GoTrue auth user") {
 		t.Errorf("auth deletion failure was not logged, log:\n%s", sink.String())
+	}
+}
+
+// TestReaperOrphanPass pins the auth-side sweep (#82): anonymous GoTrue
+// identities older than the TTL with no public.users row are invisible to
+// the row-driven reap and must be deleted from the auth side; everything
+// else — young orphans, identities that do have a row, non-anonymous users
+// (already filtered by the lister) — is left alone. The pass is best-effort:
+// lister/store failures are logged and never fail the row pass.
+func TestReaperOrphanPass(t *testing.T) {
+	ttl := 30 * 24 * time.Hour
+	old := time.Now().Add(-ttl - time.Hour)
+	young := time.Now().Add(-time.Hour)
+
+	tests := []struct {
+		name        string
+		store       *fakeReaperStore
+		withLister  bool
+		listerUsers []auth.AdminUser
+		listerErr   error
+		withDeleter bool
+		wantCount   int
+		wantDeleted []string
+		wantAsked   []string
+	}{
+		{
+			name:        "no lister configured — row pass only",
+			store:       &fakeReaperStore{rows: []database.DeleteExpiredAnonymousUsersRow{reapedRow("auth-1")}},
+			withDeleter: true,
+			wantCount:   1,
+			wantDeleted: []string{"auth-1"},
+		},
+		{
+			name:        "lister without deleter cannot act, so it is not consulted",
+			store:       &fakeReaperStore{},
+			withLister:  true,
+			listerUsers: []auth.AdminUser{{ID: "orphan-old", CreatedAt: old}},
+			wantCount:   0,
+		},
+		{
+			name:       "old orphan deleted; young orphan and row-backed identity spared",
+			store:      &fakeReaperStore{existing: []string{"has-row-old"}},
+			withLister: true,
+			listerUsers: []auth.AdminUser{
+				{ID: "orphan-old", CreatedAt: old},
+				{ID: "orphan-young", CreatedAt: young},
+				{ID: "has-row-old", CreatedAt: old},
+			},
+			withDeleter: true,
+			wantCount:   1,
+			wantDeleted: []string{"orphan-old"},
+			wantAsked:   []string{"orphan-old", "has-row-old"}, // young ones never hit the DB
+		},
+		{
+			name:        "nothing older than the TTL — store not queried",
+			store:       &fakeReaperStore{},
+			withLister:  true,
+			listerUsers: []auth.AdminUser{{ID: "orphan-young", CreatedAt: young}},
+			withDeleter: true,
+			wantCount:   0,
+		},
+		{
+			name:        "row pass and orphan pass counts add up",
+			store:       &fakeReaperStore{rows: []database.DeleteExpiredAnonymousUsersRow{reapedRow("auth-1")}},
+			withLister:  true,
+			listerUsers: []auth.AdminUser{{ID: "orphan-old", CreatedAt: old}},
+			withDeleter: true,
+			wantCount:   2,
+			wantDeleted: []string{"auth-1", "orphan-old"},
+			wantAsked:   []string{"orphan-old"},
+		},
+		{
+			name:        "lister failure is logged, row pass result stands",
+			store:       &fakeReaperStore{rows: []database.DeleteExpiredAnonymousUsersRow{reapedRow("auth-1")}},
+			withLister:  true,
+			listerErr:   errors.New("gotrue down"),
+			withDeleter: true,
+			wantCount:   1,
+			wantDeleted: []string{"auth-1"},
+		},
+		{
+			name:        "existence lookup failure deletes nothing (never guess)",
+			store:       &fakeReaperStore{existingErr: errors.New("db down")},
+			withLister:  true,
+			listerUsers: []auth.AdminUser{{ID: "orphan-old", CreatedAt: old}},
+			withDeleter: true,
+			wantCount:   0,
+			wantAsked:   []string{"orphan-old"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var deleted []string
+			var deleter AuthUserDeleter
+			if tt.withDeleter {
+				deleter = func(ctx context.Context, authID string) error {
+					deleted = append(deleted, authID)
+					return nil
+				}
+			}
+			r := NewReaper(tt.store, deleter, ttl, time.Hour)
+			listerCalled := false
+			if tt.withLister {
+				r.WithAuthLister(func(ctx context.Context) ([]auth.AdminUser, error) {
+					listerCalled = true
+					return tt.listerUsers, tt.listerErr
+				})
+			}
+
+			count, err := r.RunOnce(context.Background())
+			if err != nil {
+				t.Fatalf("RunOnce() error: %v", err)
+			}
+			if count != tt.wantCount {
+				t.Errorf("count = %d, want %d", count, tt.wantCount)
+			}
+			if tt.withLister && !tt.withDeleter && listerCalled {
+				t.Error("lister was called although no deleter is configured")
+			}
+			if strings.Join(deleted, ",") != strings.Join(tt.wantDeleted, ",") {
+				t.Errorf("deleted = %v, want %v", deleted, tt.wantDeleted)
+			}
+			if strings.Join(tt.store.gotAsked, ",") != strings.Join(tt.wantAsked, ",") {
+				t.Errorf("asked store about %v, want %v", tt.store.gotAsked, tt.wantAsked)
+			}
+		})
 	}
 }
