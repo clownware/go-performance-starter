@@ -171,6 +171,7 @@ task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
 task agents:check      # CI gate: fail if AGENTS.md drifts from sources
 task versions:check    # CI gate: fail if versions.json drifts from repo pins (ADR-030)
+task versions:sync     # rewrite versions.json from the repo pins after a dependency/toolchain bump (ADR-030)
 task demo:seed         # load demo fixtures (refuses without DEMO_MODE=1, ADR-031)
 task demo:reset        # purge guests' demo content + re-seed (refuses without DEMO_MODE=1)
 ```
