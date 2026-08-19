@@ -3,10 +3,21 @@
 // of truth (go.mod, package-lock.json, vendored JS, sqlc headers, workflow
 // pins), so the manifest external consumers read can never drift from what
 // the template actually ships. Run from the repo root.
+//
+// Usage:
+//
+//	go run ./scripts/checkversions          # check (task versions:check, part of task ci)
+//	go run ./scripts/checkversions -write   # rewrite versions.json from the pins (task versions:sync)
+//
+// -write makes a pin bump a one-file edit: change go.mod (or whichever
+// source), run the sync, commit both. The check is still the gate; the
+// writer only ever produces what the check would accept.
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"regexp"
@@ -163,7 +174,112 @@ func expectedVersions() (map[string]string, error) {
 	}, nil
 }
 
+// manifestKeys returns the top-level keys of a JSON object in file order —
+// consumers diff versions.json, so -write must not reshuffle it the way a
+// map round-trip would.
+func manifestKeys(raw []byte) ([]string, error) {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	tok, err := dec.Token()
+	if err != nil {
+		return nil, err
+	}
+	if delim, ok := tok.(json.Delim); !ok || delim != '{' {
+		return nil, fmt.Errorf("versions.json is not a JSON object")
+	}
+	var keys []string
+	for dec.More() {
+		tok, err := dec.Token()
+		if err != nil {
+			return nil, err
+		}
+		key, ok := tok.(string)
+		if !ok {
+			return nil, fmt.Errorf("versions.json: unexpected token %v", tok)
+		}
+		keys = append(keys, key)
+		// Consume (and discard) the value; the string values are re-read
+		// through the map below.
+		var v json.RawMessage
+		if err := dec.Decode(&v); err != nil {
+			return nil, err
+		}
+	}
+	return keys, nil
+}
+
+// syncManifest rewrites raw (the current versions.json) so every key with a
+// wired source of truth carries the repo's actual pin. It preserves key
+// order, leaves the release-stamped template field and any unknown keys
+// alone (the check rejects those; the writer must not hide them), and
+// appends newly wired keys at the end. It returns the new file content and a
+// human-readable change list; content is byte-identical to raw when nothing
+// changed.
+func syncManifest(raw []byte, expected map[string]string) ([]byte, []string, error) {
+	var manifest map[string]string
+	if err := json.Unmarshal(raw, &manifest); err != nil {
+		return nil, nil, fmt.Errorf("parse versions.json: %w", err)
+	}
+	keys, err := manifestKeys(raw)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse versions.json: %w", err)
+	}
+
+	var changes []string
+	values := make(map[string]string, len(manifest))
+	for _, key := range keys {
+		values[key] = manifest[key]
+		want, wired := expected[key]
+		if key == "template" || !wired || want == "" || want == manifest[key] {
+			continue
+		}
+		changes = append(changes, fmt.Sprintf("%s: %q -> %q", key, manifest[key], want))
+		values[key] = want
+	}
+	// Newly wired keys (present in expected, absent from the file) are
+	// appended in a stable order so the output is deterministic.
+	var added []string
+	for key, want := range expected {
+		if _, present := manifest[key]; present || key == "template" || want == "" {
+			continue
+		}
+		added = append(added, key)
+	}
+	sortStrings(added)
+	for _, key := range added {
+		keys = append(keys, key)
+		values[key] = expected[key]
+		changes = append(changes, fmt.Sprintf("%s: (missing) -> %q", key, expected[key]))
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString("{\n")
+	for i, key := range keys {
+		k, _ := json.Marshal(key)
+		v, _ := json.Marshal(values[key])
+		fmt.Fprintf(&buf, "  %s: %s", k, v)
+		if i < len(keys)-1 {
+			buf.WriteString(",")
+		}
+		buf.WriteString("\n")
+	}
+	buf.WriteString("}\n")
+	return buf.Bytes(), changes, nil
+}
+
+// sortStrings is an insertion sort — the slices here are a handful of keys,
+// and it keeps the script free of imports beyond the ones it already has.
+func sortStrings(s []string) {
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && s[j] < s[j-1]; j-- {
+			s[j], s[j-1] = s[j-1], s[j]
+		}
+	}
+}
+
 func main() {
+	write := flag.Bool("write", false, "rewrite versions.json from the repo's pins instead of checking it")
+	flag.Parse()
+
 	manifestRaw, err := os.ReadFile("versions.json")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "❌ %v\n", err)
@@ -179,6 +295,27 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "❌ %v\n", err)
 		os.Exit(1)
+	}
+
+	if *write {
+		synced, changes, err := syncManifest(manifestRaw, expected)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ %v\n", err)
+			os.Exit(1)
+		}
+		if len(changes) == 0 {
+			fmt.Println("✅ versions.json already matches the repo's actual pins — nothing written")
+			return
+		}
+		if err := os.WriteFile("versions.json", synced, 0o644); err != nil {
+			fmt.Fprintf(os.Stderr, "❌ write versions.json: %v\n", err)
+			os.Exit(1)
+		}
+		for _, c := range changes {
+			fmt.Printf("   %s\n", c)
+		}
+		fmt.Printf("✅ versions.json synced (%d key(s) updated) — review and commit it with the pin change\n", len(changes))
+		return
 	}
 
 	failed := false

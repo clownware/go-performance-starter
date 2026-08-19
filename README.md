@@ -149,7 +149,7 @@ Two hooks are the only blocking layer: a **Stop-gate** (agents can't finish a tu
 
 [`versions.json`](versions.json) at the repo root is a machine-readable manifest of what this template ships — its own release version (`template`) plus one key per meaningful stack pin (Go, templ, HTMX, Alpine, Tailwind, sqlc, …). External consumers fetch it raw from the default branch at build time, so treat it as a consumption contract: **adding keys is fine; renaming or removing keys is a breaking change.**
 
-It cannot drift: `task versions:check` (part of `task ci`) fails when any key disagrees with its in-repo source of truth (`go.mod`, `package-lock.json`, vendored JS bundles, sqlc headers, workflow pins), and the release workflow stamps the `template` field from the git tag ([ADR-030](docs/adr/ADR-030-Versions-Manifest-Contract.md)).
+It cannot drift: `task versions:check` (part of `task ci`) fails when any key disagrees with its in-repo source of truth (`go.mod`, `package-lock.json`, vendored JS bundles, sqlc headers, workflow pins), and the release workflow stamps the `template` field from the git tag ([ADR-030](docs/adr/ADR-030-Versions-Manifest-Contract.md)). After bumping a pin, `task versions:sync` rewrites the manifest from those same sources so the bump stays a one-file edit — the check remains the gate.
 
 ## Architecture Decisions
 
