@@ -27,4 +27,8 @@ type QuizRepository interface {
 
 	// CountCorrectByUser returns how many questions the user has answered correctly.
 	CountCorrectByUser(ctx context.Context, userID uuid.UUID) (int64, error)
+
+	// CountAttemptsByUser returns the user's all-time attempt total — the
+	// dashboard's denominator, independent of any listing window.
+	CountAttemptsByUser(ctx context.Context, userID uuid.UUID) (int64, error)
 }

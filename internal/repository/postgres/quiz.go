@@ -90,3 +90,10 @@ func (r *QuizRepo) CountCorrectByUser(ctx context.Context, userID uuid.UUID) (in
 		return q.CountCorrectAttemptsByUser(ctx, userID)
 	})
 }
+
+// CountAttemptsByUser returns the user's all-time attempt total.
+func (r *QuizRepo) CountAttemptsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	return inScope(ctx, r.db, r.querier, func(q database.Querier) (int64, error) {
+		return q.CountAttemptsByUser(ctx, userID)
+	})
+}

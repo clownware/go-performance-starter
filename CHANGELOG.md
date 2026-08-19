@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved by refactor, not allowlist (#92, #99)
 
 ### Fixed
+- Found-work batch (2026-08-19): the Docker builder derives the templ CLI
+  version from go.mod instead of a stale hand pin (the image regenerated
+  committed output with v0.3.1001 while the repo was on v0.3.1020 — the
+  same drift class `check:generated` now polices); static-asset error
+  responses go out `no-store` instead of inheriting the one-year success
+  header (a cached 404 could outlive the fix); the dashboard quiz total
+  comes from a dedicated `CountAttemptsByUser` query instead of the length
+  of a 200-row listing window, so long histories read true; the stray
+  hand-written `internal/database/users.sql` inside the sqlc output dir is
+  removed; the home dashboard card stops promising widgets that now exist
 - The ADR-029 token scan (`internal/view/tokens_test.go`) now rejects raw
   utilities from every Tailwind palette family, not just gray; the four
   pre-ADR leftovers it surfaced (profile-form success box, first-run CTA

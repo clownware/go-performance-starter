@@ -11,6 +11,21 @@ import (
 	"github.com/google/uuid"
 )
 
+const countAttemptsByUser = `-- name: CountAttemptsByUser :one
+SELECT COUNT(*)
+FROM quiz_attempts
+WHERE user_id = $1
+`
+
+// Dashboard total (2026-08-19): the widget's attempt count must be the real
+// total, not the length of a windowed list.
+func (q *Queries) CountAttemptsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countAttemptsByUser, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countCorrectAttemptsByUser = `-- name: CountCorrectAttemptsByUser :one
 SELECT COUNT(*)
 FROM quiz_attempts

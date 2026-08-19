@@ -86,7 +86,7 @@ func homeSurfaces() []surface {
 		{
 			Href:        "/dashboard",
 			Title:       "Dashboard",
-			Description: "Your workspace shell — progress widgets land here as the demo grows.",
+			Description: "Your progress, live from your own rows: quiz score history and cards to review, loaded with the skeleton pattern.",
 		},
 	}
 }

@@ -13,6 +13,9 @@ import (
 )
 
 type Querier interface {
+	// Dashboard total (2026-08-19): the widget's attempt count must be the real
+	// total, not the length of a windowed list.
+	CountAttemptsByUser(ctx context.Context, userID uuid.UUID) (int64, error)
 	CountCorrectAttemptsByUser(ctx context.Context, userID uuid.UUID) (int64, error)
 	// The organization_id from step 1
 	CountOrganizationMembers(ctx context.Context, organizationID uuid.UUID) (int64, error)
