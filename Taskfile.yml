@@ -82,6 +82,13 @@ tasks:
     cmds:
       - go run ./scripts/adrcheck
 
+  check:generated:
+    desc: Regenerate sqlc + templ output into a scratch copy and diff against the committed code (ADR-003/ADR-017; warn-only until graduated per ADR-033)
+    cmds:
+      # Graduation (ADR-033 §4): flip -mode=warn to -mode=block here and log
+      # it in ADR-003/ADR-017's graduation logs + CHANGELOG.
+      - go run ./scripts/checkgenerated -mode=warn
+
   ci:
     desc: Halt-on-violation quality gate — run before claiming a change is complete (ADR-021)
     cmds:
@@ -91,6 +98,7 @@ tasks:
       - task: agents:check
       - task: versions:check
       - task: check:adr
+      - task: check:generated
       - task: test:binary-size
       - task: test:asset-budgets
       - task: scan:vuln

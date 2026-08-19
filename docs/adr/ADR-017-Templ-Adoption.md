@@ -79,5 +79,6 @@ internal/view/
   - TC-1 → `adr017-no-html-template` in `scripts/adrcheck` (status: **warn**)
   - TC-2 → `adr017-typed-view-props` in `scripts/adrcheck` (status: **warn**)
   - TC-3 → `templ generate` + `go build` in `task ci` (status: **block**, pre-existing)
-- **Not machine-checkable:** Single-render-path discipline (`view.Render` everywhere) and partial/page composition judgment. templ-regeneration drift has no wired check — TODO in ADR-033.
+- **Not machine-checkable:** Single-render-path discipline (`view.Render` everywhere) and partial/page composition judgment.
+- **Amendment 2026-08-19 (#90):** TC-4 — committed `*_templ.go` equals what `templ generate` produces from the `.templ` sources (stale generated files with no source are flagged too) → `task check:generated` (`scripts/checkgenerated`) in `task ci` (status: **warn**; graduate by flipping `-mode=block` in `Taskfile.yml`). Closes the ADR-033 TODO.
 - **Graduation log:** _(empty)_

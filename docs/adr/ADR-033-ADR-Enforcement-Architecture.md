@@ -75,7 +75,7 @@ A check is promoted from **warn** to **block** after **7+ days with no false pos
 
 ### TODOs (deferred, not forgotten)
 
-- sqlc and templ regeneration-drift checks (`task db:generate` / `templ generate` output vs committed code) — ADR-003/ADR-017.
+- ~~sqlc and templ regeneration-drift checks (`task db:generate` / `templ generate` output vs committed code) — ADR-003/ADR-017.~~ Done 2026-08-19 (#90): `task check:generated` / `scripts/checkgenerated`, warn-only per §4.
 - A secret scanner for ADR-014/ADR-015's "no hardcoded secrets" beyond structural patterns.
 - Lighthouse-CI accessibility/performance gates (ADR-000, ADR-009) — deliberately unwired at this repo's scale.
 

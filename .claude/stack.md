@@ -18,7 +18,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 
 ```bash
 task dev               # hot-reload dev server (air); watches .go, .templ
-task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + check:adr + binary-size + asset-budgets + vuln
+task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + check:adr + check:generated + binary-size + asset-budgets + vuln
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
@@ -32,6 +32,7 @@ task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
 task agents:check      # CI gate: fail if AGENTS.md drifts from sources
 task versions:check    # CI gate: fail if versions.json drifts from repo pins (ADR-030)
+task check:generated   # CI gate (warn-only): sqlc/templ output regenerated into a scratch copy must equal the committed code (ADR-003/017, #90)
 task demo:seed         # load demo fixtures (refuses without DEMO_MODE=1, ADR-031)
 task demo:reset        # purge guests' demo content + re-seed (refuses without DEMO_MODE=1)
 ```

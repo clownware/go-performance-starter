@@ -17,10 +17,10 @@ Accepted
 Define a single halt-on-violation gate, `task ci`, that an agent must run before claiming any change complete (Constitution rule 9). It chains:
 
 ```
-fmt:check → lint → go test -race -covermode=atomic ./... → agents:check → versions:check → check:adr → test:binary-size → test:asset-budgets → scan:vuln
+fmt:check → lint → go test -race -covermode=atomic ./... → agents:check → versions:check → check:adr → check:generated → test:binary-size → test:asset-budgets → scan:vuln
 ```
 
-*(Chain as of 2026-08-02 — `versions:check` (ADR-030) and `check:adr` (ADR-033) joined the gate after acceptance; `Taskfile.yml` is authoritative.)*
+*(Chain as of 2026-08-19 — `versions:check` (ADR-030), `check:adr` (ADR-033) and `check:generated` (#90, warn-only regeneration-drift check for ADR-003/ADR-017) joined the gate after acceptance; `Taskfile.yml` is authoritative.)*
 
 If it exits non-zero, the agent halts and fixes the failure. It must not lower a threshold, exclude files, or bypass git hooks with `--no-verify`.
 
