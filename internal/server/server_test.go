@@ -244,3 +244,54 @@ func TestServer_AssetCacheBusting(t *testing.T) {
 		t.Error("page still renders the retired full-screen loading overlay")
 	}
 }
+
+// TestServer_HomeExplainer pins ADR-024 surface 1 (#67): the landing page
+// renders the five-node architecture walkthrough with anchors, source
+// peeks and ADR links, plus the live budget grid whose values come from
+// internal/performance — while the original hero and surface directory
+// stay in place (the directory is the skeleton the explainer grows around).
+func TestServer_HomeExplainer(t *testing.T) {
+	srv := newTestServer(t, "development")
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET / status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+
+	if !strings.Contains(body, `data-testid="explainer"`) {
+		t.Fatal("home page missing the architecture explainer section")
+	}
+	if got := strings.Count(body, `data-testid="explainer-node"`); got != 5 {
+		t.Errorf("explainer renders %d nodes, want 5 (routing, handlers, database, frontend, performance)", got)
+	}
+	for _, anchor := range []string{`id="routing"`, `id="handlers"`, `id="database"`, `id="frontend"`, `id="performance"`} {
+		if !strings.Contains(body, anchor) {
+			t.Errorf("explainer missing node anchor %s", anchor)
+		}
+	}
+	for _, adr := range []string{"ADR-014-", "ADR-017-", "ADR-003-", "ADR-007-", "ADR-000-"} {
+		if !strings.Contains(body, "docs/adr/"+adr) {
+			t.Errorf("explainer missing a link to %s", adr)
+		}
+	}
+	if got := strings.Count(body, "<details"); got != 5 {
+		t.Errorf("explainer renders %d source peeks, want 5 (one <details> per node, no JS required)", got)
+	}
+	if !strings.Contains(body, `href="/learn/quiz"`) {
+		t.Error("explainer must hand off to the quiz (read → quiz → flashcards)")
+	}
+
+	if !strings.Contains(body, `data-testid="perf-stats"`) {
+		t.Fatal("home page missing the live performance budgets section")
+	}
+	if got := strings.Count(body, `data-testid="perf-stat"`); got != 10 {
+		t.Errorf("budget grid renders %d stats, want 10", got)
+	}
+	// Values come from the constants, not the template: spot-check two.
+	for _, want := range []string{"&lt; 100ms", "&lt; 20 MB", "&lt; 50 KB"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("budget grid missing %q (rendered from internal/performance)", want)
+		}
+	}
+}

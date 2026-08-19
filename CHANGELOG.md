@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now CI-enforced by `internal/view/tokens_contrast_test.go`.
 
 ### Added
+- Landing architecture explainer (ADR-024 surface 1, #67): the home page
+  now walks one request through the stack in five anchored nodes — Chi
+  router + middleware, handler, repository/sqlc/RLS, templ/HTMX/Alpine,
+  performance budgets — each with prose, a native `<details>` source peek
+  of the real file (no JS), its ADR link, and a hand-off to the quiz topic
+  it feeds; plus a live budgets grid rendered from
+  `internal/performance/budgets.go` constants on every request. The hero
+  and surface directory stay as the navigational skeleton
 - Password reset flow (#71): request page (`/auth/recover`, anti-enumeration
   generic response), server-side `token_hash` verification via direct GoTrue
   REST (`/auth/reset` — no client JS; requires the Reset Password email
