@@ -236,7 +236,7 @@ func TestCacheControlWrapper(t *testing.T) {
 			called := false
 			inner := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				called = true
-				w.WriteHeader(http.StatusTeapot) // distinctive: proves the wrapped handler's status passes through
+				w.WriteHeader(http.StatusOK)
 			})
 			rec := httptest.NewRecorder()
 			cacheControlWrapper(inner).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tt.path, nil))
@@ -244,14 +244,67 @@ func TestCacheControlWrapper(t *testing.T) {
 			if !called {
 				t.Fatal("wrapped handler was not invoked")
 			}
-			if rec.Code != http.StatusTeapot {
-				t.Errorf("status = %d, want %d (wrapper must not alter the handler's status)", rec.Code, http.StatusTeapot)
+			if rec.Code != http.StatusOK {
+				t.Errorf("status = %d, want %d (wrapper must not alter the handler's status)", rec.Code, http.StatusOK)
 			}
 			if got := rec.Header().Get("Cache-Control"); got != tt.want {
 				t.Errorf("Cache-Control for %s = %q, want %q", tt.path, got, tt.want)
 			}
 		})
 	}
+}
+
+// TestCacheControlWrapper_ErrorsNotCached pins the 2026-08-19 found-work
+// fix: a 404 for /static/app.css used to carry the one-year header, so an
+// intermediary could cache the miss and keep serving it after the file
+// appeared. Error responses now go out as no-store; 304 revalidations keep
+// the extension header (they're the cache working as intended); implicit
+// WriteHeader via Write still succeeds.
+func TestCacheControlWrapper_ErrorsNotCached(t *testing.T) {
+	tests := []struct {
+		name      string
+		path      string
+		status    int
+		wantCache string
+	}{
+		{"404 for a css path is no-store, not one-year", "/css/missing.css", http.StatusNotFound, "no-store"},
+		{"500 for a font path is no-store", "/fonts/inter.woff2", http.StatusInternalServerError, "no-store"},
+		{"403 for an html path is no-store", "/secret.html", http.StatusForbidden, "no-store"},
+		{"304 revalidation keeps the one-year header", "/css/app.css", http.StatusNotModified, "public, max-age=31536000"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inner := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(tt.status)
+			})
+			rec := httptest.NewRecorder()
+			cacheControlWrapper(inner).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tt.path, nil))
+
+			if rec.Code != tt.status {
+				t.Fatalf("status = %d, want %d", rec.Code, tt.status)
+			}
+			if got := rec.Header().Get("Cache-Control"); got != tt.wantCache {
+				t.Errorf("Cache-Control = %q, want %q", got, tt.wantCache)
+			}
+		})
+	}
+
+	t.Run("implicit WriteHeader via Write keeps the success header", func(t *testing.T) {
+		inner := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte("body{}")) // no explicit WriteHeader
+		})
+		rec := httptest.NewRecorder()
+		cacheControlWrapper(inner).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/css/app.css", nil))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200", rec.Code)
+		}
+		if got := rec.Header().Get("Cache-Control"); got != "public, max-age=31536000" {
+			t.Errorf("Cache-Control = %q, want the one-year header", got)
+		}
+		if rec.Body.String() != "body{}" {
+			t.Errorf("body = %q, want %q", rec.Body.String(), "body{}")
+		}
+	})
 }
 
 // TestFileServer mounts fileServer on a bare chi router over a temp dir and
@@ -288,7 +341,7 @@ func TestFileServer(t *testing.T) {
 		{"css served with one-year cache", "/static/css/app.css", http.StatusOK, "", "public, max-age=31536000", "body{margin:0}"},
 		{"font served with one-year cache", "/static/fonts/inter.woff2", http.StatusOK, "", "public, max-age=31536000", "wOF2"},
 		{"html served with one-hour cache", "/static/offline.html", http.StatusOK, "", "public, max-age=3600", "<h1>offline</h1>"},
-		{"missing file is 404", "/static/css/missing.css", http.StatusNotFound, "", "", ""},
+		{"missing file is 404 and not cacheable", "/static/css/missing.css", http.StatusNotFound, "", "no-store", ""},
 		{"path outside the mount is not served", "/css/app.css", http.StatusNotFound, "", "", ""},
 	}
 	for _, tt := range tests {

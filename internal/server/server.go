@@ -92,13 +92,16 @@ func fileServer(r chi.Router, path string, root http.FileSystem) {
 	})
 }
 
-// cacheControlWrapper adds cache control headers based on file extension
+// cacheControlWrapper adds cache control headers based on file extension.
+// The header is decided up front from the path, but committed only for
+// non-error responses: a 404 for a missing asset used to ship the one-year
+// header, letting an intermediary cache the miss and keep serving it after
+// the file appeared (2026-08-19 found-work fix). Errors go out as no-store;
+// 304 revalidations keep the extension header — that's the cache working.
 func cacheControlWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Add cache control headers based on file extension
 		path := r.URL.Path
 
-		// Set Cache-Control headers based on file type
 		switch {
 		// CSS, JS, and images can be cached for longer periods
 		case isFileType(path, ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"):
@@ -111,8 +114,33 @@ func cacheControlWrapper(h http.Handler) http.Handler {
 			w.Header().Set("Cache-Control", "public, max-age=3600") // 1 hour
 		}
 
-		h.ServeHTTP(w, r)
+		h.ServeHTTP(&errorUncachedWriter{ResponseWriter: w}, r)
 	})
+}
+
+// errorUncachedWriter downgrades Cache-Control to no-store the moment an
+// error status is written, so failures are never cached under a success
+// policy chosen from the URL alone.
+type errorUncachedWriter struct {
+	http.ResponseWriter
+	wroteHeader bool
+}
+
+func (w *errorUncachedWriter) WriteHeader(status int) {
+	if !w.wroteHeader {
+		w.wroteHeader = true
+		if status >= http.StatusBadRequest {
+			w.Header().Set("Cache-Control", "no-store")
+		}
+	}
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *errorUncachedWriter) Write(b []byte) (int, error) {
+	if !w.wroteHeader {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(b)
 }
 
 // isFileType checks if the file path has any of the specified extensions

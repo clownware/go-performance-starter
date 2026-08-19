@@ -37,14 +37,9 @@ import (
 // the same fragment whether or not HTMX asked (a fragment endpoint is a
 // fragment endpoint; the layout is never wrapped around it).
 
-// dashboardAttemptWindow caps how many attempts the quiz widget reads: the
-// list feeds both the recent-attempts rows and the attempt total. The quiz
-// is ~10 questions, so the window sits far past any realistic session; if
-// it ever fills, the precise fix is a dedicated count query, not a bigger
-// window.
-const dashboardAttemptWindow = 200
-
-// dashboardRecentAttempts is how many rows the recent-attempts list shows.
+// dashboardRecentAttempts is how many rows the recent-attempts list shows —
+// and, since CountAttemptsByUser owns the total (2026-08-19 found-work fix),
+// all the listing the widget needs.
 const dashboardRecentAttempts = 5
 
 // DashboardRoutes registers the dashboard page and its widget fragments
@@ -78,9 +73,15 @@ func dashboardQuizWidget(repo repository.QuizRepository) http.HandlerFunc {
 			return
 		}
 
-		attempts, err := repo.ListAttemptsByUser(r.Context(), user.ID, dashboardAttemptWindow, 0)
+		attempts, err := repo.ListAttemptsByUser(r.Context(), user.ID, dashboardRecentAttempts, 0)
 		if err != nil {
 			slog.Error("Failed to list quiz attempts", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		total, err := repo.CountAttemptsByUser(r.Context(), user.ID)
+		if err != nil {
+			slog.Error("Failed to count quiz attempts", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -101,7 +102,7 @@ func dashboardQuizWidget(repo repository.QuizRepository) http.HandlerFunc {
 			}
 		}
 
-		renderQuiz(w, r, http.StatusOK, partials.QuizProgressWidget(quizProgress(attempts, correct, questions)))
+		renderQuiz(w, r, http.StatusOK, partials.QuizProgressWidget(quizProgress(attempts, total, correct, questions)))
 	}
 }
 
@@ -127,13 +128,13 @@ func dashboardFlashcardWidget(repo repository.FlashcardRepository) http.HandlerF
 // quizProgress maps the attempt log (most recent first), the correct count,
 // and the question table to widget props. Percent rounds half-up; an attempt
 // whose question is gone still renders, labelled, without a link.
-func quizProgress(attempts []database.QuizAttempt, correct int64, questions []database.QuizQuestion) partials.QuizProgressProps {
+func quizProgress(attempts []database.QuizAttempt, total, correct int64, questions []database.QuizQuestion) partials.QuizProgressProps {
 	props := partials.QuizProgressProps{
-		Attempts: len(attempts),
+		Attempts: int(total),
 		Correct:  int(correct),
 	}
-	if props.Attempts > 0 {
-		props.Percent = int(math.Round(float64(correct) * 100 / float64(props.Attempts)))
+	if total > 0 {
+		props.Percent = int(math.Round(float64(correct) * 100 / float64(total)))
 	}
 
 	byID := make(map[uuid.UUID]database.QuizQuestion, len(questions))

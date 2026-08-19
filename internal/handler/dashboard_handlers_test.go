@@ -46,6 +46,7 @@ func TestQuizProgress(t *testing.T) {
 	tests := []struct {
 		name         string
 		results      []bool
+		total        int64 // 0 = len(results); the repo count is authoritative
 		correct      int64
 		wantAttempts int
 		wantCorrect  int
@@ -58,11 +59,21 @@ func TestQuizProgress(t *testing.T) {
 		{name: "two of three rounds up to 67", results: []bool{true, true, false}, correct: 2, wantAttempts: 3, wantCorrect: 2, wantPercent: 67, wantRecent: 3},
 		{name: "exact half rounds up", results: []bool{true, false, false, false, false, false, false, false}, correct: 1, wantAttempts: 8, wantCorrect: 1, wantPercent: 13, wantRecent: 5},
 		{name: "recent list is capped at five", results: []bool{true, false, true, false, true, false, true}, correct: 4, wantAttempts: 7, wantCorrect: 4, wantPercent: 57, wantRecent: 5},
+		// The total comes from CountAttemptsByUser, not from the listed
+		// window (2026-08-19 found-work fix): a long history must not read
+		// as capped, and the percentage is all-time correct over all-time
+		// attempts.
+		{name: "total beyond the listed window drives attempts and percent", results: []bool{true, false, true, false, true}, total: 250, correct: 100, wantAttempts: 250, wantCorrect: 100, wantPercent: 40, wantRecent: 5},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := quizProgress(attemptFixtures(userID, questions, tt.results...), tt.correct, questions)
+			attempts := attemptFixtures(userID, questions, tt.results...)
+			total := tt.total
+			if total == 0 {
+				total = int64(len(attempts))
+			}
+			got := quizProgress(attempts, total, tt.correct, questions)
 
 			if got.Attempts != tt.wantAttempts {
 				t.Errorf("Attempts = %d, want %d", got.Attempts, tt.wantAttempts)
@@ -93,7 +104,7 @@ func TestQuizProgress(t *testing.T) {
 // still renders a row (labelled, not dropped) — the history is the user's.
 func TestQuizProgress_UnknownQuestion(t *testing.T) {
 	orphan := []database.QuizAttempt{{ID: uuid.New(), QuestionID: uuid.New(), IsCorrect: true}}
-	got := quizProgress(orphan, 1, quizFixtures())
+	got := quizProgress(orphan, 1, 1, quizFixtures())
 	if len(got.Recent) != 1 {
 		t.Fatalf("len(Recent) = %d, want 1", len(got.Recent))
 	}
@@ -326,6 +337,14 @@ func TestDashboardQuizWidget(t *testing.T) {
 		{
 			name:       "count failure is a 500",
 			repo:       &fakeQuizRepo{questions: questions, countErr: errFake},
+			user:       user,
+			htmx:       true,
+			wantStatus: http.StatusInternalServerError,
+			wantRows:   -1,
+		},
+		{
+			name:       "attempt-total count failure is a 500",
+			repo:       &fakeQuizRepo{questions: questions, countAttemptsErr: errFake},
 			user:       user,
 			htmx:       true,
 			wantStatus: http.StatusInternalServerError,

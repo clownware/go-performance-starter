@@ -39,8 +39,12 @@ COPY . .
 # Copy built CSS from frontend stage
 COPY --from=frontend-builder /build/web/static/css/app.css ./web/static/css/app.css
 
-# Install templ CLI and generate Go code from .templ files
-RUN go install github.com/a-h/templ/cmd/templ@v0.3.1001
+# Install templ CLI and generate Go code from .templ files.
+# go.mod is the single source of the templ version — a version pinned here
+# went stale once already (v0.3.1001 vs go.mod's v0.3.1020; CI learned this
+# lesson in b0e62ff, this line did not), which made the image regenerate
+# committed output with an older CLI than produced it (#90's drift class).
+RUN go install github.com/a-h/templ/cmd/templ@$(go list -m -f '{{.Version}}' github.com/a-h/templ)
 RUN templ generate
 
 # Build the application with optimization flags

@@ -27,11 +27,12 @@ type fakeQuizRepo struct {
 	// ListAttemptsByUser; attempts below records the write side.
 	history []database.QuizAttempt
 
-	listErr         error
-	getErr          error
-	recordErr       error
-	countErr        error
-	listAttemptsErr error
+	listErr          error
+	getErr           error
+	recordErr        error
+	countErr         error
+	listAttemptsErr  error
+	countAttemptsErr error
 
 	attempts []database.CreateQuizAttemptParams
 }
@@ -97,6 +98,13 @@ func (f *fakeQuizRepo) CountCorrectByUser(_ context.Context, _ uuid.UUID) (int64
 		return 0, f.countErr
 	}
 	return f.correctCount, nil
+}
+
+func (f *fakeQuizRepo) CountAttemptsByUser(_ context.Context, _ uuid.UUID) (int64, error) {
+	if f.countAttemptsErr != nil {
+		return 0, f.countAttemptsErr
+	}
+	return int64(len(f.history)), nil
 }
 
 // quizFixtures returns three seeded questions in display order, mirroring the

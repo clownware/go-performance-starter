@@ -40,3 +40,10 @@ LIMIT $2 OFFSET $3;
 SELECT COUNT(*)
 FROM quiz_attempts
 WHERE user_id = $1 AND is_correct = true;
+
+-- name: CountAttemptsByUser :one
+-- Dashboard total (2026-08-19): the widget's attempt count must be the real
+-- total, not the length of a windowed list.
+SELECT COUNT(*)
+FROM quiz_attempts
+WHERE user_id = $1;
