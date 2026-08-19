@@ -263,8 +263,13 @@ func (s *Server) AuthClient() *auth.AuthClient {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
+	// The explainer spine and the live budget stats are built per request
+	// from code and constants (ADR-024 surface 1, #67) — server-rendered
+	// dynamic content is part of what the page demonstrates.
 	props := pages.HomePageProps{
 		BaseProps: view.NewBaseProps("Go Performance Starter"),
+		Nodes:     handler.ExplainerNodes(),
+		Stats:     handler.PerfBudgetStats(),
 	}
 	if err := view.Render(w, r, http.StatusOK, pages.HomePage(props)); err != nil {
 		slog.Error("Failed to render home page", "error", err)

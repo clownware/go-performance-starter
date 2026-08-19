@@ -9,14 +9,52 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"fmt"
 	"github.com/clownware/go-performance-starter/internal/view"
 	"github.com/clownware/go-performance-starter/internal/view/components"
 	"github.com/clownware/go-performance-starter/internal/view/layouts"
 )
 
-// HomePageProps holds data for the home landing page.
+// HomePageProps holds data for the home landing page. Nodes and Stats are
+// built by the handler (internal/handler/home_explainer.go): the explainer
+// spine and the live ADR-000 budgets rendered from constants (#67).
 type HomePageProps struct {
 	view.BaseProps
+	Nodes []ExplainerNode
+	Stats []BudgetStat
+}
+
+// ExplainerNode is one step of the request's journey through the stack
+// (ADR-024 surface 1): prose, a source peek, its ADR, and the quiz topic
+// that draws from it.
+type ExplainerNode struct {
+	Step      int
+	Anchor    string // fragment id, e.g. "routing"
+	QuizTopic string // matches quiz_questions.topic
+	Title     string
+	Summary   string
+	Prose     []string
+	ADR       ExplainerLink
+	Source    ExplainerSource
+}
+
+// ExplainerLink is an outbound reference (an ADR on GitHub).
+type ExplainerLink struct {
+	Href  string
+	Label string
+}
+
+// ExplainerSource is an abridged excerpt of a real file in this repo.
+type ExplainerSource struct {
+	File    string
+	Snippet string
+}
+
+// BudgetStat is one ADR-000 budget, rendered from internal/performance.
+type BudgetStat struct {
+	Label string
+	Value string
+	Note  string
 }
 
 // surface is one entry in the home directory of demo surfaces.
@@ -26,9 +64,8 @@ type surface struct {
 	Description string
 }
 
-// homeSurfaces lists the demo surfaces in tour order — the interim
-// navigational directory until the full ADR-024 architecture explainer
-// lands on this page.
+// homeSurfaces lists the demo surfaces in tour order — the navigational
+// skeleton the explainer grows around (ADR-024).
 func homeSurfaces() []surface {
 	return []surface{
 		{
@@ -95,7 +132,7 @@ func HomePage(props HomePageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><h1 class=\"text-3xl font-bold mb-3\">Go Performance Starter</h1><p class=\"text-muted-foreground mb-6 max-w-xl mx-auto\">A server-rendered Go + HTMX starter that proves its own architecture: typed templates, RLS-scoped data access, and performance budgets enforced in CI — demonstrated live by the surfaces below.</p><div class=\"flex flex-wrap justify-center gap-3 mb-12\"><a href=\"/patterns\" class=\"btn btn-primary inline-block\">Explore the patterns</a> <a href=\"https://github.com/clownware/go-performance-starter\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"btn btn-secondary inline-block\">View on GitHub</a></div></section><section data-testid=\"surface-directory\" aria-label=\"Demo surfaces\" class=\"max-w-3xl mx-auto grid gap-4 sm:grid-cols-2 pb-8\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><h1 class=\"text-3xl font-bold mb-3\">Go Performance Starter</h1><p class=\"text-muted-foreground mb-6 max-w-xl mx-auto\">A server-rendered Go + HTMX starter that proves its own architecture: typed templates, RLS-scoped data access, and performance budgets enforced in CI — demonstrated live by the surfaces below.</p><div class=\"flex flex-wrap justify-center gap-3 mb-12\"><a href=\"/patterns\" class=\"btn btn-primary inline-block\">Explore the patterns</a> <a href=\"#architecture\" class=\"btn btn-secondary inline-block\">Follow a request through the stack</a> <a href=\"https://github.com/clownware/go-performance-starter\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"btn btn-secondary inline-block\">View on GitHub</a></div></section><section data-testid=\"surface-directory\" aria-label=\"Demo surfaces\" class=\"max-w-3xl mx-auto grid gap-4 sm:grid-cols-2 pb-8\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -107,7 +144,7 @@ func HomePage(props HomePageProps) templ.Component {
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 70, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 108, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -120,7 +157,7 @@ func HomePage(props HomePageProps) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 73, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 111, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -133,7 +170,7 @@ func HomePage(props HomePageProps) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(s.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 74, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 112, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -148,9 +185,337 @@ func HomePage(props HomePageProps) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			if len(props.Nodes) > 0 {
+				templ_7745c5c3_Err = explainer(props.Nodes).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(props.Stats) > 0 {
+				templ_7745c5c3_Err = perfStats(props.Stats).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
 			return nil
 		})
 		templ_7745c5c3_Err = layouts.Base(props.BaseProps).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// explainer is the architecture walkthrough (ADR-024 surface 1): the five
+// nodes of a request's journey, each with prose, an ADR link, a native
+// <details> source peek (no JavaScript needed), and the quiz hand-off.
+func explainer(nodes []ExplainerNode) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<section id=\"architecture\" data-testid=\"explainer\" aria-labelledby=\"architecture-heading\" class=\"max-w-3xl mx-auto py-12 scroll-mt-20\"><header class=\"mb-8 text-center\"><p class=\"text-sm uppercase tracking-wide text-muted-foreground mb-2\">Architecture tour</p><h2 id=\"architecture-heading\" class=\"text-2xl font-bold mb-3\">Follow one request through the stack</h2><p class=\"text-muted-foreground max-w-xl mx-auto\">Five stops from the socket to the pixel. Each is a live part of this very page, links to the decision record that shaped it, and feeds the quiz — so what you read here is what you'll be asked.</p></header><nav aria-label=\"Tour steps\" class=\"mb-8\"><ol class=\"flex flex-wrap justify-center gap-2 text-sm\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, n := range nodes {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<li><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var7 templ.SafeURL
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("#" + n.Anchor))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 143, Col: 45}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" class=\"inline-block px-3 py-1 rounded-full border border-border bg-surface text-link hover:border-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d · %s", n.Step, n.QuizTopic))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 144, Col: 53}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</a></li>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</ol></nav><ol class=\"space-y-6\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, n := range nodes {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<li id=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(n.Anchor)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 152, Col: 21}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" data-testid=\"explainer-node\" class=\"bg-surface rounded-lg shadow-md p-6 scroll-mt-20\"><div class=\"flex items-start gap-4\"><span aria-hidden=\"true\" class=\"shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-link font-semibold\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", n.Step))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 154, Col: 167}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</span><div class=\"min-w-0 flex-1\"><h3 class=\"text-lg font-semibold mb-1\"><span class=\"sr-only\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Step %d: ", n.Step))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 157, Col: 64}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(n.Title)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 158, Col: 17}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</h3><p class=\"text-sm text-muted-foreground mb-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(n.Summary)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 160, Col: 64}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, p := range n.Prose {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<p class=\"mb-3 text-foreground\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var14 string
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 162, Col: 43}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<details class=\"mt-4 rounded-md border border-border bg-background/60 open:bg-surface-hover\"><summary class=\"cursor-pointer select-none px-4 py-2 text-sm font-medium text-link hover:underline\">Source peek — <code class=\"text-xs text-foreground\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(n.Source.File)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 166, Col: 78}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</code></summary><pre class=\"p-4 text-xs overflow-x-auto border-t border-border\"><code>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var16 string
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(n.Source.Snippet)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 168, Col: 96}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</code></pre></details><p class=\"mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm\"><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var17 templ.SafeURL
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(n.ADR.Href))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 171, Col: 43}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-link hover:underline\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var18 string
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(n.ADR.Label)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 171, Col: 135}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " ↗</a> <a href=\"/learn/quiz\" class=\"text-link hover:underline\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs("Quiz yourself on " + n.QuizTopic + " →")
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 172, Col: 108}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</a></p></div></div></li>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</ol><div class=\"mt-10 text-center\"><p class=\"text-muted-foreground mb-4\">Read it? Now prove it — wrong answers become flashcards you can keep.</p><a href=\"/learn/quiz\" class=\"btn btn-primary inline-block\">Take the architecture quiz</a></div></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// perfStats renders the ADR-000 budgets. The values arrive from the handler,
+// which reads internal/performance at request time — this component never
+// hardcodes a number, which is the point it demonstrates.
+func perfStats(stats []BudgetStat) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var20 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var20 == nil {
+			templ_7745c5c3_Var20 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<section id=\"budgets\" data-testid=\"perf-stats\" aria-labelledby=\"budgets-heading\" class=\"max-w-3xl mx-auto pb-12 scroll-mt-20\"><header class=\"mb-6 text-center\"><p class=\"text-sm uppercase tracking-wide text-muted-foreground mb-2\">Live performance budgets</p><h2 id=\"budgets-heading\" class=\"text-2xl font-bold mb-3\">What CI refuses to ship past</h2><p class=\"text-muted-foreground max-w-xl mx-auto\">Rendered on this request from the constants in <code class=\"text-xs px-1 rounded bg-primary/10 text-link\">internal/performance/budgets.go</code> — the same values <code class=\"text-xs px-1 rounded bg-primary/10 text-link\">task ci</code> enforces. Change the constant, and this grid changes; no template edit involved.</p></header><dl class=\"grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, s := range stats {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div data-testid=\"perf-stat\" class=\"bg-surface rounded-lg shadow-sm p-4 text-center\"><dt class=\"text-xs uppercase tracking-wide text-muted-foreground\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(s.Label)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 203, Col: 80}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</dt><dd class=\"mt-1\"><span class=\"block text-xl font-semibold text-foreground\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("< " + s.Value)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 205, Col: 80}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</span> <span class=\"block text-xs text-muted-foreground mt-1\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(s.Note)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages/home.templ`, Line: 206, Col: 69}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</span></dd></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</dl></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
