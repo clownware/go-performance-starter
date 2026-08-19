@@ -7,26 +7,68 @@ import (
 	"github.com/clownware/go-performance-starter/internal/view/partials"
 )
 
-// ProfilePageProps holds data for the profile page.
+// ProfilePageProps holds data for the profile page. Email and IsGuest come
+// from the authenticated identity; Errors/Success belong to the name form,
+// PasswordErrors/PasswordSuccess to the change-password form (#97).
 type ProfilePageProps struct {
 	view.BaseProps
-	Name    string
-	Errors  map[string]string
-	Success bool
+	Name            string
+	Email           string
+	IsGuest         bool
+	Errors          map[string]string
+	Success         bool
+	PasswordErrors  map[string]string
+	PasswordSuccess bool
 }
 
 templ ProfilePage(props ProfilePageProps) {
 	@layouts.Base(props.BaseProps) {
-		<div class="max-w-2xl mx-auto bg-surface text-foreground rounded shadow p-6">
-			<h1 class="text-2xl font-semibold mb-4">Profile</h1>
-			<form id="profile-form" hx-post="/profile" hx-target="#profile-form" hx-swap="innerHTML">
-				@components.CSRFField()
-				@partials.ProfileForm(partials.ProfileFormProps{
-					Name:    props.Name,
-					Errors:  props.Errors,
-					Success: props.Success,
-				})
-			</form>
+		<div class="max-w-2xl mx-auto space-y-6">
+			<section class="bg-surface text-foreground rounded shadow p-6" aria-labelledby="account-heading">
+				<h1 id="account-heading" class="text-2xl font-semibold mb-4">Profile</h1>
+				<dl class="mb-6">
+					<dt class="text-sm font-medium text-muted-foreground">Account email</dt>
+					<dd class="mt-1">
+						if props.IsGuest {
+							<span class="text-foreground">You're browsing as a guest — no email is attached to this account.</span>
+							<a href="/learn/upgrade" class="text-link hover:underline ml-1">Create an account to keep your progress</a>
+						} else if props.Email != "" {
+							<span class="text-foreground">{ props.Email }</span>
+						} else {
+							<span class="text-muted-foreground">No email on file</span>
+						}
+					</dd>
+				</dl>
+				<form id="profile-form" hx-post="/profile" hx-target="#profile-form" hx-swap="innerHTML" method="post" action="/profile">
+					@components.CSRFField()
+					@partials.ProfileForm(partials.ProfileFormProps{
+						Name:    props.Name,
+						Errors:  props.Errors,
+						Success: props.Success,
+					})
+				</form>
+			</section>
+			if !props.IsGuest {
+				<section class="bg-surface text-foreground rounded shadow p-6" aria-labelledby="password-heading">
+					<h2 id="password-heading" class="text-xl font-semibold mb-1">Change password</h2>
+					<p class="text-sm text-muted-foreground mb-4">Your signed-in session is the credential — you won't be asked for the current password.</p>
+					<form id="password-form" hx-post="/profile/password" hx-target="#password-form" hx-swap="innerHTML" method="post" action="/profile/password" autocomplete="on">
+						@components.CSRFField()
+						@partials.PasswordForm(partials.PasswordFormProps{
+							Errors:  props.PasswordErrors,
+							Success: props.PasswordSuccess,
+						})
+					</form>
+				</section>
+			}
+			<section class="bg-surface text-foreground rounded shadow p-6" aria-labelledby="session-heading">
+				<h2 id="session-heading" class="text-xl font-semibold mb-1">Session</h2>
+				<p class="text-sm text-muted-foreground mb-4">Sign out of this browser.</p>
+				<form hx-post="/auth/logout" hx-target="body" method="post" action="/auth/logout">
+					@components.CSRFField()
+					<button type="submit" class="btn btn-secondary">Sign out</button>
+				</form>
+			</section>
 		</div>
 	}
 }

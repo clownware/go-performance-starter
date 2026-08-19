@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now CI-enforced by `internal/view/tokens_contrast_test.go`.
 
 ### Added
+- Profile page build-out (#97): the account email is shown read-only from
+  the authenticated GoTrue user (guests see an upgrade prompt instead), a
+  change-password section reuses the reset machinery — an authenticated
+  `UpdateUser` on the session token, no current-password step, guests
+  refused — behind the strict credential rate tier at
+  `POST /profile/password`, and a sign-out form lives on the page itself
+  instead of only in the nav menu. Works as plain forms without JS
 - Password reset flow (#71): request page (`/auth/recover`, anti-enumeration
   generic response), server-side `token_hash` verification via direct GoTrue
   REST (`/auth/reset` — no client JS; requires the Reset Password email

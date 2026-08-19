@@ -174,6 +174,10 @@ func (s *Server) setupRoutes() {
 			protectedRouter.Use(mw.UserLoader(postgres.NewUserRepo(s.db, database.New(s.db))))
 			protectedRouter.Get("/profile", handler.ProfileView)
 			protectedRouter.Post("/profile", handler.ProfileUpdate)
+			// Change password (#97): the session token is the credential, so
+			// it sits on the strict credential tier like /auth/reset.
+			protectedRouter.With(mw.RateLimiter(5.0/60.0, 5)).
+				Post("/profile/password", handler.ProfilePasswordUpdate(s.authClient))
 			handler.FirstRunHandlers(protectedRouter)
 		})
 	}
