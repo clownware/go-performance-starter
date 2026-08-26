@@ -88,6 +88,16 @@ package database
     steps:
       - run: curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
 `,
+		"Taskfile.yml": `version: '3'
+
+vars:
+  GOLANGCI_LINT_VERSION: 2.99.5
+
+tasks:
+  lint:install:
+    cmds:
+      - go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v{{.GOLANGCI_LINT_VERSION}}
+`,
 	}
 }
 
@@ -108,6 +118,7 @@ func fakeManifest() map[string]string {
 		"sqlc":           "1.31.1",
 		"golang-migrate": "4.19.1",
 		"node":           "20",
+		"golangci-lint":  "2.99.5",
 	}
 }
 
@@ -261,6 +272,7 @@ func TestExpectedVersions(t *testing.T) {
 				"sqlc":           "1.31.1",
 				"golang-migrate": "4.19.1",
 				"node":           "20",
+				"golangci-lint":  "2.99.5",
 			},
 		},
 		{
@@ -330,6 +342,19 @@ func TestExpectedVersions(t *testing.T) {
 			wantErr: "release.yml",
 		},
 		{
+			name:    "missing Taskfile errors",
+			edit:    func(files map[string]string) { delete(files, "Taskfile.yml") },
+			wantErr: "Taskfile.yml",
+		},
+		{
+			name: "Taskfile without a golangci-lint pin errors",
+			edit: func(files map[string]string) {
+				files["Taskfile.yml"] = strings.Replace(
+					files["Taskfile.yml"], "GOLANGCI_LINT_VERSION: 2.99.5\n", "", 1)
+			},
+			wantErr: "Taskfile.yml: no match",
+		},
+		{
 			name: "ci workflow without a node pin errors",
 			edit: func(files map[string]string) {
 				files[".github/workflows/ci.yml"] = strings.Replace(
@@ -383,7 +408,7 @@ func TestMainVerdict(t *testing.T) {
 		{
 			name:     "manifest matching every pin passes and reports the key count",
 			wantExit: 0,
-			wantOut:  "✅ versions.json matches the repo's actual pins (14 keys)",
+			wantOut:  "✅ versions.json matches the repo's actual pins (15 keys)",
 		},
 		{
 			name:         "drifted pin fails naming the key and both values",
@@ -602,13 +627,15 @@ func TestVersionRegexes(t *testing.T) {
 		{name: "sqlc header", re: "sqlc", input: "// versions:\n//   sqlc v1.31.1\n", want: "1.31.1"},
 		{name: "migrate download url", re: "migrate", input: "https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz", want: "4.19.1"},
 		{name: "node ci pin", re: "node", input: "node-version: '20'", want: "20"},
+		{name: "golangci-lint taskfile var", re: "golangci", input: "vars:\n  GOLANGCI_LINT_VERSION: 2.13.1\n", want: "2.13.1"},
 	}
 
 	res := map[string]interface{ FindStringSubmatch(string) []string }{
-		"js":      jsVersionRe,
-		"sqlc":    sqlcVersionRe,
-		"migrate": migrateVersionRe,
-		"node":    nodeVersionRe,
+		"js":       jsVersionRe,
+		"sqlc":     sqlcVersionRe,
+		"migrate":  migrateVersionRe,
+		"node":     nodeVersionRe,
+		"golangci": golangciLintVersionRe,
 	}
 
 	for _, tt := range tests {
