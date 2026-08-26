@@ -39,6 +39,10 @@ var migrateVersionRe = regexp.MustCompile(`golang-migrate/migrate/releases/downl
 // nodeVersionRe matches the CI Node pin (`node-version: '20'`).
 var nodeVersionRe = regexp.MustCompile(`node-version:\s*['"]?([0-9]+(?:\.[0-9]+)*)`)
 
+// golangciLintVersionRe matches the Taskfile var behind lint:install
+// (`GOLANGCI_LINT_VERSION: 2.13.1`).
+var golangciLintVersionRe = regexp.MustCompile(`GOLANGCI_LINT_VERSION:\s*['"]?([0-9]+(?:\.[0-9]+)+)`)
+
 // templateRe is the only key not checked against a source file: the release
 // workflow stamps it from the git tag, so CI just enforces the tag format.
 var templateRe = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
@@ -156,6 +160,10 @@ func expectedVersions() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	golangciLint, err := firstMatch("Taskfile.yml", golangciLintVersionRe)
+	if err != nil {
+		return nil, err
+	}
 
 	return map[string]string{
 		"go":             mod["toolchain"],
@@ -171,6 +179,7 @@ func expectedVersions() (map[string]string, error) {
 		"sqlc":           sqlc,
 		"golang-migrate": migrateVersion,
 		"node":           node,
+		"golangci-lint":  golangciLint,
 	}, nil
 }
 

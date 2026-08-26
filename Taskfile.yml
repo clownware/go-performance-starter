@@ -5,6 +5,12 @@ version: '3'
 # (a missing .env is a no-op here). See .env.tpl / .env.example.
 dotenv: ['.env']
 
+vars:
+  # Pinned so lint results are reproducible and CI never resolves @latest over
+  # the network. Tracked in versions.json (ADR-030) — bump here, then run
+  # `task versions:sync`.
+  GOLANGCI_LINT_VERSION: 2.13.1
+
 tasks:
   # Development tasks
   dev:
@@ -35,9 +41,10 @@ tasks:
   lint:install:
     desc: Install golangci-lint for local development
     cmds:
-      - go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+      - go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v{{.GOLANGCI_LINT_VERSION}}
     status:
-      - which golangci-lint
+      # Version-aware so a stale local binary gets upgraded, not silently kept.
+      - golangci-lint version | grep -qF "version {{.GOLANGCI_LINT_VERSION}} "
 
   lint:
     desc: Run linters
