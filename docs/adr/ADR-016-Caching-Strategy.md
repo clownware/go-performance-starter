@@ -71,6 +71,15 @@ func serveAuthenticatedContent(w http.ResponseWriter, r *http.Request) {
 
 ### 3. In-Memory Caching
 
+> **Amended 2026-08-26** (operator-authorized, #87): the `internal/cache`
+> package that implemented this section was removed — it shipped with zero
+> call sites and 0% coverage since the demo pivot (ADR-024), and dead code is
+> surface without benefit. The design below remains the accepted pattern:
+> when a measured hot path needs in-memory caching, reintroduce the package
+> from this spec, and per ADR-032's sequencing rule it then enters test +
+> mutation scope. HTTP/CDN caching and build-time precomputation are
+> implemented and unaffected.
+
 #### Simple In-Memory Cache
 
 ```go
