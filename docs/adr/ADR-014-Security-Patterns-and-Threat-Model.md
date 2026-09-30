@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (amended by ADR-025 §1, ADR-027 §4, ADR-028 §6, ADR-034 §4)
 
 ## Context
 
@@ -13,6 +13,8 @@ The application must protect against the OWASP Top 10 threats while maintaining 
 ## Decision
 
 ### 1. Authentication and Authorization
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): ADR-001 does not mention Supabase — the auth choice is made here and in ADR-024. There is no sliding session: the access token rides the `sb-access-token` cookie and the refresh token is used exactly once, during guest→registered upgrade (ADR-024). Session carriage is amended by ADR-025 §3.
 
 #### Authentication Strategy
 - Use **Supabase Auth** for identity management (as referenced in ADR-001)
@@ -56,6 +58,8 @@ func authMiddleware(next http.Handler) http.Handler {
 ```
 
 ### 2. Input Validation and Sanitization
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): the `bluemonday` sample is illustrative; the app ships no HTML sanitiser. templ escapes every interpolated value and inputs are length-validated in `internal/validate`.
 
 #### Validation Principles
 - **Never trust client input** - validate on server
@@ -143,6 +147,8 @@ func GetPostUnsafe(slug string) (*Post, error) {
 
 ### 3. CSRF Protection
 
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): `gorilla/csrf` is not a dependency. The double-submit cookie is hand-rolled in `internal/middleware/csrf.go`: 32-byte random token in an HttpOnly cookie (12h), sent back via the `X-CSRF-Token` header (`hx-headers` on `<body>`) or the `csrf_token` field (`components.CSRFField`), compared in constant time. No per-session binding, no rotation.
+
 #### CSRF Token Strategy
 - Generate unique token per session
 - Include token in forms via hidden input
@@ -181,6 +187,8 @@ func renderForm(w http.ResponseWriter, r *http.Request) {
 ```
 
 ### 4. Rate Limiting
+
+> **Amended 2026-07-07 by ADR-027 and 2026-09-09 by ADR-034** (note added 2026-09-30): per-client tiers only see real visitor IPs behind a proxy when `TRUSTED_PROXY_CIDRS`/`CLIENT_IP_HEADER` are set (ADR-027). Shipped tiers (`internal/server/server.go`): global 50 req/s burst 10; `/auth` credential POSTs 5/min; `/learn` 30/min burst 20; the `/patterns` rate-limit demo 3 then one per 2s. The per-user and per-email tiers listed below are not implemented (OWASP table, A07). Every 429 carries `Retry-After` (ADR-034).
 
 #### Rate Limit Strategy
 - **Authentication endpoints**: 5 attempts per minute per IP
@@ -225,6 +233,8 @@ func perUserRateLimit(next http.Handler) http.Handler {
 ```
 
 ### 5. Secrets Management
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): production secrets live on the container host (`fly secrets`; ADR-015, ADR-025), not in Cloudflare environment variables. `adr015-no-hardcoded-secrets` scans shipped source and config in `task check:adr`.
 
 #### Development Environment
 - Use `.env` files loaded via `godotenv` (as defined in ADR-001)
@@ -404,6 +414,8 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
 
 ## Implementation Checklist
 
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): this checklist is the original plan, kept unticked as history; everything it lists shipped. Current status lives in the Enforcement section and the guides under `docs/guides/`.
+
 - [ ] Implement authentication middleware with JWT validation
 - [ ] Add CSRF protection to all state-changing endpoints
 - [ ] Implement rate limiting for authentication and API endpoints
@@ -427,6 +439,8 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
 ## Review Cadence
 
 **Review Date**: 2026-02-15 (Quarterly security review)
+
+**Reviewed**: 2026-09-30 (docs health audit — decision unchanged; next review 2027-03-31)
 
 ---
 

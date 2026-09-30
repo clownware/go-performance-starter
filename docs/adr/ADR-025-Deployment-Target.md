@@ -27,6 +27,8 @@ Two constraints shape the decision:
 
 ### 2. TLS: terminated at the edge, plain HTTP inside
 
+> **Refined 2026-07-07 by ADR-027** (note added 2026-09-30): client-IP resolution behind the edge is specified in ADR-027 (`TRUSTED_PROXY_CIDRS`, `CLIENT_IP_HEADER`, fail-closed default). The HSTS gating below shipped in `internal/middleware/security.go`.
+
 - TLS terminates at Cloudflare (edge) and the platform proxy (Fly), configured in Full (strict) mode between them. The Go process serves plain HTTP on `HTTP_PORT` inside the private network and does **not** embed certificates.
 - The app emits `Strict-Transport-Security` only when `ENV=production` (implementation tracked in the hardening phase; ADR-014 §6 already specifies the header).
 
@@ -70,6 +72,7 @@ ADR-019's "don't create deployment infra" boundary is amended to permit **one wo
 
 - [ADR-000](ADR-000-Performance-Budgets-and-Quality-Attributes.md) (image/memory budgets), [ADR-001](ADR-001-Foundation.md) (superseded §5), [ADR-014](ADR-014-Security-Patterns-and-Threat-Model.md) (HSTS, sessions), [ADR-015](ADR-015-Configuration-Management-Strategy.md) (env config), [ADR-016](ADR-016-Caching-Strategy.md) (CDN layer), [ADR-019](ADR-019-Template-Scope-Boundary.md) (amended), [ADR-024](ADR-024-Demo-Application-Direction.md) (demo instance)
 - 2026-07-05 deployment-readiness audit (session transcript)
+- Amends: ADR-001 §5 (superseded), ADR-014 §1 (session carriage), ADR-015 (production secrets on the host), ADR-016 (session-data bullet), ADR-019 (the `fly.toml` exception, §6). Refined by ADR-027 (§2). Noted 2026-09-30.
 
 ## Enforcement
 <!-- added 2026-07-12, see ADR-033 (Enforcement Architecture) -->
@@ -81,5 +84,6 @@ ADR-019's "don't create deployment infra" boundary is amended to permit **one wo
   - TC-1 → `adr025-deploy-scope` in `scripts/adrcheck` (status: **warn**)
   - TC-2 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
   - TC-3 → docker job in `.github/workflows/ci.yml` (status: **block**, pre-existing; owned by ADR-000)
+- **Amendment 2026-09-30:** `adr025-deploy-scope` detects `.tf` files and stray `fly.toml`s only; Kubernetes manifests are not detected, so TC-1's wording overstates the check. Manifests are review territory until the check grows.
 - **Not machine-checkable:** Statelessness (no session store, no local disk state) and forward-only production migration discipline — architectural/process, review territory.
 - **Graduation log:** _(empty)_

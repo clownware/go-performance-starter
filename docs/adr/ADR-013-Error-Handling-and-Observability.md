@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (§2 logging amended by ADR-026)
 
 ## Context
 
@@ -134,6 +134,8 @@ func (r *PostRepository) GetBySlug(ctx context.Context, slug string) (*Post, err
 ### 2. Structured Logging
 
 > **Amended 2026-07-05**: [ADR-026](ADR-026-Logging-Standardization.md) standardizes logging on stdlib `log/slog`. The level semantics, required context fields, and scrubbing rules below are unchanged; the zerolog code samples are illustrative of the pattern, not the library.
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): the budget constant in the sample below is `performance.MaxP95ResponseTime` (`internal/performance/budgets.go`); there is no `MaxResponseTime`. The Alternatives and References that name zerolog record the 2025 decision ADR-026 superseded. Everything in the Implementation Checklist shipped (`internal/middleware`: Recoverer, RequestLogger, Metrics; `/metrics`, `/health`, `/healthz` in `internal/server/server.go`).
 
 Use **zerolog** (as defined in ADR-001) with consistent context:
 
@@ -342,6 +344,8 @@ func HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
 
 ## Implementation Checklist
 
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): this checklist is the original plan, kept unticked as history; everything it lists shipped. Current status lives in the Enforcement section and the guides under `docs/guides/`.
+
 - [ ] Implement error handling middleware with panic recovery
 - [ ] Add request logger middleware with request_id context
 - [ ] Define custom error types (NotFoundError, ValidationError)
@@ -364,6 +368,8 @@ func HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
 ## Review Cadence
 
 **Review Date**: 2026-05-15
+
+**Reviewed**: 2026-09-30 (docs health audit — decision unchanged; next review 2027-03-31)
 
 ---
 

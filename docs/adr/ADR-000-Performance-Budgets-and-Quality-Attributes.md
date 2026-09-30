@@ -73,6 +73,8 @@ The Enforced budgets run inside the single quality gate (ADR-021):
 task ci   # includes test:binary-size and test:asset-budgets
 ```
 
+> **Amended 2026-09-09 by ADR-034** (note added 2026-09-30): the asset file lists that `test:asset-budgets` gates now live in `internal/performance` (`ShippedJS`, `ShippedCSS`) so the CI gate and the runtime observed-vs-budget grid measure the same files; the Monitored tier is measured per process and shown on the landing page. §2's Code Quality Metrics (80% coverage, cyclomatic complexity, function and file length) belong to no tier and are not enforced — ADR-023 rejected a coverage floor; read them as Aspirational. §4's Lighthouse CI and bundle analyzer are not wired ([#136](https://github.com/clownware/go-performance-starter/issues/136)).
+
 #### Automated Monitoring
 - Performance tests run in CI on every pull request
 - Binary size checked and reported as comment on PR
@@ -159,6 +161,8 @@ to calibrate them, and Aspirational targets graduate only if their measurement
 ## Review Cadence
 
 **Review Date**: 2026-07-01
+
+**Reviewed**: 2026-09-30 (docs health audit — tiers unchanged; next review 2027-03-31)
 
 This ADR should be reviewed quarterly to ensure budgets remain aligned with:
 - Application complexity growth

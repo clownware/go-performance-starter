@@ -4,7 +4,7 @@
 
 ## Status
 
-Accepted (§3 superseded by ADR-026; §5 superseded by ADR-025)
+Accepted (§3 superseded by ADR-026; §4 amended by ADR-015/ADR-025; §5 superseded by ADR-025)
 
 ## Context
 
@@ -15,6 +15,8 @@ This ADR documents these critical choices to ensure alignment and provide ration
 ## Decision
 
 ### 1. Go Version & Module Path
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): the floor is now Go 1.26 (`go.mod`, mirrored in `versions.json` per ADR-030); the module path is unchanged.
 
 We will use **Go 1.24+** with the module path `github.com/clownware/go-performance-starter`.
 
@@ -52,6 +54,8 @@ Rationale:
 - Simple integration with HTTP middleware for request logging
 
 ### 4. Secret Management Strategy
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): production secrets live on the container host (`fly secrets` in the ADR-025 worked example), not in Cloudflare environment variables — Cloudflare is proxy/CDN only (ADR-025); ADR-015 carries the current configuration surface. Runtime secret rotation was never built; rotation is an operational procedure, not a code capability.
 
 We adopt a two-tier approach to secret management:
 

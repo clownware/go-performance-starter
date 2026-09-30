@@ -12,6 +12,8 @@ Accepted
 
 Thirty-two ADRs govern this repo, but until now their constraints were enforced unevenly: some had dedicated tests wired into `task ci` (ADR-028's inline-script pin, ADR-029's token scan), some were enforced as a side effect of the build (ADR-005's named queries), and many stated rules no machine ever verified (ADR-026's `log.Printf` ban, ADR-002's migration pairing). An agent or contributor had no single place to learn which rules are checked, which are review territory, and which are aspirational.
 
+> **Correction 2026-09-30**: ADR-000 … ADR-032 is thirty-three ADRs (thirty-four including this one); the Enforcement section's "33/33 at launch" and the CHANGELOG's "all 34" both count this ADR in. TC-1's "status: warn" below labels a check that is not wired — read it as "not wired (no status)".
+
 This ADR applies the Clownware ADR-enforcement pattern: every ADR declares its testable consequences, a deterministic check suite verifies them, and enforcement graduates from warning to blocking only after a check earns trust. The pattern was specified for the Clownware repo family alongside `astro-performance-starter`; at implementation time the Astro repo had not yet landed its enforcement ADR, so this repo is the pattern's reference implementation, not a port.
 
 An honest scale note: this repo needed less new machinery than the pattern budgets for. Roughly half of the machine-checkable surface was already blocking in `task ci` (ADR-021) before this ADR existed. The new value is the mapping, the gap-filling checks, and the graduation mechanism — not a new wall of gates.

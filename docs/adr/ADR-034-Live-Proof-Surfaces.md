@@ -4,7 +4,7 @@
 
 ## Status
 
-Accepted
+Accepted (amends ADR-000 §3 — asset lists; ADR-014 §4 — `Retry-After` on every 429)
 
 ## Context
 

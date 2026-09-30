@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Accepted — implementation incomplete, see [#135](https://github.com/clownware/go-performance-starter/issues/135); session-data bullet amended by ADR-025 §3
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): status against the code: static assets get `Cache-Control: public, max-age=31536000` (no `immutable`) with a `?v=<build>` stamp and error responses go out `no-store`; there is no ETag/304 handling, no `CDN-Cache-Control`/`Cache-Tag`, no `singleflight` dependency, and the in-memory cache was removed (amendment in §3). The baseline/target figures in this ADR were targets, never measurements. #135 decides between implementing the remainder and superseding this ADR.
 
 ## Context
 
@@ -479,6 +481,8 @@ func GetWithMetrics(key string) (interface{}, bool) {
 
 ## Implementation Checklist
 
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): this checklist is the original plan, kept unticked as history; only the static-asset header shipped (see the Status note and #135).
+
 - [ ] Implement simple in-memory cache with TTL
 - [ ] Add HTTP caching headers for static assets
 - [ ] Add ETag support for dynamic content
@@ -518,6 +522,8 @@ func GetWithMetrics(key string) (interface{}, bool) {
 ## Review Cadence
 
 **Review Date**: 2026-05-15
+
+**Reviewed**: 2026-09-30 (docs health audit — open decision tracked in #135)
 
 ---
 
