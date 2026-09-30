@@ -6,6 +6,12 @@
       "runtimeExecutable": "op",
       "runtimeArgs": ["run", "--env-file=.env.tpl", "--", "go", "run", "./cmd/api"],
       "port": 4000
+    },
+    {
+      "name": "api-dotenv",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./cmd/api"],
+      "port": 4000
     }
   ]
 }

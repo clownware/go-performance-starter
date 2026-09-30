@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The continuous-deploy image is stamped with the `git describe` version
+  instead of the literal `dev`, so `/health` on the demo reports the real
+  build (#140)
+- `/health` reports the stamped build version on deployed instances
+  instead of `dev` (#141)
+
+### Changed
+- Documentation sweep (#142): README Quick Start bootstraps vanilla Postgres
+  with `task db:test:setup` (the `auth.uid()` stub CI uses) instead of a
+  bare `db:migrate:up` that fails on the RLS migrations; CLI prerequisites
+  listed; budgets table carries the ADR-000 Enforced/Monitored class; the
+  phantom `internal/cache/` package is gone from README, `engineering.md`
+  and the guides; `stack.md` counts 35 ADRs and names ADR-027…034;
+  `workflow.md`'s scope table gains the ADR-033 append-only row and the
+  ADR-025 `fly.toml` exception; the generated `AGENTS.md` no longer carries
+  three dangling `roles/*.md` links; CLAUDE.md rules 1 and 2 fold in
+  ADR-033 (append-only ADRs) and ADR-029 (role tokens); the
+  personalization guide lists `PUBLIC_BASE_URL` as required and every
+  brand-string site; `.claude/launch.json` gains a plain `go run` config
+  beside the `op run` one
+- Removed the dead `internal/database/fixtures` package (hand-written,
+  unused, and sitting inside the sqlc-generated path the ADR guard protects)
+
 ## [0.9.0] - 2026-09-12
 
 ### Added
@@ -21,76 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the tier say no. `RateLimiterWith` is the new seam: the limiter decides
   and sets `Retry-After`, the caller supplies the refusal body
 
-### Fixed
-- Every 429 from the rate limiter now carries `Retry-After` (whole seconds,
-  rounded up, never 0) computed from the bucket's refill; a refused request
-  no longer costs a token
-- RLS isolation check (ADR-034) on the flashcards page: one click runs
-  your own `ListFlashcardsByUser` twice through the same repository — as
-  you, then as a freshly minted stranger identity — and shows both row
-  counts next to the policy text. Zero rows for the stranger is Postgres
-  refusing the identical query, not a `WHERE` clause. Works without
-  JavaScript via `?check=1`; the HTMX endpoint is
-  `GET /learn/flashcards/isolation`. No other visitor's data is read
-- Observed-vs-budget grid (ADR-034): the landing page's budgets section now
-  shows, per budget, what this process observed since boot — p50/p95/p99
-  over the last 4096 requests, memory and its high-water mark, startup
-  (process start → listening socket, measured in `main`), the executable
-  size, and the shipped assets gzipped — with pass/fail and the ADR-000
-  class (Enforced/Monitored/Aspirational). Unmeasured values say so
-  instead of showing a passing zero. Every response also carries
-  `Server-Timing: app;dur=<ms>`. The asset file lists now live in
-  `internal/performance` so the CI gate and the runtime measure the same
-  files
-- Share and crawl surface: every page carries a real meta description,
-  Open Graph and Twitter card tags, and — when `PUBLIC_BASE_URL` is set —
-  a canonical link plus absolute `og:url`/`og:image` (a 1200×630 share
-  image ships at `/static/img/og.png`). `/robots.txt` disallows `/learn/*`
-  on purpose (its identity chain mints a real anonymous Supabase user on
-  first touch) and the per-user surfaces; `/sitemap.xml` lists the public
-  identity-free pages and exists only when the origin is configured, so
-  URLs are never guessed from the Host header. The README now links the
-  live demo
-
-### Changed
-- `/health` readiness probe pings its dependency through a consumer-side
-  `handler.Pinger` seam instead of importing `pgxpool` directly — the one
-  standing `adr003-no-sql-in-handlers` warning from the ADR-033 launch is
-  resolved by refactor, not allowlist (#92, #99)
-
-### Fixed
-- Found-work batch (2026-08-19): the Docker builder derives the templ CLI
-  version from go.mod instead of a stale hand pin (the image regenerated
-  committed output with v0.3.1001 while the repo was on v0.3.1020 — the
-  same drift class `check:generated` now polices); static-asset error
-  responses go out `no-store` instead of inheriting the one-year success
-  header (a cached 404 could outlive the fix); the dashboard quiz total
-  comes from a dedicated `CountAttemptsByUser` query instead of the length
-  of a 200-row listing window, so long histories read true; the stray
-  hand-written `internal/database/users.sql` inside the sqlc output dir is
-  removed; the home dashboard card stops promising widgets that now exist
-- The ADR-029 token scan (`internal/view/tokens_test.go`) now rejects raw
-  utilities from every Tailwind palette family, not just gray; the four
-  pre-ADR leftovers it surfaced (profile-form success box, first-run CTA
-  card, two `bg-blue-600` empty-state buttons) now ride `bg-success/10
-  text-success` and `.btn-primary` (#85)
-- The guest reaper now sweeps the auth side too (#82): anonymous GoTrue
-  identities older than the TTL with no `public.users` row — orphans from
-  failed provisioning (the #81 window) or sign-ins that never hit a
-  UserLoader route — were invisible to the row-driven reap and lingered
-  forever. A second pass lists anonymous users via the admin API
-  (paginated, page-capped), asks the database which have rows under
-  `service_role`, and deletes only the positively row-less ones; failures
-  are logged, never guessed through
-- WCAG AA contrast across both modes (2026-07-17 audit; every Lighthouse
-  a11y deduction was this): `--color-teal` darkened `#468189` → `#427a82`
-  (white button text 4.41→4.84:1), small-text `text-primary` usages moved
-  to the flipping `text-link` role, alert text rides a new
-  `--color-danger-emphasis` token (5.5:1 on the danger tint), and `.input`
-  borders ride `--color-border-input` (≥3.6:1, WCAG 1.4.11). Ratios are
-  now CI-enforced by `internal/view/tokens_contrast_test.go`.
-
-### Added
 - Landing architecture explainer (ADR-024 surface 1, #67): the home page
   now walks one request through the stack in five anchored nodes — Chi
   router + middleware, handler, repository/sqlc/RLS, templ/HTMX/Alpine,
@@ -142,6 +96,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (cards to review / known / total). Signed-out visitors get the
   browse-first teaser; with auth disabled the shell stays routed so the nav
   link never 404s. The pre-pivot "Create Project" empty state is gone
+
+### Changed
+- `/health` readiness probe pings its dependency through a consumer-side
+  `handler.Pinger` seam instead of importing `pgxpool` directly — the one
+  standing `adr003-no-sql-in-handlers` warning from the ADR-033 launch is
+  resolved by refactor, not allowlist (#92, #99)
+
+### Fixed
+- Every 429 from the rate limiter now carries `Retry-After` (whole seconds,
+  rounded up, never 0) computed from the bucket's refill; a refused request
+  no longer costs a token
+- RLS isolation check (ADR-034) on the flashcards page: one click runs
+  your own `ListFlashcardsByUser` twice through the same repository — as
+  you, then as a freshly minted stranger identity — and shows both row
+  counts next to the policy text. Zero rows for the stranger is Postgres
+  refusing the identical query, not a `WHERE` clause. Works without
+  JavaScript via `?check=1`; the HTMX endpoint is
+  `GET /learn/flashcards/isolation`. No other visitor's data is read
+- Observed-vs-budget grid (ADR-034): the landing page's budgets section now
+  shows, per budget, what this process observed since boot — p50/p95/p99
+  over the last 4096 requests, memory and its high-water mark, startup
+  (process start → listening socket, measured in `main`), the executable
+  size, and the shipped assets gzipped — with pass/fail and the ADR-000
+  class (Enforced/Monitored/Aspirational). Unmeasured values say so
+  instead of showing a passing zero. Every response also carries
+  `Server-Timing: app;dur=<ms>`. The asset file lists now live in
+  `internal/performance` so the CI gate and the runtime measure the same
+  files
+- Share and crawl surface: every page carries a real meta description,
+  Open Graph and Twitter card tags, and — when `PUBLIC_BASE_URL` is set —
+  a canonical link plus absolute `og:url`/`og:image` (a 1200×630 share
+  image ships at `/static/img/og.png`). `/robots.txt` disallows `/learn/*`
+  on purpose (its identity chain mints a real anonymous Supabase user on
+  first touch) and the per-user surfaces; `/sitemap.xml` lists the public
+  identity-free pages and exists only when the origin is configured, so
+  URLs are never guessed from the Host header. The README now links the
+  live demo
+
+- Found-work batch (2026-08-19): the Docker builder derives the templ CLI
+  version from go.mod instead of a stale hand pin (the image regenerated
+  committed output with v0.3.1001 while the repo was on v0.3.1020 — the
+  same drift class `check:generated` now polices); static-asset error
+  responses go out `no-store` instead of inheriting the one-year success
+  header (a cached 404 could outlive the fix); the dashboard quiz total
+  comes from a dedicated `CountAttemptsByUser` query instead of the length
+  of a 200-row listing window, so long histories read true; the stray
+  hand-written `internal/database/users.sql` inside the sqlc output dir is
+  removed; the home dashboard card stops promising widgets that now exist
+- The ADR-029 token scan (`internal/view/tokens_test.go`) now rejects raw
+  utilities from every Tailwind palette family, not just gray; the four
+  pre-ADR leftovers it surfaced (profile-form success box, first-run CTA
+  card, two `bg-blue-600` empty-state buttons) now ride `bg-success/10
+  text-success` and `.btn-primary` (#85)
+- The guest reaper now sweeps the auth side too (#82): anonymous GoTrue
+  identities older than the TTL with no `public.users` row — orphans from
+  failed provisioning (the #81 window) or sign-ins that never hit a
+  UserLoader route — were invisible to the row-driven reap and lingered
+  forever. A second pass lists anonymous users via the admin API
+  (paginated, page-capped), asks the database which have rows under
+  `service_role`, and deletes only the positively row-less ones; failures
+  are logged, never guessed through
+- WCAG AA contrast across both modes (2026-07-17 audit; every Lighthouse
+  a11y deduction was this): `--color-teal` darkened `#468189` → `#427a82`
+  (white button text 4.41→4.84:1), small-text `text-primary` usages moved
+  to the flipping `text-link` role, alert text rides a new
+  `--color-danger-emphasis` token (5.5:1 on the danger tint), and `.input`
+  borders ride `--color-border-input` (≥3.6:1, WCAG 1.4.11). Ratios are
+  now CI-enforced by `internal/view/tokens_contrast_test.go`.
 
 ## [0.8.0] - 2026-07-12
 
@@ -435,7 +457,7 @@ enforcement, unified logging, guest-mode backend, and a release pipeline.
 - Hardcoded "John Doe" in user menu, profile page, and API stub replaced with
   dynamic user data from auth context (closes #3)
 
-## [0.1.0] - 2025-04-04
+## [0.1.0] - 2026-04-04
 
 ### Added
 - Go (Chi) server with graceful shutdown and signal handling
@@ -474,6 +496,6 @@ enforcement, unified logging, guest-mode backend, and a release pipeline.
 [0.4.1]: https://github.com/clownware/go-performance-starter/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/clownware/go-performance-starter/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/clownware/go-performance-starter/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/clownware/go-performance-starter/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/clownware/go-performance-starter/compare/v0.1.0...v0.2.0
+[0.3.0]: https://github.com/clownware/go-performance-starter/compare/90ed61b...v0.3.0
+[0.2.0]: https://github.com/clownware/go-performance-starter/compare/v0.1.0...90ed61b
 [0.1.0]: https://github.com/clownware/go-performance-starter/releases/tag/v0.1.0

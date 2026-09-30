@@ -64,7 +64,6 @@ go-performance-starter/
 │   └── api/         # Application entry point (main.go)
 ├── internal/        # Private application code
 │   ├── auth/        # Authentication related code
-│   ├── cache/       # In-memory caching
 │   ├── config/      # Configuration handling
 │   ├── database/    # Database connection and sqlc-generated models
 │   ├── handler/     # HTTP handlers

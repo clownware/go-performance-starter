@@ -10,7 +10,7 @@ Nothing in this guide needs to happen before local development works — `task d
 
 ### 1. Go module path (~10 min — do this first)
 
-The big one for a Go template: the module path `github.com/clownware/go-performance-starter` appears in `go.mod` and in the import blocks of ~77 Go files, plus the `.templ` sources. Everything else imports through it.
+The big one for a Go template: the module path `github.com/clownware/go-performance-starter` appears in `go.mod` and in the import blocks of ~90 Go files, plus the `.templ` sources. Everything else imports through it.
 
 ```bash
 OLD=github.com/clownware/go-performance-starter
@@ -43,9 +43,12 @@ Notes:
 |---|---|
 | `app` | Fly app names are globally unique; `go-performance-starter` is taken (by our demo). The deploy workflows read the name from this file — nothing else to change. |
 | `primary_region` | `ewr` (New Jersey) suits us; pick yours. |
+| `PUBLIC_BASE_URL` | Hardcoded to our demo origin. Every page derives its canonical link, `og:url`, `og:image` and `/sitemap.xml` from it — leave it and you ship links to *our* demo. Set it to your origin (or remove it to disable those tags). |
 | `GUEST_MODE_ENABLED`, `GUEST_TTL` | Public-demo tuning (ADR-024/031). For a real product you likely want guest mode off and the TTL default. |
 
 Not deploying to Fly? Delete `fly.toml` — the Docker image is the portable contract ([ADR-025](adr/ADR-025-Deployment-Target.md)); `deploy.yml` will simply never activate without a `FLY_API_TOKEN` secret.
+
+`.claude/launch.json` ships two dev-server configs for the Claude desktop app: `api` runs under 1Password's `op run --env-file=.env.tpl` (our secret injection; `.env.tpl` is gitignored), and `api-dotenv` is plain `go run ./cmd/api` reading `.env`. Delete whichever you don't use.
 
 ### 3. Environment — `.env`
 
@@ -66,7 +69,21 @@ The manifest is this template's public consumption contract ([ADR-030](adr/ADR-0
 
 ### Site branding (`internal/view/`)
 
-"Go Performance Starter" renders in `internal/view/layouts/base.templ` (page title, meta description, header, footer) and the logo mark lives in `internal/view/components/brand.templ`. Change them, then `task templ:generate`.
+"Go Performance Starter" is a string in more places than the layout. The full list (grep the repo for it after your rename to confirm):
+
+| Where | What |
+|---|---|
+| `internal/view/seo.go` | `SiteName` and `DefaultDescription` — feed the `<title>`, meta description, Open Graph and Twitter tags |
+| `internal/view/layouts/base.templ` | header brand text + `aria-label`, footer copyright |
+| `internal/view/components/brand.templ` | the logo mark (SVG) |
+| `internal/view/pages/home.templ` | hero `<h1>` and the GitHub link |
+| `internal/server/server.go` (`NewBaseProps("Go Performance Starter")`) | error-page title |
+| `internal/handler/home_explainer.go` (`adrBase`) | the explainer's "view ADR" links point at *our* GitHub |
+| `cmd/api/main.go`, `web/static/js/app.js` | startup log line, console banner |
+| `web/static/img/og.png` | 1200×630 share image |
+| `Taskfile.yml` (`docker:build` tag), `scripts/agentsmd/main.go` (AGENTS.md title), `CLAUDE.md`, `.windsurfrules`, `.claude/agents/code-reviewer.md` | tooling and constitution titles |
+
+Five tests assert on the brand string and will fail after a rename until updated: `internal/server/server_test.go` (three sites) and `internal/server/wiring_test.go` (one), plus `scripts/agentsmd/main_test.go` for the AGENTS.md title. Then `task templ:generate` and `task agents:build`.
 
 ### Brand colors (one file)
 
@@ -75,6 +92,8 @@ The palette is a role-based token system ([design-system.md](design-system.md)):
 ### Demo surfaces
 
 `/patterns`, the explainer, and the quiz/flashcards exist to prove the stack ([ADR-024](adr/ADR-024-Demo-Application-Direction.md)); the README's [load-bearing table](../README.md#whats-load-bearing-vs-removable) marks them **replaceable**. The quiz/flashcard handlers are the reference implementation for RLS-scoped CRUD — read them before deleting them.
+
+If you remove them, also remove what feeds them: migrations `000007` and `000008` seed the quiz questions (they run against your production database via `db-migrate.yml` and `release.yml`), `sql/demo/` holds the DEMO_MODE seed and reset scripts, and `task demo:seed` / `task demo:reset` wrap them. The `quiz_*` and `flashcards` tables come from migration `000003`.
 
 ### Demo operations (only if you want your own public demo)
 
@@ -94,7 +113,7 @@ The deploy/reset workflows are inert until you opt in ([ADR-031](adr/ADR-031-Pub
 
 - **`CHANGELOG.md`** — this template's history; start your own.
 - **`LICENSE`** — MIT; update the copyright holder.
-- **`docs/adr/`** — the ADRs document why the architecture is the way it is; we recommend keeping them and appending your own from ADR-034.
+- **`docs/adr/`** — the ADRs document why the architecture is the way it is; we recommend keeping them and appending your own from ADR-035 (check `ls docs/adr | tail -1` — the template is `docs/product/adr-template.md`).
 - **`.claude/` + `AGENTS.md`** — the AI constitution is removable if you don't develop with agents (README table); if you keep it, `AGENTS.md` regenerates via `task agents:build`.
 
 ## Verify

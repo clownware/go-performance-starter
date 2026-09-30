@@ -13,7 +13,6 @@ go-performance-starter/
 │       └── main.go               # Application entrypoint
 ├── internal/                     # Private application code
 │   ├── auth/                     # Supabase auth client (anonymous sign-in, upgrade, recovery)
-│   ├── cache/                    # In-memory caching helpers
 │   ├── config/                   # Environment config loader
 │   ├── database/                 # sqlc-generated queries + connection pooling
 │   ├── handler/                  # HTTP handlers (auth, quiz, flashcards, patterns, profile, health)
