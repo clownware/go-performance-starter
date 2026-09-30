@@ -4,8 +4,8 @@ These rules apply with halt-on-violation force. If a rule fires and you cannot s
 
 ## Rules
 
-1. Architectural changes require checking `docs/adr/` first. If an Accepted ADR contradicts your proposal, halt and update the ADR or revise the proposal.
-2. Server-rendered HTML uses templ. Raw `html/template` is forbidden (ADR-017). New UI is a templ page, partial, or component in `internal/view/` with a typed props struct — never `map[string]interface{}`.
+1. Architectural changes require checking `docs/adr/` first. If an Accepted ADR contradicts your proposal, halt and update the ADR or revise the proposal. Existing ADRs are append-only (ADR-033): amend by appending a dated note or graduation-log entry, or supersede with a new ADR — never rewrite history. A PreToolUse guard denies in-place edits (kill-switch `ADR_GUARD_OFF=1`, operator-reviewed).
+2. Server-rendered HTML uses templ. Raw `html/template` is forbidden (ADR-017). New UI is a templ page, partial, or component in `internal/view/` with a typed props struct — never `map[string]interface{}`. Colors ride role tokens (`bg-surface`, `text-muted-foreground`, …; ADR-029) — never raw palette utilities or `dark:` color variants; `internal/view/tokens_test.go` fails `task ci` otherwise.
 3. All database access goes through sqlc-generated queries behind the repository interfaces (ADR-003). Hand-written SQL strings in handlers are forbidden. If you need a new query, add it to `sql/queries/` and run `task db:generate`.
 4. Prefer server-rendered HTMX over client JavaScript (ADR-007, ADR-012). Reach for Alpine.js only for light client-only interactivity. Pages must work as progressive enhancement.
 5. Do not disable or `//nolint` golangci-lint findings to make the build pass — fix the code. Formatting is `gofmt`; do not introduce a different formatter.

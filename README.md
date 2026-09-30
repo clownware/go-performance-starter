@@ -51,6 +51,16 @@ Forking this for your own product? The governance apparatus is modular ([ADR-019
 - Docker & Docker Compose (for local development database)
 - [Task](https://taskfile.dev) (task runner)
 - Node.js 20+ (for Tailwind CSS build)
+- CLI tools the tasks shell out to (pinned versions in [`versions.json`](versions.json)):
+
+```bash
+go install github.com/a-h/templ/cmd/templ@v0.3.1020                                   # task templ:generate, air
+go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1                                   # task db:generate
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.19.1   # task db:migrate:*
+go install github.com/air-verse/air@latest                                             # task dev
+```
+
+`psql` (for `task db:auth-stub`) comes with Postgres; `golangci-lint`, `govulncheck` and `gremlins` install themselves on first use.
 
 ## Quick Start
 
@@ -59,10 +69,11 @@ git clone https://github.com/clownware/go-performance-starter.git
 cd go-performance-starter
 
 cp .env.example .env
-# Edit .env with your Supabase credentials and DATABASE_URL
+# Edit .env with your Supabase credentials and DATABASE_URL.
+# URL-encode any special characters in the database password or pgx fails at boot.
 
 task db:up              # Start local Postgres
-task db:migrate:up      # Run migrations
+task db:test:setup      # Stub Supabase's auth.uid() on vanilla Postgres, then run migrations
 task db:generate        # Generate sqlc types
 go mod tidy             # Install Go dependencies
 npm install             # Install Tailwind tooling
@@ -70,6 +81,8 @@ task dev                # Start dev server with hot reload
 ```
 
 The application runs at [http://localhost:4000](http://localhost:4000) by default (`HTTP_PORT`).
+
+The RLS migrations call Supabase's `auth.uid()`, which vanilla Postgres lacks; `task db:test:setup` applies `sql/test/auth_stub.sql` first and then migrates (the same bootstrap CI uses). Against a real Supabase database, run `task db:migrate:up` alone. Repository and integration tests run only when `DATABASE_URL` is set, so the same bootstrap is how you run them locally.
 
 **Password reset (one-time Supabase config):** the reset flow verifies the
 email link's `token_hash` server-side, so the *Reset Password* email template
@@ -93,11 +106,14 @@ Run `task --list` to see all available tasks. Key ones:
 | Task | Description |
 |------|-------------|
 | `task dev` | Start dev server with hot reload |
-| `task ci` | Halt-on-violation quality gate (fmt, lint, race tests, agent-spine + versions drift, binary size, vuln scan) |
+| `task ci` | Halt-on-violation quality gate: fmt check, lint, race tests, `agents:check`, `versions:check`, `check:adr`, `check:generated`, binary size, gzipped asset budgets, vuln scan |
 | `task build` | Compile optimized binary to `./dist/app` |
-| `task test` | Run test suite (`task test:coverage` for coverage) |
-| `task test:performance` | Check performance budgets |
-| `task test:binary-size` | Validate binary size < 20MB |
+| `task test` | Run test suite (`task test:coverage` for coverage; `task test:mutation` for go-gremlins, ADR-032) |
+| `task test:performance` | Performance budget tests + binary size + asset budgets (local bundle of the CI legs) |
+| `task test:binary-size` | Validate stripped binary size < 20MB |
+| `task test:asset-budgets` | Validate gzipped JS < 50KB and CSS < 30KB |
+| `task check:adr` | Run the ADR enforcement suite (`scripts/adrcheck`, ADR-033) |
+| `task db:test:setup` | Bootstrap a vanilla Postgres for local dev and tests (auth stub + migrations) |
 | `task lint` | Run golangci-lint |
 | `task css:build` | Build Tailwind CSS |
 | `task docker:build` | Build production Docker image |
@@ -108,32 +124,39 @@ Run `task --list` to see all available tasks. Key ones:
 ```
 cmd/api/              Entry point
 internal/
-  auth/               Supabase auth client
-  cache/              In-memory TTL cache
+  auth/               Supabase auth client (JWT validation, anonymous guests, upgrade)
   config/             Environment-based configuration
   database/           sqlc-generated types and queries (generated)
   handler/            HTTP handlers
   jobs/               Background jobs (guest TTL reaper)
-  middleware/         Auth, metrics, logging, request ID
-  performance/        Performance budget definitions
-  repository/         Data access interfaces + implementations
+  middleware/         Auth, guest session, CSRF, rate limiting, trusted-proxy IP, security headers, body cap, metrics, request logging
+  performance/        Performance budget definitions + observed values
+  repository/         Data access interfaces + postgres implementations (RLS scope helper)
   server/             Router setup and middleware stack
   validate/           Input validation helpers
-  view/               templ UI: layouts/, pages/, partials/, components/ (+ render, props)
+  view/               templ UI: layouts/, pages/, partials/, components/ (+ render, props, SEO)
   webutil/            HTMX + context helpers
 web/
   static/             CSS, JS, images
 migrations/           golang-migrate SQL files
-sql/                  sqlc query and schema definitions
-docs/                 ADRs, implementation guides, product docs
-.claude/              Layered AI constitution (engineering, workflow, stack, roles, skills, agents)
+sql/
+  queries/, schema/   sqlc inputs
+  demo/               DEMO_MODE-gated seed + reset (ADR-031)
+  test/               auth.uid() stub for vanilla Postgres
+scripts/              Repo tooling: adrcheck, adrguard, agentsmd, checkgenerated, checkversions, budget checks
+checks/               enforcement.config.json (ADR-033 warn/block registry)
+docs/                 ADRs, guides, design system, personalization guide
+.claude/              Layered AI constitution (engineering, workflow, stack, roles, skills, agents, hooks)
+.github/workflows/    ci, docker, release, deploy, db-migrate, demo-reset
+Dockerfile, fly.toml  Multi-stage image; the ADR-025 worked-example deploy config
+versions.json         Public manifest of what the template ships (ADR-030)
 ```
 
 ## Agentic Discipline
 
 This starter is built to be developed with AI coding agents — and it holds the agent to the same rules you follow. The discipline is operationalized, not aspirational:
 
-- **Layered AI constitution.** [`CLAUDE.md`](CLAUDE.md) holds ~10 halt-on-violation rules; [`.claude/engineering.md`](.claude/engineering.md), [`.claude/workflow.md`](.claude/workflow.md), and [`.claude/stack.md`](.claude/stack.md) carry engineering defaults, process, and ephemeral stack facts ([ADR-018](docs/adr/ADR-018-Layered-AI-Constitution.md)).
+- **Layered AI constitution.** [`CLAUDE.md`](CLAUDE.md) holds ten halt-on-violation rules; [`.claude/engineering.md`](.claude/engineering.md), [`.claude/workflow.md`](.claude/workflow.md), and [`.claude/stack.md`](.claude/stack.md) carry engineering defaults, process, and ephemeral stack facts ([ADR-018](docs/adr/ADR-018-Layered-AI-Constitution.md)).
 - **Cross-tool spine.** [`AGENTS.md`](AGENTS.md) is **generated** from those layers via `task agents:build` and read natively by Cursor, Copilot, Codex, Windsurf, and others. CI fails if it drifts from its sources ([ADR-022](docs/adr/ADR-022-Cross-Tool-Agents-Spine.md)).
 - **Role-separated workflow.** Non-trivial features run a three-pass Architect → Coder → Reviewer flow, each pass producing an ADR, a failing test, or a review ([ADR-020](docs/adr/ADR-020-Agent-Roles.md)).
 - **Halt-on-violation gate.** `task ci` is the single definition of "done." An agent must clear it before claiming a change complete — no lowering thresholds, no `--no-verify` ([ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md)).
@@ -164,15 +187,17 @@ This project uses Architecture Decision Records (ADRs) to document key technical
 
 ## Performance Targets
 
-| Metric | Budget |
-|--------|--------|
-| P95 response time | < 100ms |
-| Binary size | < 20MB |
-| Docker image | < 30MB |
-| Memory (steady state) | < 128MB |
-| Startup time | < 500ms |
+| Metric | Budget | Class ([ADR-000](docs/adr/ADR-000-Performance-Budgets-and-Quality-Attributes.md)) |
+|--------|--------|-------|
+| Binary size (stripped linux build) | < 20MB | Enforced (`task test:binary-size`) |
+| Docker image | < 30MB | Enforced (CI docker job, release workflow) |
+| JavaScript (gzip) | < 50KB | Enforced (`task test:asset-budgets`) |
+| CSS (gzip) | < 30KB | Enforced (`task test:asset-budgets`) |
+| P95 / P99 response time | < 100ms / < 200ms | Monitored (Prometheus + the live observed-vs-budget grid) |
+| Memory (steady state) | < 128MB | Monitored |
+| Startup time | < 500ms | Monitored |
 
-These are enforced in CI via `task test:performance` and `task test:binary-size`.
+Enforced budgets fail `task ci`. Monitored budgets are measured on every request and shown on the landing page's observed-vs-budget grid ([ADR-034](docs/adr/ADR-034-Live-Proof-Surfaces.md)) but do not gate the build yet.
 
 ## License
 

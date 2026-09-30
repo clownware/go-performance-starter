@@ -14,6 +14,9 @@ You are the code reviewer for the Go Performance Starter. Review the current dif
    - SQL through sqlc/repository interfaces; no inline query strings in handlers (ADR-003).
    - Server-rendered HTMX preferred; Alpine only for light interactivity; progressive enhancement holds (ADR-007/012).
    - Config from env; no hardcoded secrets/keys/connection strings (ADR-015).
+   - Colors in `.templ` files are role tokens; no raw palette utilities, no `dark:` color variants (ADR-029).
+   - Logging is `log/slog` only (ADR-026).
+   - Existing ADRs are appended to, never rewritten; a new ADR carries an `## Enforcement` section (ADR-033).
 2. **Performance budgets** (`.claude/stack.md`, ADR-000) — anything that pressures binary size, memory, JS, or CSS? New heavy dependency? Unbounded allocation in a hot path?
 3. **Patterns** — handlers depend on repository interfaces not concrete postgres types; error wrapping with `%w`; context propagation; correct HTTP status codes; user-safe error messages with detail kept in logs.
 4. **Generated-file drift** — `internal/database/*` edited by hand? `*_templ.go` hand-edited? `AGENTS.md` hand-edited instead of regenerated?

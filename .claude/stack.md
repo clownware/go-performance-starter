@@ -22,12 +22,15 @@ task ci                # quality gate: fmt + lint + test(-race -cover) + agents:
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
-task fmt               # gofmt
+task fmt               # golangci-lint fmt (gofmt + goimports)
 task templ:generate    # regenerate *_templ.go from .templ
 task db:generate       # regenerate internal/database from sql/ via sqlc
 task db:migrate:up     # apply migrations
 task css:build         # build Tailwind CSS
-task test:performance  # performance budget tests + binary size
+task test:performance  # performance budget tests + binary size + asset budgets (local bundle of the CI legs)
+task test:mutation     # go-gremlins mutation run on the scoped packages (ADR-032)
+task check:adr         # ADR enforcement suite, scripts/adrcheck; statuses in checks/enforcement.config.json (ADR-033)
+task db:test:setup     # bootstrap a vanilla Postgres: auth.uid() stub + migrations (local dev, tests, CI)
 task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
 task agents:check      # CI gate: fail if AGENTS.md drifts from sources
@@ -51,14 +54,14 @@ task demo:reset        # purge guests' demo content + re-seed (refuses without D
 | JavaScript (gzip) | < 50KB |
 | CSS (gzip) | < 30KB |
 
-Budgets are enforced in CI via `task ci`: the `go test` leg runs the `internal/performance` budget tests, and `test:binary-size` / `test:asset-budgets` gate binary and gzipped JS/CSS sizes (`task test:performance` bundles the same checks for local runs). The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
+ADR-000 classes each budget. **Enforced** (fails `task ci`): binary size (`test:binary-size`), Docker image (CI docker job + release workflow), JS and CSS gzip (`test:asset-budgets`). **Monitored** (measured per request, shown on the landing page's observed-vs-budget grid per ADR-034, not gating): P95/P99, memory, startup. `task test:performance` bundles the local checks. The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
 
 ## Key ADRs
 
-18+ ADRs in `docs/adr/`. The structurally important ones:
+35 ADRs in `docs/adr/` (ADR-000 … ADR-034). The structurally important ones:
 
 - **ADR-000:** Performance budgets and quality attributes
-- **ADR-001:** Foundation (Go, Chi, logging)
+- **ADR-001:** Foundation (Go, Chi; §3 logging and §5 deployment superseded by ADR-026/025)
 - **ADR-003:** sqlc + repository pattern for data access
 - **ADR-007 / ADR-012:** Frontend stack (HTMX + Alpine + Tailwind), routing & UI patterns
 - **ADR-015:** Configuration via environment (twelve-factor)
@@ -71,6 +74,11 @@ Budgets are enforced in CI via `task ci`: the `go test` leg runs the `internal/p
 - **ADR-026:** Logging standardized on `log/slog` (supersedes ADR-001 §3)
 - **ADR-030:** `versions.json` public manifest — CI-checked against repo pins, `template` stamped by release
 - **ADR-031:** Public demo operations (deploy-on-merge, `DEMO_MODE`-gated seed/reset, nightly reset workflow)
+- **ADR-027 / ADR-028:** Trusted-proxy client IP (`TRUSTED_PROXY_CIDRS`, `CLIENT_IP_HEADER`); CSP `unsafe-eval` carve-out for Alpine
+- **ADR-029:** Role-based design tokens — CI rejects raw palette utilities and `dark:` variants in `.templ` files
+- **ADR-032:** Mutation testing (`task test:mutation`, go-gremlins, scoped packages)
+- **ADR-033:** ADR enforcement — every ADR has an `## Enforcement` section; `task check:adr` + two hooks (Stop-gate, PreToolUse ADR/generated-file guard); ADRs are append-only
+- **ADR-034:** Live proof surfaces (observed-vs-budget grid, RLS isolation check, rate-limit demo)
 
 ## Deployment
 

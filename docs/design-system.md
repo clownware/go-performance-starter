@@ -2,7 +2,7 @@
 
 The starter ships a role-based token system ([ADR-029](adr/ADR-029-Role-Based-Design-Tokens.md), mirroring astro-performance-starter's ADR-047): components never name colors, they name **roles** — `bg-surface`, `text-muted-foreground`, `border-border` — and the roles resolve to the palette. Dark mode flips the role variables, not the components. The practical payoff for a template: **restyle the entire app by editing one `@theme` block.**
 
-Everything below is enforced in CI, not aspirational: `internal/view/tokens_test.go` scans every `.templ` file and fails `task ci` on raw palette utilities (any Tailwind color family — `gray-500`, `green-100`, `blue-600` …) or `dark:` color variants.
+Rules 1 and 2 below are enforced in CI: `internal/view/tokens_test.go` scans every `.templ` file and fails `task ci` on raw palette utilities (any Tailwind color family — `gray-500`, `green-100`, `blue-600` …) or `dark:` color variants, and `internal/view/tokens_contrast_test.go` computes WCAG AA contrast for the role pairs in both modes. Rules 3 and 4 are conventions the reviewer checks ([ADR-029](adr/ADR-029-Role-Based-Design-Tokens.md) lists them as not machine-checkable).
 
 ## The roles
 
@@ -20,10 +20,12 @@ Defined once in [`web/static/css/input.css`](../web/static/css/input.css); the `
 | `accent` | Highlights, secondary chips | sage | sage |
 | `link` | Hyperlinks | dark teal | soft teal |
 | `danger` | Destructive text/tints | bittersweet | soft bittersweet |
+| `danger-emphasis` | Alert text on the `bg-danger/10` tint (5.5:1) | bittersweet-strong | soft bittersweet |
+| `border-input` | Form-control borders (≥3:1, WCAG 1.4.11) | gray-500 | gray-500 |
 | `success` | Positive feedback | green-700 | green-400 |
 | `warning` | Cautionary feedback | amber-700 | amber-500 |
 
-## The rules (CI-enforced)
+## The rules
 
 1. **Dark mode flips tokens, not utilities.** Components never write `dark:` color variants; the `.dark` block in `input.css` is the only place color forks per mode.
 2. **No raw palette utilities in components.** `text-gray-500` is a violation and so is `bg-green-100`; `text-muted-foreground` and `bg-success/10 text-success` are the vocabulary. The scan covers every Tailwind color family, not just gray (#85).
@@ -35,7 +37,7 @@ Defined once in [`web/static/css/input.css`](../web/static/css/input.css); the `
 The whole exercise is one file:
 
 1. Replace the five base palette values in the `@theme` block of `input.css` (`--color-teal`, `--color-bittersweet`, `--color-night`, `--color-nyanza`, `--color-sage`) with your palette — keep the `-strong`/`-soft` variants roughly one step darker/lighter.
-2. Re-point any role that referenced a swapped color, and mirror your choices in the `.dark` block (lighten `link`/`danger`/`success`/`warning` enough to keep WCAG AA on your dark background).
+2. Re-point any role that referenced a swapped color, and mirror your choices in the `.dark` block (lighten `link`/`danger`/`success`/`warning` enough to keep WCAG AA on your dark background — `tokens_contrast_test.go` will tell you which pair fell short).
 3. `task css:build` and eyeball both modes (the header toggle flips live).
 
 No component changes are needed — that is the point of the system. `task ci` will tell you if anything in the view layer bypassed it.

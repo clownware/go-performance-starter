@@ -15,8 +15,8 @@ These rules apply with halt-on-violation force. If a rule fires and you cannot s
 
 ### Rules
 
-1. Architectural changes require checking `docs/adr/` first. If an Accepted ADR contradicts your proposal, halt and update the ADR or revise the proposal.
-2. Server-rendered HTML uses templ. Raw `html/template` is forbidden (ADR-017). New UI is a templ page, partial, or component in `internal/view/` with a typed props struct — never `map[string]interface{}`.
+1. Architectural changes require checking `docs/adr/` first. If an Accepted ADR contradicts your proposal, halt and update the ADR or revise the proposal. Existing ADRs are append-only (ADR-033): amend by appending a dated note or graduation-log entry, or supersede with a new ADR — never rewrite history. A PreToolUse guard denies in-place edits (kill-switch `ADR_GUARD_OFF=1`, operator-reviewed).
+2. Server-rendered HTML uses templ. Raw `html/template` is forbidden (ADR-017). New UI is a templ page, partial, or component in `internal/view/` with a typed props struct — never `map[string]interface{}`. Colors ride role tokens (`bg-surface`, `text-muted-foreground`, …; ADR-029) — never raw palette utilities or `dark:` color variants; `internal/view/tokens_test.go` fails `task ci` otherwise.
 3. All database access goes through sqlc-generated queries behind the repository interfaces (ADR-003). Hand-written SQL strings in handlers are forbidden. If you need a new query, add it to `sql/queries/` and run `task db:generate`.
 4. Prefer server-rendered HTMX over client JavaScript (ADR-007, ADR-012). Reach for Alpine.js only for light client-only interactivity. Pages must work as progressive enhancement.
 5. Do not disable or `//nolint` golangci-lint findings to make the build pass — fix the code. Formatting is `gofmt`; do not introduce a different formatter.
@@ -41,7 +41,7 @@ Strong defaults for writing code in this repo. These rules apply with the same f
 ### Package Layout
 
 - `cmd/api/` — entrypoint only: config load, wiring, graceful shutdown. No business logic.
-- `internal/` is the application. Keep packages focused: `handler` (HTTP), `server` (router + middleware stack), `repository` (data access interfaces + postgres impls), `database` (sqlc-generated — never hand-edit), `view` (templ UI), `middleware`, `auth`, `cache`, `config`, `jobs` (background jobs), `performance`, `validate`, `webutil`.
+- `internal/` is the application. Keep packages focused: `handler` (HTTP), `server` (router + middleware stack), `repository` (data access interfaces + postgres impls), `database` (sqlc-generated — never hand-edit), `view` (templ UI), `middleware`, `auth`, `config`, `jobs` (background jobs), `performance`, `validate`, `webutil`.
 - Dependencies point inward. Handlers depend on repository *interfaces*, not concrete postgres types.
 
 ### Go Style
@@ -59,6 +59,7 @@ Strong defaults for writing code in this repo. These rules apply with the same f
 - Pages compose the layout: `@layouts.Base(props.BaseProps) { ... }`. Partials render standalone (no layout) so HTMX fragments are correct.
 - One render path: `view.Render(w, r, status, component)`. Choose page vs. partial with `view.IsHTMXRequest(r)`.
 - After editing a `.templ` file, run `task templ:generate` (or `task dev`, which watches). Never hand-edit `*_templ.go`.
+- Colors are role tokens (ADR-029, [`docs/design-system.md`](docs/design-system.md)): `bg-surface`, `text-muted-foreground`, `bg-danger/10 text-danger`. No raw palette utilities, no `dark:` color variants — the `.dark` block in `input.css` flips the roles.
 
 ### Data Access
 
@@ -68,14 +69,14 @@ Strong defaults for writing code in this repo. These rules apply with the same f
 
 ### Logging & Errors
 
-- Structured logging only. Log errors with request-scoped context (request ID, route); never log secrets.
+- Structured logging via stdlib `log/slog` only (ADR-026); no zerolog/zap/logrus. Log errors with request-scoped context (request ID, path); never log secrets.
 - Return correct HTTP status codes and user-safe messages; keep internal detail in logs, not responses.
 
 ### Testing
 
 - Table-driven tests with `testing` + `net/http/httptest`. One behaviour per case; name cases for the behaviour, not the implementation.
-- Test both success and error paths. Use the repository interfaces with fakes; reserve a real Postgres harness for repository/integration tests.
-- Never lower a coverage or performance threshold to make a test pass — fix the code or open an ADR documenting the exception.
+- Test both success and error paths. Use the repository interfaces with fakes; reserve a real Postgres harness for repository/integration tests. Those suites run only when `DATABASE_URL` is set — locally: `task db:up && task db:test:setup`, then `task test`.
+- Never lower a performance budget, mutation-score expectation, or enforcement status to make a test pass — fix the code or open an ADR documenting the exception.
 
 ---
 
@@ -89,10 +90,11 @@ How work moves through the repo. These rules apply with the same force as `CLAUD
 
 | Category | Paths | Rule |
 |---|---|---|
-| Modify freely | `cmd/`, `internal/`, `web/`, `sql/`, `migrations/`, `Taskfile.yml`, `sqlc.yaml`, `.golangci.yml`, `.air.toml`, `package.json`, `.github/workflows/`, `.windsurfrules` | Full read/write |
-| Read-only | `docs/` | Don't modify unless explicitly asked to update documentation |
+| Modify freely | `cmd/`, `internal/`, `web/`, `sql/`, `migrations/`, `scripts/`, `checks/`, `Taskfile.yml`, `sqlc.yaml`, `.golangci.yml`, `.air.toml`, `package.json`, `.github/workflows/`, `.windsurfrules`, `CLAUDE.md`, `.claude/` | Full read/write |
+| Read-only | `docs/` | Don't modify unless explicitly asked to update documentation. Exception: appending a graduation-log entry to an ADR's Enforcement section when promoting/demoting a check (ADR-033 §4) |
+| Append-only | `docs/adr/ADR-*.md` (existing) | Amend by appending a dated note; supersede with a new ADR; never rewrite (ADR-033). Enforced by the PreToolUse guard |
 | Generated — never hand-edit | `internal/database/*` (sqlc), `internal/view/*_templ.go` (templ), `AGENTS.md` (agents:build) | Edit the source, then regenerate |
-| Don't create | Deployment infra, marketing content, maintenance scripts | Suggest adding to `docs/` instead |
+| Don't create | Deployment infra, marketing content, maintenance scripts | Suggest adding to `docs/` instead. Exception: `fly.toml` at the repo root is the one permitted worked-example deploy config (ADR-025 §6) |
 
 Full rationale in [ADR-019](docs/adr/ADR-019-Template-Scope-Boundary.md).
 
@@ -100,9 +102,9 @@ Full rationale in [ADR-019](docs/adr/ADR-019-Template-Scope-Boundary.md).
 
 For any feature that touches multiple ADRs, has non-obvious acceptance criteria, adds a dependency, or changes a public API, use the three-pass workflow:
 
-1. **Architect pass** ([`.claude/roles/architect.md`](roles/architect.md)) — write or update the relevant ADR; write the failing table-driven test; no production code.
-2. **Coder pass** ([`.claude/roles/coder.md`](roles/coder.md)) — minimum implementation to make the failing test pass; no test edits beyond what the Architect scaffolded.
-3. **Reviewer pass** ([`.claude/roles/reviewer.md`](roles/reviewer.md)) — run `task ci`; report delta vs. the Architect plan; recommend (no commits).
+1. **Architect pass** ([`.claude/roles/architect.md`](.claude/roles/architect.md)) — write or update the relevant ADR; write the failing table-driven test; no production code.
+2. **Coder pass** ([`.claude/roles/coder.md`](.claude/roles/coder.md)) — minimum implementation to make the failing test pass; no test edits beyond what the Architect scaffolded.
+3. **Reviewer pass** ([`.claude/roles/reviewer.md`](.claude/roles/reviewer.md)) — run `task ci`; report delta vs. the Architect plan; recommend (no commits).
 
 Each pass produces a concrete artefact and announces hand-off explicitly. The operator (human) enforces the hand-off: refuse to merge work that skipped a pass. Trivial changes (typo, single-line, single rename) can skip the pattern.
 
@@ -126,12 +128,14 @@ Full rationale in [ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md).
 
 - Check `docs/adr/` before proposing architectural changes.
 - Every Accepted ADR is a constraint — if your proposal conflicts, halt and either revise the proposal or update the ADR.
+- Existing ADRs are append-only (ADR-033): add a dated amendment note or a graduation-log entry, or write a superseding ADR. The PreToolUse guard (`scripts/adrguard`) denies in-place edits; `ADR_GUARD_OFF=1` is the operator-reviewed kill-switch.
+- Every ADR carries an `## Enforcement` section (testable consequences → checks with a warn/block status, what is not machine-checkable, a graduation log). New checks start at **warn** and are promoted in `checks/enforcement.config.json` after 7+ clean days or one real catch.
 - If a decision should be an ADR (picking a tool, library, pattern, or convention), say so — don't make architectural calls inline.
 - ADR template: `docs/product/adr-template.md`. Naming: `docs/adr/ADR-NNN-Title.md`. Numbering is sequential — check the highest existing number first.
 
 ### Git Conventions
 
-Conventional commits with these prefixes: `feat`, `fix`, `perf`, `docs`, `style`, `refactor`, `test`, `chore`. Lowercase summary, concise, reference issues where applicable. Respect existing git hooks — never bypass with `--no-verify`.
+Conventional commits with these prefixes: `feat`, `fix`, `perf`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`. Lowercase summary, concise, reference issues where applicable. Respect existing git hooks — never bypass with `--no-verify`.
 
 ---
 
@@ -161,12 +165,15 @@ task ci                # quality gate: fmt + lint + test(-race -cover) + agents:
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
-task fmt               # gofmt
+task fmt               # golangci-lint fmt (gofmt + goimports)
 task templ:generate    # regenerate *_templ.go from .templ
 task db:generate       # regenerate internal/database from sql/ via sqlc
 task db:migrate:up     # apply migrations
 task css:build         # build Tailwind CSS
-task test:performance  # performance budget tests + binary size
+task test:performance  # performance budget tests + binary size + asset budgets (local bundle of the CI legs)
+task test:mutation     # go-gremlins mutation run on the scoped packages (ADR-032)
+task check:adr         # ADR enforcement suite, scripts/adrcheck; statuses in checks/enforcement.config.json (ADR-033)
+task db:test:setup     # bootstrap a vanilla Postgres: auth.uid() stub + migrations (local dev, tests, CI)
 task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
 task agents:check      # CI gate: fail if AGENTS.md drifts from sources
@@ -190,14 +197,14 @@ task demo:reset        # purge guests' demo content + re-seed (refuses without D
 | JavaScript (gzip) | < 50KB |
 | CSS (gzip) | < 30KB |
 
-Budgets are enforced in CI via `task ci`: the `go test` leg runs the `internal/performance` budget tests, and `test:binary-size` / `test:asset-budgets` gate binary and gzipped JS/CSS sizes (`task test:performance` bundles the same checks for local runs). The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
+ADR-000 classes each budget. **Enforced** (fails `task ci`): binary size (`test:binary-size`), Docker image (CI docker job + release workflow), JS and CSS gzip (`test:asset-budgets`). **Monitored** (measured per request, shown on the landing page's observed-vs-budget grid per ADR-034, not gating): P95/P99, memory, startup. `task test:performance` bundles the local checks. The 20MB binary budget targets the stripped linux build (`-ldflags="-s -w"`), not local debug builds.
 
 ### Key ADRs
 
-18+ ADRs in `docs/adr/`. The structurally important ones:
+35 ADRs in `docs/adr/` (ADR-000 … ADR-034). The structurally important ones:
 
 - **ADR-000:** Performance budgets and quality attributes
-- **ADR-001:** Foundation (Go, Chi, logging)
+- **ADR-001:** Foundation (Go, Chi; §3 logging and §5 deployment superseded by ADR-026/025)
 - **ADR-003:** sqlc + repository pattern for data access
 - **ADR-007 / ADR-012:** Frontend stack (HTMX + Alpine + Tailwind), routing & UI patterns
 - **ADR-015:** Configuration via environment (twelve-factor)
@@ -210,6 +217,11 @@ Budgets are enforced in CI via `task ci`: the `go test` leg runs the `internal/p
 - **ADR-026:** Logging standardized on `log/slog` (supersedes ADR-001 §3)
 - **ADR-030:** `versions.json` public manifest — CI-checked against repo pins, `template` stamped by release
 - **ADR-031:** Public demo operations (deploy-on-merge, `DEMO_MODE`-gated seed/reset, nightly reset workflow)
+- **ADR-027 / ADR-028:** Trusted-proxy client IP (`TRUSTED_PROXY_CIDRS`, `CLIENT_IP_HEADER`); CSP `unsafe-eval` carve-out for Alpine
+- **ADR-029:** Role-based design tokens — CI rejects raw palette utilities and `dark:` variants in `.templ` files
+- **ADR-032:** Mutation testing (`task test:mutation`, go-gremlins, scoped packages)
+- **ADR-033:** ADR enforcement — every ADR has an `## Enforcement` section; `task check:adr` + two hooks (Stop-gate, PreToolUse ADR/generated-file guard); ADRs are append-only
+- **ADR-034:** Live proof surfaces (observed-vs-budget grid, RLS isolation check, rate-limit demo)
 
 ### Deployment
 
