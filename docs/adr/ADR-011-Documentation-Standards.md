@@ -13,6 +13,7 @@ Clear and up-to-date documentation is critical for onboarding and handoff. The t
 
 - All major architectural decisions are documented as ADRs in `/docs/adr`.
 - User/developer guides live in `/docs/implementation-guides`.
+  > **Amendment 2026-09-30:** guides live in `docs/guides/` as topic-named documents (`data-access.md`, `view-layer.md`, …) indexed by `docs/guides/README.md`; the numbered, phase-ordered `docs/implementation-guides/` set and `docs/product/` are retired. The ADR template is `docs/adr/TEMPLATE.md` and `docs/adr/README.md` indexes the record. Canonical ADR metadata for ADR-035 onward: `**Date**: YYYY-MM-DD` under the title, then `## Status`, with the ADR-033 `## Enforcement` block; earlier ADRs keep their original layout.
 - Code should be commented for non-obvious logic.
 - `.env.example` is maintained as the canonical template for environment variables.
 

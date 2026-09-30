@@ -113,7 +113,7 @@ The deploy/reset workflows are inert until you opt in ([ADR-031](adr/ADR-031-Pub
 
 - **`CHANGELOG.md`** — this template's history; start your own.
 - **`LICENSE`** — MIT; update the copyright holder.
-- **`docs/adr/`** — the ADRs document why the architecture is the way it is; we recommend keeping them and appending your own from ADR-035 (check `ls docs/adr | tail -1` — the template is `docs/product/adr-template.md`).
+- **`docs/adr/`** — the ADRs document why the architecture is the way it is; we recommend keeping them and appending your own from ADR-035 (check `ls docs/adr | tail -1` — the template is `docs/adr/TEMPLATE.md`).
 - **`.claude/` + `AGENTS.md`** — the AI constitution is removable if you don't develop with agents (README table); if you keep it, `AGENTS.md` regenerates via `task agents:build`.
 
 ## Verify

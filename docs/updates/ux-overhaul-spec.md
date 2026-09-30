@@ -18,7 +18,7 @@ Related decisions: [ADR-017](../adr/ADR-017-Templ-Adoption.md), [ADR-007](../adr
 Public (no auth required)
   /                     Landing page (value prop, stack overview, perf stats)
   /patterns             Interactive pattern showcase
-  /patterns/{slug}      Individual pattern deep-dive (anchored sections or routes)
+  /patterns#{slug}      Individual pattern (anchored sections on the one page; no per-slug route shipped)
   /auth                 Login / signup (tabbed, single page)
   /terms                Terms of service
   /privacy              Privacy policy
@@ -65,7 +65,7 @@ Authenticated
 
 Source panels can be tabbed (Template | Handler) to save horizontal space.
 
-**Patterns to include:**
+**Patterns to include** (the original twelve; the shipped catalogue in `internal/handler/patterns_handlers.go` has grown to twenty — `polling`, `oob-swap`, `confirm-delete`, `view-transitions`, `rate-limit`, `loading-states`, `modal`, `global-store` were added after this spec — and is grouped into five sections: fetch-swap, search-lists, forms-actions, server-driven, alpine-islands):
 
 | Pattern | Slug | HTMX features | Alpine features | Description |
 |---------|------|---------------|-----------------|-------------|
@@ -229,7 +229,7 @@ For the patterns showcase, all data is in-memory stubs — no database dependenc
 For the authenticated experience, a seed script creates example data:
 
 ```
-task db:seed
+task demo:seed   # the shipped name; refuses to run without DEMO_MODE=1 (ADR-031)
 ```
 
 Creates:

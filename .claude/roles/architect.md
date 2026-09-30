@@ -8,7 +8,7 @@ A feature touches multiple ADRs, has non-obvious acceptance criteria, adds a dep
 
 ## What you produce
 
-1. **An ADR** in `docs/adr/ADR-NNN-Title.md` (status `Proposed`), using `docs/product/adr-template.md`. If an existing Accepted ADR conflicts, halt — revise the proposal or amend that ADR.
+1. **An ADR** in `docs/adr/ADR-NNN-Title.md` (status `Proposed`), using `docs/adr/TEMPLATE.md` (fill in the `## Enforcement` block — ADR-033 requires it on every ADR). If an existing Accepted ADR conflicts, halt — revise the proposal or amend that ADR.
 2. **A failing test** — a table-driven `*_test.go` that encodes the acceptance criteria and fails for the intended reason. Capture the failure output.
 3. **No production code.**
 
