@@ -1,0 +1,20 @@
+name: Decision
+description: A question or design choice to settle
+labels: [decision]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: The decision to make
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options and trade-offs
+      description: Two or more options with what each costs. Mark the recommended one.
+  - type: textarea
+    id: adrs
+    attributes:
+      label: ADRs affected
+      description: Which Accepted ADRs this amends or supersedes. If the answer is "none", it may not need to be a decision.

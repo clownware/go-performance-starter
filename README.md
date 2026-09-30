@@ -199,6 +199,10 @@ This project uses Architecture Decision Records (ADRs) to document key technical
 
 Enforced budgets fail `task ci`. Monitored budgets are measured on every request and shown on the landing page's observed-vs-budget grid ([ADR-034](docs/adr/ADR-034-Live-Proof-Surfaces.md)) but do not gate the build yet.
 
+## Contributing
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) is the short version of the rules; [`SECURITY.md`](SECURITY.md) is how to report a vulnerability privately; [`docs/troubleshooting.md`](docs/troubleshooting.md) collects the things that bite more than once.
+
 ## License
 
 MIT -- see [LICENSE](LICENSE).
