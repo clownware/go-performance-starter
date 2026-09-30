@@ -54,6 +54,7 @@ Implementation lands in the consistency phase (issue #16) as a table-driven-test
   - TC-1: `github.com/rs/zerolog` is absent from `go.mod`.
   - TC-2: No `log.Printf`/`log.Print`/`log.Println` call sites in `cmd/` or `internal/` — logging goes through `log/slog`.
 - **Checks:**
-  - TC-1, TC-2 → `adr026-slog-only` in `scripts/adrcheck` (status: **warn**)
+  - TC-1, TC-2 → `adr026-slog-only` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
 - **Not machine-checkable:** Structured-field completeness (`request_id`, `user_id`, `error`, `duration_ms` on relevant entries) and scrubbing rules — semantic, per ADR-013.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.

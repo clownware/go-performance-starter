@@ -8,11 +8,12 @@
 |---|---|---|
 | `fmt:check` | `golangci-lint fmt` diff is empty (gofmt + goimports with the module as local prefix) | ADR-010 |
 | `lint` | `.golangci.yml`: errcheck, govet, ineffassign, misspell, staticcheck, unused, whitespace; `generated: lax` | ADR-010 |
+| `go mod verify` | The module cache matches `go.sum` (supply-chain tamper check) | ADR-014 §8 |
 | `go test -race -covermode=atomic ./...` | Every test, race detector on; the `internal/performance` budget tests run here too | ADR-023, ADR-000 |
 | `agents:check` | `AGENTS.md` equals what `task agents:build` would generate | ADR-022 |
 | `versions:check` | `versions.json` equals the repo's real pins | ADR-030 |
-| `check:adr` | The ADR enforcement suite (`scripts/adrcheck`); block-status findings fail, warn-status report | ADR-033 |
-| `check:generated` | sqlc and templ regenerated into a scratch copy equal the committed output (warn mode until graduated) | ADR-003, ADR-017 |
+| `check:adr` | The ADR enforcement suite (`scripts/adrcheck`); block-status findings fail, warn-status report. All eleven checks are block since 2026-09-30 | ADR-033 |
+| `check:generated` | sqlc and templ regenerated into a scratch copy equal the committed output (block since 2026-09-30) | ADR-003, ADR-017 |
 | `test:binary-size` | Stripped build (`-ldflags="-s -w"`) under 20MB | ADR-000 |
 | `test:asset-budgets` | Built CSS and shipped JS under 30KB / 50KB gzipped (`task css:build` runs first) | ADR-000 |
 | `scan:vuln` | `govulncheck ./...` | ADR-014 |
@@ -45,7 +46,7 @@ There are no client-side git hooks in the repo; the constitution's "never `--no-
 
 ## Graduating a check
 
-Checks in `checks/enforcement.config.json` start at **warn** and move to **block** after 7+ clean days or one real catch; the promotion is logged in the owning ADR's graduation log and in `CHANGELOG.md`. `check:generated` has its own `-mode` flag in the Taskfile with the same rule. Never fix a red gate by demoting a check.
+Checks in `checks/enforcement.config.json` start at **warn** and move to **block** after 7+ clean days or one real catch; the promotion is logged in the owning ADR's graduation log and in `CHANGELOG.md`. `check:generated` has its own `-mode` flag in the Taskfile with the same rule. The first graduation happened on 2026-09-30: all eleven adrcheck checks and `check:generated`, after 42–80 clean days. Never fix a red gate by demoting a check.
 
 ## Dependencies
 

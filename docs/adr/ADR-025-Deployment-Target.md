@@ -81,9 +81,10 @@ ADR-019's "don't create deployment infra" boundary is amended to permit **one wo
   - TC-2: `Strict-Transport-Security` is emitted only when `ENV=production`.
   - TC-3: The Docker image stays under 30MB.
 - **Checks:**
-  - TC-1 → `adr025-deploy-scope` in `scripts/adrcheck` (status: **warn**)
+  - TC-1 → `adr025-deploy-scope` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
   - TC-2 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
   - TC-3 → docker job in `.github/workflows/ci.yml` (status: **block**, pre-existing; owned by ADR-000)
 - **Amendment 2026-09-30:** `adr025-deploy-scope` detects `.tf` files and stray `fly.toml`s only; Kubernetes manifests are not detected, so TC-1's wording overstates the check. Manifests are review territory until the check grows.
 - **Not machine-checkable:** Statelessness (no session store, no local disk state) and forward-only production migration discipline — architectural/process, review territory.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.

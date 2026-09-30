@@ -76,9 +76,11 @@ internal/view/
   - TC-2: No `map[string]interface{}` inside `internal/view` — props are typed structs.
   - TC-3: Generated templ output compiles.
 - **Checks:**
-  - TC-1 → `adr017-no-html-template` in `scripts/adrcheck` (status: **warn**)
-  - TC-2 → `adr017-typed-view-props` in `scripts/adrcheck` (status: **warn**)
+  - TC-1 → `adr017-no-html-template` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
+  - TC-2 → `adr017-typed-view-props` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
   - TC-3 → `templ generate` + `go build` in `task ci` (status: **block**, pre-existing)
 - **Not machine-checkable:** Single-render-path discipline (`view.Render` everywhere) and partial/page composition judgment.
-- **Amendment 2026-08-19 (#90):** TC-4 — committed `*_templ.go` equals what `templ generate` produces from the `.templ` sources (stale generated files with no source are flagged too) → `task check:generated` (`scripts/checkgenerated`) in `task ci` (status: **warn**; graduate by flipping `-mode=block` in `Taskfile.yml`). Closes the ADR-033 TODO.
-- **Graduation log:** _(empty)_
+- **Amendment 2026-08-19 (#90):** TC-4 — committed `*_templ.go` equals what `templ generate` produces from the `.templ` sources (stale generated files with no source are flagged too) → `task check:generated` (`scripts/checkgenerated`) in `task ci` (status: **block** since 2026-09-30 via `-mode=block` in `Taskfile.yml`). Closes the ADR-033 TODO.
+- **Graduation log:**
+  - 2026-09-30 — `adr017-no-html-template` and `adr017-typed-view-props` promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.
+  - 2026-09-30 — `task check:generated` promoted **warn → block** (`-mode=block` in `Taskfile.yml`, ADR-033 §4): clean since 2026-08-19 (42 days). It caught the real templ-CLI drift class the Docker builder had (CHANGELOG 0.9.0) before it was wired, which is the other promotion trigger.

@@ -65,6 +65,7 @@ These technologies will be used in conjunction with Go's `html/template` engine 
 - **Testable consequences:**
   - TC-1: No heavy client framework (react, vue, svelte, angular, jquery, next, nuxt) appears in `package.json` dependencies.
 - **Checks:**
-  - TC-1 → `adr007-no-heavy-frameworks` in `scripts/adrcheck` (status: **warn**)
+  - TC-1 → `adr007-no-heavy-frameworks` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
 - **Not machine-checkable:** The "prefer server-rendering over client JS" judgment call — governed per-change by ADR-012 and review.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.

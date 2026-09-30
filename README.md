@@ -106,7 +106,7 @@ Run `task --list` to see all available tasks. Key ones:
 | Task | Description |
 |------|-------------|
 | `task dev` | Start dev server with hot reload |
-| `task ci` | Halt-on-violation quality gate: fmt check, lint, race tests, `agents:check`, `versions:check`, `check:adr`, `check:generated`, binary size, gzipped asset budgets, vuln scan |
+| `task ci` | Halt-on-violation quality gate: fmt check, lint, `go mod verify`, race tests, `agents:check`, `versions:check`, `check:adr`, `check:generated`, binary size, gzipped asset budgets, vuln scan |
 | `task build` | Compile optimized binary to `./dist/app` |
 | `task test` | Run test suite (`task test:coverage` for coverage; `task test:mutation` for go-gremlins, ADR-032) |
 | `task test:performance` | Performance budget tests + binary size + asset budgets (local bundle of the CI legs) |
@@ -164,7 +164,7 @@ This starter is built to be developed with AI coding agents — and it holds the
 
 ### ADR Enforcement
 
-`task check:adr` runs a deterministic suite (`scripts/adrcheck`, part of `task ci`) that verifies the testable consequences declared in each ADR's Enforcement section — including a minimal high-signal secret scanner (`adr015-no-hardcoded-secrets`) for the ADR-014/015 "no hardcoded secrets" rule. Checks start life as **warn** — they report but never fail the build — and are promoted to **block** in [`checks/enforcement.config.json`](checks/enforcement.config.json) only after 7+ clean days or one real catch, with the promotion logged in the owning ADR's graduation log and the CHANGELOG. Demotion back to warn is always allowed, same trail. Every failure message names the ADR, the testable consequence, and the remedy; `--json` gives machine-readable output.
+`task check:adr` runs a deterministic suite (`scripts/adrcheck`, part of `task ci`) that verifies the testable consequences declared in each ADR's Enforcement section — including a minimal high-signal secret scanner (`adr015-no-hardcoded-secrets`) for the ADR-014/015 "no hardcoded secrets" rule. Checks start life as **warn** — they report but never fail the build — and are promoted to **block** in [`checks/enforcement.config.json`](checks/enforcement.config.json) only after 7+ clean days or one real catch, with the promotion logged in the owning ADR's graduation log and the CHANGELOG (all eleven shipped checks graduated on 2026-09-30). Demotion back to warn is always allowed, same trail. Every failure message names the ADR, the testable consequence, and the remedy; `--json` gives machine-readable output.
 
 Two hooks are the only blocking layer: a **Stop-gate** (agents can't finish a turn with failing tests or a BLOCKER; kill-switch `STOP_GATE_OFF=1`) and a **PreToolUse guard** (agents can't hand-edit existing ADRs, `AGENTS.md`, or sqlc/templ-generated code; kill-switch `ADR_GUARD_OFF=1`).
 

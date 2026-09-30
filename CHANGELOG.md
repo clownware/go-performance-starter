@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- ADR-033 graduation, first exercise of the rule (#145): all eleven
+  `scripts/adrcheck` checks and `task check:generated` are promoted from
+  **warn** to **block** in `checks/enforcement.config.json` and
+  `Taskfile.yml` after 42–80 clean days against a 7-day rule (`graduated:
+  2026-09-30`); each owning ADR's graduation log records it. `go mod
+  verify` joins `task ci` — ADR-014 §8 mandated it since 2025 and nothing
+  ran it (ADR-014 TC-4). Demotion back to warn stays allowed, same trail
+
 ### Fixed
 - The continuous-deploy image is stamped with the `git describe` version
   instead of the literal `dev`, so `/health` on the demo reports the real

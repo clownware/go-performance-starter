@@ -15,7 +15,7 @@ After the Coder hands off with a passing test.
 
 ## Checklist
 
-- `task ci` exits 0 (fmt, lint, test `-race -cover`, agents:check, versions:check, check:adr, check:generated, binary-size, asset-budgets, vuln).
+- `task ci` exits 0 (fmt, lint, `go mod verify`, test `-race -cover`, agents:check, versions:check, check:adr, check:generated, binary-size, asset-budgets, vuln).
 - Change complies with the cited ADRs; no Accepted ADR is silently violated.
 - templ props are typed (no `map[string]interface{}`); SQL goes through sqlc/repository; no hardcoded secrets.
 - Perf budgets in `.claude/stack.md` still hold.

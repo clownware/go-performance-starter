@@ -118,7 +118,7 @@ Before claiming a change is complete, run:
 task ci
 ```
 
-It runs `fmt` (check) + `lint` + `test` (`-race -cover`) + `agents:check` + `versions:check` + `check:adr` + `check:generated` + `test:binary-size` + `test:asset-budgets` + `scan:vuln`. If it exits non-zero, halt and fix the failure. Do not work around it by lowering thresholds, excluding files, or skipping git hooks with `--no-verify`.
+It runs `fmt` (check) + `lint` + `go mod verify` + `test` (`-race -cover`) + `agents:check` + `versions:check` + `check:adr` + `check:generated` + `test:binary-size` + `test:asset-budgets` + `scan:vuln`. If it exits non-zero, halt and fix the failure. Do not work around it by lowering thresholds, excluding files, or skipping git hooks with `--no-verify`.
 
 The fast inner loop is `task test` and `task lint` individually. Reserve `task ci` for the final gate before claiming done.
 
@@ -161,7 +161,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 
 ```bash
 task dev               # hot-reload dev server (air); watches .go, .templ
-task ci                # quality gate: fmt + lint + test(-race -cover) + agents:check + versions:check + check:adr + check:generated + binary-size + asset-budgets + vuln
+task ci                # quality gate: fmt + lint + go mod verify + test(-race -cover) + agents:check + versions:check + check:adr + check:generated + binary-size + asset-budgets + vuln
 task test              # go test ./...
 task test:coverage     # coverage report (HTML)
 task lint              # golangci-lint
@@ -172,14 +172,14 @@ task db:migrate:up     # apply migrations
 task css:build         # build Tailwind CSS
 task test:performance  # performance budget tests + binary size + asset budgets (local bundle of the CI legs)
 task test:mutation     # go-gremlins mutation run on the scoped packages (ADR-032)
-task check:adr         # ADR enforcement suite, scripts/adrcheck; statuses in checks/enforcement.config.json (ADR-033)
+task check:adr         # ADR enforcement suite, scripts/adrcheck; all 11 checks block since 2026-09-30 (checks/enforcement.config.json, ADR-033)
 task db:test:setup     # bootstrap a vanilla Postgres: auth.uid() stub + migrations (local dev, tests, CI)
 task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
 task agents:check      # CI gate: fail if AGENTS.md drifts from sources
 task versions:check    # CI gate: fail if versions.json drifts from repo pins (ADR-030)
 task versions:sync     # rewrite versions.json from the repo pins after a dependency/toolchain bump (ADR-030)
-task check:generated   # CI gate (warn-only): sqlc/templ output regenerated into a scratch copy must equal the committed code (ADR-003/017, #90)
+task check:generated   # CI gate (block since 2026-09-30): sqlc/templ output regenerated into a scratch copy must equal the committed code (ADR-003/017, #90)
 task demo:seed         # load demo fixtures (refuses without DEMO_MODE=1, ADR-031)
 task demo:reset        # purge guests' demo content + re-seed (refuses without DEMO_MODE=1)
 ```
