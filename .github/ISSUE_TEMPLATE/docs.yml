@@ -1,0 +1,18 @@
+name: Documentation
+description: Something in the docs is wrong, missing, or stale
+labels: [docs]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: File and line
+      description: e.g. docs/guides/deployment.md:42 or README "Quick Start"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What it says vs what is true
+      description: Quote the text and cite the code, task, or ADR that contradicts it.
+    validations:
+      required: true

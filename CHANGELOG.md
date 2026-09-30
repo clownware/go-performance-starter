@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Contributor scaffolding (#144): `CONTRIBUTING.md` (the rules in short:
+  three-pass workflow, `task ci` as done, commit types, append-only ADRs,
+  how to run the database-gated tests), `SECURITY.md` (private reporting
+  via GitHub, what is in scope, the demo's deliberate abuse surface), a PR
+  template, issue templates for bug / enhancement / decision / docs mapped
+  to the existing labels, and `docs/troubleshooting.md` for the failures
+  that recur (DATABASE_URL encoding, the `auth` schema on vanilla Postgres,
+  generator drift, `versions:check` on Dependabot branches, the two hooks)
 - ADR-033 graduation, first exercise of the rule (#145): all eleven
   `scripts/adrcheck` checks and `task check:generated` are promoted from
   **warn** to **block** in `checks/enforcement.config.json` and

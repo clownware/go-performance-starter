@@ -1,0 +1,27 @@
+name: Bug
+description: Something that should work fails
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got. Include the command or route.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps from a fresh clone. Say whether `task ci` is green on master for you.
+      render: bash
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `git describe --tags` or the `template` field of `versions.json`, and Go version.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      render: text
