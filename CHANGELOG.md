@@ -30,6 +30,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   beside the `op run` one
 - Removed the dead `internal/database/fixtures` package (hand-written,
   unused, and sitting inside the sqlc-generated path the ADR guard protects)
+- Documentation restructure (#98): `docs/implementation-guides/` (numbered,
+  phase-ordered, 14 of 16 orphaned) becomes `docs/guides/` with topic names
+  and a reading-order index; six guides rewritten against the ADRs they
+  explain (data access, view layer, auth and security, testing,
+  performance, documentation) with every command, path and number verified
+  against the code, the rest updated in place; the ADR template moves to
+  `docs/adr/TEMPLATE.md` and gains the mandatory `## Enforcement` block and
+  a `**Date**` line; `docs/adr/README.md` indexes all 35 ADRs with their
+  supersession and amendment links; `docs/README.md` maps the folders;
+  ADR-011 amended (append-only) to record the new locations and the
+  canonical metadata format for ADR-035+. Deleted as superseded or
+  orphaned: `00-how-to-use`, `13-advanced`, `14-simplified-app`,
+  `docs/product/` (PRD, mermaid diagram with Cloudflare Workers, 2025 CI
+  sample, directory tree; the security overview is folded into the auth
+  guide), `docs/database/` (folded into the data-access guide),
+  `docs/implementation-notes/` (completed migration logs)
 
 ## [0.9.0] - 2026-09-12
 

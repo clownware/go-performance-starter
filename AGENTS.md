@@ -131,7 +131,7 @@ Full rationale in [ADR-021](docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.md).
 - Existing ADRs are append-only (ADR-033): add a dated amendment note or a graduation-log entry, or write a superseding ADR. The PreToolUse guard (`scripts/adrguard`) denies in-place edits; `ADR_GUARD_OFF=1` is the operator-reviewed kill-switch.
 - Every ADR carries an `## Enforcement` section (testable consequences → checks with a warn/block status, what is not machine-checkable, a graduation log). New checks start at **warn** and are promoted in `checks/enforcement.config.json` after 7+ clean days or one real catch.
 - If a decision should be an ADR (picking a tool, library, pattern, or convention), say so — don't make architectural calls inline.
-- ADR template: `docs/product/adr-template.md`. Naming: `docs/adr/ADR-NNN-Title.md`. Numbering is sequential — check the highest existing number first.
+- ADR template: `docs/adr/TEMPLATE.md` (includes the mandatory `## Enforcement` block). Naming: `docs/adr/ADR-NNN-Title.md`. Numbering is sequential — check the highest existing number first. Index: `docs/adr/README.md`.
 
 ### Git Conventions
 

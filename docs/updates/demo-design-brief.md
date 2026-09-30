@@ -94,7 +94,7 @@ Progress (score, streak, cards-to-review) is computed from `quiz_attempts` + `fl
 
 ## HTMX/Alpine patterns this demo must exercise
 
-Quiz answer submit (`hx-post` → result swap), save-flashcard (`hx-post`, optimistic), flashcard delete (`hx-delete`, `hx-swap="outerHTML swap:200ms"`), mark-known toggle, live perf stats, skeleton loaders on dashboard widgets, dark-mode toggle, toast on save/delete via `HX-Trigger`. (The full pattern catalogue lives in the retained `/patterns` section of [`ux-overhaul-spec.md`](ux-overhaul-spec.md).)
+Quiz answer submit (`hx-post` → result swap), save-flashcard (`hx-post`, optimistic), flashcard delete (a plain `POST /learn/flashcards/{id}/delete` form with `hx-post` and `hx-swap="outerHTML swap:200ms"` — the starter standardises progressive-enhancement forms on POST rather than `hx-delete`), mark-known toggle, live perf stats, skeleton loaders on dashboard widgets, dark-mode toggle, toast on save/delete via `HX-Trigger`. (The full pattern catalogue lives in the retained `/patterns` section of [`ux-overhaul-spec.md`](ux-overhaul-spec.md).)
 
 ## What NOT to mock
 
