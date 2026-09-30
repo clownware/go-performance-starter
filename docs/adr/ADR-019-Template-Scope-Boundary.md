@@ -23,6 +23,8 @@ Define a scope table (canonical copy in `.claude/workflow.md`):
 | Generated — never hand-edit | `internal/database/*`, `internal/view/*_templ.go`, `AGENTS.md` | Edit the source, then regenerate |
 | Don't create | Deployment infra, marketing content, maintenance scripts | Suggest adding to `docs/` instead |
 
+> **Amended 2026-07-05 by ADR-025 §6** (note added 2026-09-30): one worked-example deployment config, `fly.toml` at the repo root, is permitted despite the "Don't create deployment infra" row (`adr025-deploy-scope` checks there is exactly one). Two further clarifications recorded 2026-09-30: appending a graduation-log entry to an ADR's Enforcement section when a check is promoted or demoted (ADR-033 §4) is the one standing exception to "`docs/` is read-only"; and the canonical table in `.claude/workflow.md` lists `scripts/`, `checks/`, `CLAUDE.md` and `.claude/` under "Modify freely" and existing ADRs as "Append-only".
+
 ## Consequences
 
 - Agents stop touching `docs/` and generated files uninvited; diffs stay reviewable.

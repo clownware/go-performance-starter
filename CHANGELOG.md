@@ -46,6 +46,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sample, directory tree; the security overview is folded into the auth
   guide), `docs/database/` (folded into the data-access guide),
   `docs/implementation-notes/` (completed migration logs)
+- ADR record cross-linking (#143, append-only notes; no decision changed):
+  every amendment and supersession now reads from both sides — ADR-007/012
+  say ADR-017 amended them, ADR-013/014/015/019/025/034 carry the notes for
+  ADR-025/026/027/028/034, ADR-025 lists what it amends; stale samples are
+  labelled illustrative where the code diverged (zerolog in ADR-013,
+  gorilla/csrf and bluemonday in ADR-014, `JWT_SECRET`/`ENABLE_CACHE` in
+  ADR-015, "Cloudflare environment variables" in ADR-001/014); ADR-015's
+  variable list completed; ADR-016's Status states what shipped and what
+  did not (#135); ADR-000 records that its code-quality metrics belong to
+  no tier; ADR-005 no longer says regeneration drift is unchecked; ADR-025
+  and ADR-033 correct their own TC wording and counts; the 2025
+  implementation checklists in ADR-013–016 are marked historical and their
+  overdue review dates closed with a 2027-03-31 next review
 
 ## [0.9.0] - 2026-09-12
 

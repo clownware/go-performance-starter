@@ -3,7 +3,7 @@
 **Date**: 2026-04-04
 
 ## Status
-Accepted (supersedes ADR-008)
+Accepted (supersedes ADR-008; amends the rendering sections of ADR-007 and ADR-012)
 
 ## Context
 

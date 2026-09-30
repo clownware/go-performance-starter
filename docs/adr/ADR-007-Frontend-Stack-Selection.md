@@ -4,7 +4,7 @@
 
 ## Status
 
-Accepted
+Accepted (rendering engine amended by ADR-017)
 
 ## Context
 

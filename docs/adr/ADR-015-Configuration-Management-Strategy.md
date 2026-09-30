@@ -2,9 +2,11 @@
 
 ## Status
 
-Accepted
+Accepted (production secrets amended by ADR-025; variable surface amended 2026-08-02 and 2026-09-30, see notes)
 
 > **Amended 2026-08-02**: the code and env samples in this ADR predate the adoption of `kelseyhightower/envconfig` — the authoritative config surface is `internal/config/config.go` and `.env.example`. The real variables are `ENV` (not `ENVIRONMENT`), `HTTP_PORT` (default `4000`, not `PORT=8080`), `DATABASE_URL`, `SUPABASE_URL`/`SUPABASE_ANON_KEY` (set both or neither — auth is disabled when both are empty), optional `SUPABASE_SERVICE_ROLE_KEY` and `METRICS_TOKEN` (there is no separate metrics port), and pool tuning via `DB_MAX_CONNS`/`DB_MIN_CONNS`/`DB_MAX_CONN_LIFETIME`. `JWT_SECRET`, `JWT_EXPIRY`, `ENABLE_CACHE`, and `CACHE_TTL` do not exist. Production env vars are set on the container host per [ADR-025](./ADR-025-Deployment-Target.md) (Fly.io worked example), not in Cloudflare. The §3 env samples and §5 production story below have been corrected; the §2 Go sample stands as the original decision illustration.
+
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): the 2026-08-02 list is incomplete. `internal/config/config.go` also reads `DB_MAX_CONN_IDLE_TIME`, `MAX_REQUEST_BODY_BYTES`, `PUBLIC_BASE_URL`, `TRUSTED_PROXY_CIDRS` and `CLIENT_IP_HEADER` (ADR-027), `GUEST_MODE_ENABLED`, `GUEST_TTL` and `REAPER_INTERVAL` (ADR-024); `LOG_LEVEL` is read in `cmd/api/main.go`; `DEMO_MODE` gates the Taskfile demo tasks and the nightly reset (ADR-031). `.env.example` is the canonical, complete list. `JWT_SECRET`, `ENABLE_CACHE` and `METRICS_PORT` in the §2/§5 samples remain illustrative only.
 
 ## Context
 
@@ -381,6 +383,8 @@ Maintain configuration documentation in:
 
 ## Implementation Checklist
 
+> **Amended 2026-09-30** (docs health audit; append-only per ADR-033): this checklist is the original plan, kept unticked as history; everything it lists shipped. Current status lives in the Enforcement section and the guides under `docs/guides/`.
+
 - [ ] Create `internal/config/config.go` with Config struct
 - [ ] Implement `LoadConfig()` with environment variable parsing
 - [ ] Add `Validate()` method to check required configuration
@@ -403,6 +407,8 @@ Maintain configuration documentation in:
 ## Review Cadence
 
 **Review Date**: 2026-05-15
+
+**Reviewed**: 2026-09-30 (docs health audit — decision unchanged; next review 2027-03-31)
 
 ---
 

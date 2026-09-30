@@ -3,7 +3,7 @@
 **Date**: 2025-05-01
 
 ## Status
-Accepted
+Accepted (template engine amended by ADR-017)
 
 ## Context
 
