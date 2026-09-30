@@ -50,7 +50,7 @@ Forking this for your own product? The governance apparatus is modular ([ADR-019
 - Go 1.26+
 - Docker & Docker Compose (for local development database)
 - [Task](https://taskfile.dev) (task runner)
-- Node.js 20+ (for Tailwind CSS build)
+- Node.js 22+ (for Tailwind CSS build)
 - CLI tools the tasks shell out to (pinned versions in [`versions.json`](versions.json)):
 
 ```bash

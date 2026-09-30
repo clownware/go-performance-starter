@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/forms": "^0.5.10",

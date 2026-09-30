@@ -12,6 +12,6 @@
   "tailwindcss": "4.3.3",
   "sqlc": "1.31.1",
   "golang-migrate": "4.19.1",
-  "node": "20",
+  "node": "22",
   "golangci-lint": "2.13.1"
 }

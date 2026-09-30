@@ -4,7 +4,7 @@ The unit of deployment is the Docker image built by the repo `Dockerfile`: one s
 
 ## The image
 
-Three stages: `node:20-alpine` builds the Tailwind CSS, `golang:1.26-alpine` runs `templ generate` (the templ CLI version is derived from `go.mod`) and a stripped build, and `alpine:3.21` runs the binary as `appuser` on port 4000 with a `HEALTHCHECK` against `/healthz`. `task docker:build` builds it locally; CI's docker job and `release.yml` enforce the 30MB image budget ([ADR-000](../adr/ADR-000-Performance-Budgets-and-Quality-Attributes.md)). The binary reports its version from `-X main.version`, stamped by `git describe` in `task build` and in the deploy workflows (#140/#141).
+Three stages: `node:22-alpine` builds the Tailwind CSS, `golang:1.26-alpine` runs `templ generate` (the templ CLI version is derived from `go.mod`) and a stripped build, and `alpine:3.21` runs the binary as `appuser` on port 4000 with a `HEALTHCHECK` against `/healthz`. `task docker:build` builds it locally; CI's docker job and `release.yml` enforce the 30MB image budget ([ADR-000](../adr/ADR-000-Performance-Budgets-and-Quality-Attributes.md)). The binary reports its version from `-X main.version`, stamped by `git describe` in `task build` and in the deploy workflows (#140/#141).
 
 ## Configuration on the host
 

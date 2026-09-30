@@ -155,7 +155,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 - **Auth:** Supabase (gotrue) — JWT validation server-side; auth is optional/disabled if unconfigured
 - **Observability:** Prometheus (`client_golang`) + structured logging via stdlib `log/slog` (ADR-026; JSON in production, `LOG_LEVEL` env)
 - **Task runner:** Taskfile (`taskfile.dev`)
-- **Node:** 20+ (Tailwind CLI only)
+- **Node:** 22+ (Tailwind CLI only)
 
 ### Key Commands
 
