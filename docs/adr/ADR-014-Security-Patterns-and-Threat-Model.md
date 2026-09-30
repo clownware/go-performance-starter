@@ -456,7 +456,8 @@ func sanitizeLog(data map[string]interface{}) map[string]interface{} {
 - **Checks:**
   - TC-1 → `internal/middleware/security_test.go` via `task ci` (status: **block**, pre-existing)
   - TC-2 → `task scan:vuln` (govulncheck) in `task ci` (status: **block**, pre-existing)
-  - TC-3 → sqlc by construction + `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **warn**; owned by ADR-003)
+  - TC-3 → sqlc by construction + `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **block** since 2026-09-30; owned by ADR-003)
 - **Not machine-checkable:** The OWASP table in this ADR honestly records partially-implemented mitigations (e.g. the §4 per-user/per-email rate-limit tiers in A07) — those are implementation gaps, not check gaps; a check can't gate what doesn't exist. Rate-limit tier values, secret rotation cadence, and log-scrubbing coverage are ops/review territory.
 - **Graduation log:** _(empty)_
-- **Amendment 2026-08-19 (#91):** the "no hardcoded secrets" rule shared with ADR-015 gained a content-level check — `adr015-no-hardcoded-secrets` in `scripts/adrcheck` (status: **warn**; owned by ADR-015 TC-3).
+- **Amendment 2026-08-19 (#91):** the "no hardcoded secrets" rule shared with ADR-015 gained a content-level check — `adr015-no-hardcoded-secrets` in `scripts/adrcheck` (status: **block** since 2026-09-30; owned by ADR-015 TC-3).
+- **Amendment 2026-09-30 (#145):** TC-4 — the module graph verifies against `go.sum` (§8 "Run `go mod verify` in CI") → `go mod verify` as a leg of `task ci` (status: **block**, tooling; it was mandated here since 2025 but never wired until this date).

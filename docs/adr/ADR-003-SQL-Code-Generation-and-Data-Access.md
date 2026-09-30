@@ -59,8 +59,10 @@ Key considerations include:
   - TC-1: No hand-written SQL string literals in `internal/handler`.
   - TC-2: Handlers do not import `pgx` or `database/sql` — data access goes through repository interfaces. (Importing `internal/database` for sqlc-generated param/row *types* is legitimate.)
 - **Checks:**
-  - TC-1, TC-2 → `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **warn**)
+  - TC-1, TC-2 → `adr003-no-sql-in-handlers` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
 - **Not machine-checkable:** Repository-interface granularity and naming judgment.
-- **Amendment 2026-08-19 (#90):** TC-3 — committed `internal/database/` equals what `sqlc generate` produces from `sql/` → `task check:generated` (`scripts/checkgenerated`, regenerates into a scratch copy and diffs) in `task ci` (status: **warn**; graduate by flipping `-mode=block` in `Taskfile.yml`). Closes the ADR-033 TODO.
+- **Amendment 2026-08-19 (#90):** TC-3 — committed `internal/database/` equals what `sqlc generate` produces from `sql/` → `task check:generated` (`scripts/checkgenerated`, regenerates into a scratch copy and diffs) in `task ci` (status: **block** since 2026-09-30 via `-mode=block` in `Taskfile.yml`). Closes the ADR-033 TODO.
 - **Graduation log:**
   - 2026-08-19 — the one standing `adr003-no-sql-in-handlers` finding (health handler imported `pgxpool` to ping the pool, ADR-033 launch note) was resolved by refactoring the ping behind a consumer-side `handler.Pinger` seam (#92, #99); the check has reported clean since. Status stays **warn** — promotion per the 7-clean-days rule.
+  - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.
+  - 2026-09-30 — `task check:generated` promoted **warn → block** (`-mode=block` in `Taskfile.yml`, ADR-033 §4): clean since 2026-08-19 (42 days). It caught the real templ-CLI drift class the Docker builder had (CHANGELOG 0.9.0) before it was wired, which is the other promotion trigger.

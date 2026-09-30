@@ -49,6 +49,7 @@ If it exits non-zero, the agent halts and fixes the failure. It must not lower a
   - TC-2: `.github/workflows/ci.yml` invokes `task ci` rather than re-implementing its steps.
 - **Checks:**
   - TC-1 → the Taskfile definition itself; any removal is a public diff (status: **block**, pre-existing)
-  - TC-2 → `adr021-ci-invokes-gate` in `scripts/adrcheck` (status: **warn**)
+  - TC-2 → `adr021-ci-invokes-gate` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
 - **Not machine-checkable:** That an agent *actually ran* the gate before claiming done — approximated by the Stop-gate hook (ADR-033), which runs tests and the check suite when an agent tries to finish.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.

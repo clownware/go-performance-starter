@@ -27,6 +27,7 @@ Clear and up-to-date documentation is critical for onboarding and handoff. The t
 - **Testable consequences:**
   - TC-1: Every `docs/adr/ADR-*.md` follows the `ADR-NNN-Title.md` naming pattern and contains a `## Status` heading.
 - **Checks:**
-  - TC-1 → `adr011-adr-metadata` in `scripts/adrcheck` (status: **warn**)
+  - TC-1 → `adr011-adr-metadata` in `scripts/adrcheck` (status: **block**, promoted 2026-09-30)
 - **Not machine-checkable:** Comment quality ("non-obvious logic is commented") and implementation-guide freshness.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.

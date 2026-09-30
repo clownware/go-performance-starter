@@ -95,17 +95,18 @@ tasks:
       - go run ./scripts/adrcheck
 
   check:generated:
-    desc: Regenerate sqlc + templ output into a scratch copy and diff against the committed code (ADR-003/ADR-017; warn-only until graduated per ADR-033)
+    desc: Regenerate sqlc + templ output into a scratch copy and diff against the committed code (ADR-003/ADR-017; block since 2026-09-30 per ADR-033 §4)
     cmds:
-      # Graduation (ADR-033 §4): flip -mode=warn to -mode=block here and log
-      # it in ADR-003/ADR-017's graduation logs + CHANGELOG.
-      - go run ./scripts/checkgenerated -mode=warn
+      # Graduated warn -> block 2026-09-30 after 42 clean days (ADR-003/ADR-017
+      # graduation logs, CHANGELOG). Demote by flipping -mode=warn, same trail.
+      - go run ./scripts/checkgenerated -mode=block
 
   ci:
     desc: Halt-on-violation quality gate — run before claiming a change is complete (ADR-021)
     cmds:
       - task: fmt:check
       - task: lint
+      - go mod verify
       - go test -race -covermode=atomic -coverprofile=coverage.txt ./...
       - task: agents:check
       - task: versions:check

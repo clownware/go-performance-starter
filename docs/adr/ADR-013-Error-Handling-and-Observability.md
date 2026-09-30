@@ -383,6 +383,6 @@ func HandleHealthCheck(w http.ResponseWriter, r *http.Request) {
   - TC-2: Logging goes through `log/slog` (per the ADR-026 amendment).
 - **Checks:**
   - TC-1 → `internal/middleware/metrics_guard_test.go` + `internal/server/server_test.go` via `task ci` (status: **block**, pre-existing)
-  - TC-2 → `adr026-slog-only` in `scripts/adrcheck` (status: **warn**; owned by ADR-026)
+  - TC-2 → `adr026-slog-only` in `scripts/adrcheck` (status: **block** since 2026-09-30; owned by ADR-026)
 - **Not machine-checkable:** Log-level discipline, required context fields on every entry, and PII scrubbing coverage — semantic, review territory. Alert thresholds are ops configuration, not repo code.
 - **Graduation log:** _(empty)_

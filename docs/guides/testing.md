@@ -132,7 +132,7 @@ task test              # the postgres package now runs instead of skipping
 | `task test:performance` | `go test -v ./internal/performance/...` + `test:binary-size` + `test:asset-budgets` |
 | `task test:mutation` | `mutation:install` (gremlins v0.6.0), then `gremlins unleash --timeout-coefficient 20` on each scoped package |
 | `task check:adr` | `go run ./scripts/adrcheck` — warn-status checks report, block-status checks fail |
-| `task ci` | The gate: `fmt:check` → `lint` → `go test -race -covermode=atomic -coverprofile=coverage.txt ./...` → `agents:check` → `versions:check` → `check:adr` → `check:generated` → `test:binary-size` → `test:asset-budgets` → `scan:vuln` |
+| `task ci` | The gate: `fmt:check` → `lint` → `go mod verify` → `go test -race -covermode=atomic -coverprofile=coverage.txt ./...` → `agents:check` → `versions:check` → `check:adr` → `check:generated` → `test:binary-size` → `test:asset-budgets` → `scan:vuln` |
 
 Run `task ci` before claiming any change complete (Constitution rule 9). If it exits non-zero, fix the failure; do not lower a threshold, exclude a file, or push with `--no-verify`.
 
