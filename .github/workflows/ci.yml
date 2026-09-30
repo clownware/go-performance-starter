@@ -60,7 +60,7 @@ jobs:
     - name: Set up Node (Tailwind build for the asset-budget gate)
       uses: actions/setup-node@v7
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
 
     - name: Install npm dependencies

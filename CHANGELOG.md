@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Node 22 for the Tailwind build (#146): Node 20 reached end-of-life on
+  2026-04-30. `Dockerfile`, `ci.yml`, `versions.json` (via `task
+  versions:sync`) and the README prerequisites move together; `package.json`
+  gains `engines.node >=22` so the floor has an in-repo statement
 - Contributor scaffolding (#144): `CONTRIBUTING.md` (the rules in short:
   three-pass workflow, `task ci` as done, commit types, append-only ADRs,
   how to run the database-gated tests), `SECURITY.md` (private reporting
