@@ -101,6 +101,30 @@ jobs:
           git commit -m "chore(release): stamp versions.json ${{ github.ref_name }}"
           git push origin "${{ github.event.repository.default_branch }}"
 
+  # The stamp push above is made with GITHUB_TOKEN, so docs-notify.yml does not
+  # see it. Same step, same off-unless-configured rule (see docs-notify.yml).
+  notify-docs:
+    name: Notify docs site
+    if: vars.DOCS_DISPATCH_REPO != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: stamp
+    permissions: {}
+    steps:
+      - name: Send product-released to the docs repository
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+          DOCS_REPO: ${{ vars.DOCS_DISPATCH_REPO }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::DOCS_DISPATCH_REPO is set but the DOCS_DISPATCH_TOKEN secret is not"
+            exit 1
+          fi
+          gh api "repos/$DOCS_REPO/dispatches" \
+            -f event_type=product-released \
+            -f "client_payload[repo]=$GITHUB_REPOSITORY" \
+            -f "client_payload[sha]=$GITHUB_SHA"
+
   migrate:
     name: Apply Migrations
     runs-on: ubuntu-latest
