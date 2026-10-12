@@ -6,9 +6,10 @@ How work moves through the repo. These rules apply with the same force as `CLAUD
 
 | Category | Paths | Rule |
 |---|---|---|
-| Modify freely | `cmd/`, `internal/`, `web/`, `sql/`, `migrations/`, `scripts/`, `checks/`, `Taskfile.yml`, `sqlc.yaml`, `.golangci.yml`, `.air.toml`, `package.json`, `.github/workflows/`, `.windsurfrules`, `CLAUDE.md`, `.claude/` | Full read/write |
-| Read-only | `docs/` | Don't modify unless explicitly asked to update documentation. Exception: appending a graduation-log entry to an ADR's Enforcement section when promoting/demoting a check (ADR-033 §4) |
-| Append-only | `docs/adr/ADR-*.md` (existing) | Amend by appending a dated note; supersede with a new ADR; never rewrite (ADR-033). Enforced by the PreToolUse guard |
+| Modify freely | `cmd/`, `internal/`, `web/`, `sql/`, `migrations/`, `scripts/` (except the two below), `Taskfile.yml`, `sqlc.yaml`, `.golangci.yml`, `.air.toml`, `package.json`, `.github/workflows/`, `.windsurfrules` | Full read/write |
+| Governed layer | `CLAUDE.md`, `.claude/`, `checks/`, `scripts/adrcheck/`, `scripts/adrguard/` | Editable, but never to make a change comply: a rule, check, or status changes only for its own reason, and the PR names the ADR or ADR note that authorises it |
+| Read-only | `docs/` | Don't modify unless explicitly asked to update documentation. Exceptions: adding a new ADR file under `docs/adr/` with status `Proposed` (and its row in `docs/adr/README.md`); appending a graduation-log entry to an ADR's Enforcement section when promoting/demoting a check (ADR-033 §4) |
+| Append-only | `docs/adr/ADR-*.md` (existing) | Supersede with a new `Proposed` ADR (an agent may do this), or have the operator append a dated note; never rewrite (ADR-033). The PreToolUse guard denies agent Edit/Write on these files, appends included |
 | Generated — never hand-edit | `internal/database/*` (sqlc), `internal/view/*_templ.go` (templ), `AGENTS.md` (agents:build) | Edit the source, then regenerate |
 | Don't create | Deployment infra, marketing content, maintenance scripts | Suggest adding to `docs/` instead. Exception: `fly.toml` at the repo root is the one permitted worked-example deploy config (ADR-025 §6) |
 
@@ -43,7 +44,7 @@ Full rationale in [ADR-021](../docs/adr/ADR-021-Halt-On-Violation-Quality-Gate.m
 ## ADR Discipline
 
 - Check `docs/adr/` before proposing architectural changes.
-- Every Accepted ADR is a constraint — if your proposal conflicts, halt and either revise the proposal or update the ADR.
+- Every Accepted ADR is a constraint — if your proposal conflicts, halt and either revise the proposal or write a superseding ADR with status `Proposed`. When you halt, name the rule or ADR that stopped you and the legal move that would unblock the work.
 - Existing ADRs are append-only (ADR-033): add a dated amendment note or a graduation-log entry, or write a superseding ADR. The PreToolUse guard (`scripts/adrguard`) denies in-place edits; `ADR_GUARD_OFF=1` is the operator-reviewed kill-switch.
 - Every ADR carries an `## Enforcement` section (testable consequences → checks with a warn/block status, what is not machine-checkable, a graduation log). New checks start at **warn** and are promoted in `checks/enforcement.config.json` after 7+ clean days or one real catch.
 - If a decision should be an ADR (picking a tool, library, pattern, or convention), say so — don't make architectural calls inline.

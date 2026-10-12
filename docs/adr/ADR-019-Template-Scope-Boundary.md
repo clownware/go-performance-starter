@@ -25,6 +25,8 @@ Define a scope table (canonical copy in `.claude/workflow.md`):
 
 > **Amended 2026-07-05 by ADR-025 §6** (note added 2026-09-30): one worked-example deployment config, `fly.toml` at the repo root, is permitted despite the "Don't create deployment infra" row (`adr025-deploy-scope` checks there is exactly one). Two further clarifications recorded 2026-09-30: appending a graduation-log entry to an ADR's Enforcement section when a check is promoted or demoted (ADR-033 §4) is the one standing exception to "`docs/` is read-only"; and the canonical table in `.claude/workflow.md` lists `scripts/`, `checks/`, `CLAUDE.md` and `.claude/` under "Modify freely" and existing ADRs as "Append-only".
 
+> **Amended 2026-10-12** (#158; append-only per ADR-033): two changes to the canonical table in `.claude/workflow.md`. (1) Adding a new ADR file under `docs/adr/` with status `Proposed`, and its index row, is a standing exception to "`docs/` is read-only" — the Architect role (ADR-020) requires it and the guard already allowed it, but the table did not say so, which left an agent that needed an ADR no legal move. (2) `CLAUDE.md`, `.claude/`, `checks/`, `scripts/adrcheck/` and `scripts/adrguard/` move from "Modify freely" to a "Governed layer" row: editable, but never in order to make a change comply, and the PR names the ADR or note that authorises the edit. Evidence: the 2026-10 with/without-documents test of the sibling Astro starter, where the read-only rule halted a harmless feature in 6 of 6 runs and one run rewrote an ADR, a rule and a check to fit its change.
+
 ## Consequences
 
 - Agents stop touching `docs/` and generated files uninvited; diffs stay reviewable.

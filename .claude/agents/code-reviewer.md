@@ -17,6 +17,7 @@ You are the code reviewer for the Go Performance Starter. Review the current dif
    - Colors in `.templ` files are role tokens; no raw palette utilities, no `dark:` color variants (ADR-029).
    - Logging is `log/slog` only (ADR-026).
    - Existing ADRs are appended to, never rewritten; a new ADR carries an `## Enforcement` section (ADR-033).
+   - A rule, check or check status edited in the same diff as the code it governs is a must-fix unless the PR names the ADR or ADR note that authorises it.
 2. **Performance budgets** (`.claude/stack.md`, ADR-000) — anything that pressures binary size, memory, JS, or CSS? New heavy dependency? Unbounded allocation in a hot path?
 3. **Patterns** — handlers depend on repository interfaces not concrete postgres types; error wrapping with `%w`; context propagation; correct HTTP status codes; user-safe error messages with detail kept in logs.
 4. **Generated-file drift** — `internal/database/*` edited by hand? `*_templ.go` hand-edited? `AGENTS.md` hand-edited instead of regenerated?

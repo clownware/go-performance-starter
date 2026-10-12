@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Constitution legal moves (#158): the scope table now says a new ADR with
+  status `Proposed` may always be added under `docs/adr/`, rule 1 names the
+  moves an agent actually has when an ADR conflicts (supersede, or ask the
+  operator for an appended note), `CLAUDE.md`, `.claude/`, `checks/` and the
+  two ADR scripts move to a "Governed layer" row (never edited to make a
+  change comply), and the Reviewer hand-off and PR template record halts.
+  ADR-019 carries the dated note
 - Node 22 for the Tailwind build (#146): Node 20 reached end-of-life on
   2026-04-30. `Dockerfile`, `ci.yml`, `versions.json` (via `task
   versions:sync`) and the README prerequisites move together; `package.json`
