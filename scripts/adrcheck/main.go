@@ -10,9 +10,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"go/parser"
+	"go/scanner"
 	"go/token"
 	"os"
 	"path/filepath"
@@ -95,6 +97,86 @@ func walkGoFiles(root, dir string, includeTests bool, fn func(rel string, conten
 	})
 }
 
+// stripGoComments returns content with every Go comment replaced by spaces,
+// newlines kept, so byte offsets and line numbers still point at the source.
+// A comment that names a forbidden pattern is not a violation of it.
+func stripGoComments(content []byte) []byte {
+	out := make([]byte, len(content))
+	copy(out, content)
+	fset := token.NewFileSet()
+	file := fset.AddFile("", fset.Base(), len(content))
+	var sc scanner.Scanner
+	sc.Init(file, content, func(token.Position, string) {}, scanner.ScanComments)
+	for {
+		pos, tok, lit := sc.Scan()
+		if tok == token.EOF {
+			break
+		}
+		if tok != token.COMMENT {
+			continue
+		}
+		start := file.Offset(pos)
+		for i := start; i < start+len(lit) && i < len(out); i++ {
+			if out[i] != '\n' {
+				out[i] = ' '
+			}
+		}
+	}
+	return out
+}
+
+// stripTemplComments does the same for .templ sources, which mix Go and
+// HTML: <!-- --> and /* */ anywhere, and // only when it opens a line (so
+// the // in a URL attribute is left alone).
+func stripTemplComments(content []byte) []byte {
+	out := make([]byte, len(content))
+	copy(out, content)
+	blank := func(from, to int) {
+		for i := from; i < to && i < len(out); i++ {
+			if out[i] != '\n' {
+				out[i] = ' '
+			}
+		}
+	}
+	lineStart := true // only whitespace seen so far on this line
+	for i := 0; i < len(content); {
+		rest := content[i:]
+		switch {
+		case bytes.HasPrefix(rest, []byte("<!--")):
+			end := bytes.Index(rest, []byte("-->"))
+			if end < 0 {
+				end = len(rest) - 3
+			}
+			blank(i, i+end+3)
+			i += end + 3
+		case bytes.HasPrefix(rest, []byte("/*")):
+			end := bytes.Index(rest, []byte("*/"))
+			if end < 0 {
+				end = len(rest) - 2
+			}
+			blank(i, i+end+2)
+			i += end + 2
+		case lineStart && bytes.HasPrefix(rest, []byte("//")):
+			end := bytes.IndexByte(rest, '\n')
+			if end < 0 {
+				end = len(rest)
+			}
+			blank(i, i+end)
+			i += end
+		default:
+			switch content[i] {
+			case '\n':
+				lineStart = true
+			case ' ', '\t', '\r':
+			default:
+				lineStart = false
+			}
+			i++
+		}
+	}
+	return out
+}
+
 func lineOf(content []byte, idx int) int {
 	return strings.Count(string(content[:idx]), "\n") + 1
 }
@@ -161,7 +243,7 @@ func goImports(rel string, content []byte) map[string]int {
 func checkNoSQLInHandlers(root string) []string {
 	var violations []string
 	walkGoFiles(root, "internal/handler", false, func(rel string, content []byte) {
-		if loc := sqlLiteralRe.FindIndex(content); loc != nil {
+		if loc := sqlLiteralRe.FindIndex(stripGoComments(content)); loc != nil {
 			violations = append(violations, fmt.Sprintf("%s:%d: hand-written SQL string literal", rel, lineOf(content, loc[0])))
 		}
 		for path, line := range goImports(rel, content) {
@@ -234,7 +316,7 @@ func checkEnvOnlyConfig(root string) []string {
 			if envReadAllowlist[rel] || strings.HasPrefix(rel, filepath.Join("internal", "config")+string(filepath.Separator)) {
 				return
 			}
-			if loc := envReadRe.FindIndex(content); loc != nil {
+			if loc := envReadRe.FindIndex(stripGoComments(content)); loc != nil {
 				violations = append(violations, fmt.Sprintf("%s:%d: environment read outside internal/config", rel, lineOf(content, loc[0])))
 			}
 		})
@@ -278,7 +360,11 @@ func checkTypedViewProps(root string) []string {
 		if err != nil {
 			return nil
 		}
-		if loc := untypedPropsRe.FindIndex(content); loc != nil {
+		code := stripGoComments(content)
+		if isTempl {
+			code = stripTemplComments(content)
+		}
+		if loc := untypedPropsRe.FindIndex(code); loc != nil {
 			rel, _ := filepath.Rel(root, path)
 			violations = append(violations, fmt.Sprintf("%s:%d: untyped props map in internal/view", rel, lineOf(content, loc[0])))
 		}
@@ -327,7 +413,7 @@ func checkSlogOnly(root string) []string {
 	}
 	for _, dir := range []string{"cmd", "internal"} {
 		walkGoFiles(root, dir, false, func(rel string, content []byte) {
-			if loc := logPrintRe.FindIndex(content); loc != nil {
+			if loc := logPrintRe.FindIndex(stripGoComments(content)); loc != nil {
 				violations = append(violations, fmt.Sprintf("%s:%d: log.Print* call site — use log/slog", rel, lineOf(content, loc[0])))
 			}
 		})
