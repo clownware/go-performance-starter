@@ -202,3 +202,56 @@ func TestCheckADRAppendOnly(t *testing.T) {
 		}
 	})
 }
+
+func TestCheckGovernedLayer(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not on PATH")
+	}
+	base := map[string]string{
+		"CLAUDE.md":                      "# rules\n",
+		".claude/workflow.md":            "# workflow\n",
+		".claude/hooks/stop-gate.sh":     "#!/bin/sh\n",
+		"checks/enforcement.config.json": "[]\n",
+		"scripts/adrcheck/main.go":       "package main\n",
+		"scripts/adrguard/main.go":       "package main\n",
+		"scripts/agentsmd/main.go":       "package main\n",
+		"internal/handler/h.go":          "package handler\n",
+	}
+	tests := []struct {
+		name       string
+		withBase   bool
+		edit       map[string]string
+		commit     bool
+		violations int
+	}{
+		{name: "nothing changed passes", withBase: true, violations: 0},
+		{name: "ordinary source change passes", withBase: true, edit: map[string]string{"internal/handler/h.go": "package handler\n\nvar x = 1\n"}, violations: 0},
+		{name: "another script is not governed", withBase: true, edit: map[string]string{"scripts/agentsmd/main.go": "package main\n\nvar x = 1\n"}, violations: 0},
+		{name: "edited check is reported", withBase: true, edit: map[string]string{"scripts/adrcheck/main.go": "package main\n\nvar x = 1\n"}, violations: 1},
+		{name: "committed edit is reported too", withBase: true, edit: map[string]string{"checks/enforcement.config.json": "[{}]\n"}, commit: true, violations: 1},
+		{name: "each governed file is its own finding", withBase: true, edit: map[string]string{"CLAUDE.md": "# rules 2\n", ".claude/workflow.md": "# w2\n", ".claude/hooks/stop-gate.sh": "#!/bin/sh\nexit 0\n", "scripts/adrguard/main.go": "package main\n\nvar y = 1\n"}, violations: 4},
+		{name: "a new file in a governed folder is reported", withBase: true, edit: map[string]string{"scripts/adrcheck/extra.go": "package main\n"}, violations: 1},
+		{name: "no base ref means skipped, not failed", withBase: false, edit: map[string]string{"CLAUDE.md": "# rewritten\n"}, violations: 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			gitRun(t, root, "init", "-q", "-b", "work")
+			writeTree(t, root, base)
+			gitRun(t, root, "add", "-A")
+			gitRun(t, root, "commit", "-q", "-m", "base")
+			if tt.withBase {
+				gitRun(t, root, "update-ref", "refs/remotes/origin/master", "HEAD")
+			}
+			writeTree(t, root, tt.edit)
+			if tt.commit {
+				gitRun(t, root, "add", "-A")
+				gitRun(t, root, "commit", "-q", "-m", "edit")
+			}
+			got := checkGovernedLayer(root)
+			if len(got) != tt.violations {
+				t.Errorf("got %d violations %v, want %d", len(got), got, tt.violations)
+			}
+		})
+	}
+}

@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `adr019-governed-layer` (#165, warn, never graduates): lists every change
+  to the rules, hooks, check configuration and ADR scripts against the merge
+  base, as a review flag
 - `adr033-append-only` (#161, warn): existing ADRs are diffed against the
   merge base with `origin/master`; removed or rewritten text is a finding.
   The PreToolUse guard only sees Edit/Write, so shell writes went unchecked.
@@ -17,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `docs/adr/README.md`, so the index can be matched against a task
 
 ### Fixed
+- The Stop-gate no longer passes silently on the second stop (#165). It
+  blocks a session up to twice, then lets the turn end and warns the operator
+  that the gate is still failing. In the #162 test every blocked run finished
+  on its next stop with a failing tree
 - The regex checks in `scripts/adrcheck` and the ADR-029 token scan no
   longer match comments (#159); a comment naming a forbidden pattern was a
   block-status finding

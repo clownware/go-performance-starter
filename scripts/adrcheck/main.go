@@ -55,6 +55,7 @@ var checks = map[string]struct {
 	"adr026-slog-only":            {checkSlogOnly, "use log/slog with structured fields; zerolog and log.Printf are retired (ADR-026)"},
 	"adr021-ci-invokes-gate":      {checkCIInvokesGate, "have .github/workflows/ci.yml run `task ci` instead of re-implementing gate steps (ADR-021)"},
 	"adr011-index-complete":       {checkADRIndexComplete, "add the ADR's row to docs/adr/README.md (number, title, one-sentence decision, status, date), or fix the row's link (ADR-011)"},
+	"adr019-governed-layer":       {checkGovernedLayer, "not a failure: confirm each change was made for its own reason, never so that another change passes, and name the ADR or ADR note that authorises it in the PR (ADR-019)"},
 	"adr033-append-only":          {checkADRAppendOnly, "restore the original text; an existing ADR changes only by an appended dated note, a Status change, or a superseding ADR (ADR-033). If the rewrite is an operator-approved correction, say so in the PR"},
 	"adr015-no-hardcoded-secrets": {checkNoHardcodedSecrets, "move the value to an environment variable read in internal/config (ADR-015); rotate it if it was real (ADR-014)"},
 }
