@@ -49,7 +49,7 @@ Details in [documentation.md](docs/guides/documentation.md).
 
 ## Scope for agents
 
-`docs/` is read-only unless the change is asked for; deployment infrastructure, marketing content, and maintenance scripts are not created uninvited ([ADR-019](docs/adr/ADR-019-Template-Scope-Boundary.md)). The canonical scope table is in [`.claude/workflow.md`](.claude/workflow.md).
+`docs/` is read-only unless the change is asked for (a new ADR with status `Proposed` is always allowed); deployment infrastructure, marketing content, and maintenance scripts are not created uninvited ([ADR-019](docs/adr/ADR-019-Template-Scope-Boundary.md)). The canonical scope table is in [`.claude/workflow.md`](.claude/workflow.md).
 
 ## Labels
 
