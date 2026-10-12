@@ -18,6 +18,8 @@ This ADR documents these critical choices to ensure alignment and provide ration
 
 > **Amended 2026-09-30** (docs health audit; append-only per ADR-033): the floor is now Go 1.26 (`go.mod`, mirrored in `versions.json` per ADR-030); the module path is unchanged.
 
+> **Correction 2026-10-12** (#161; append-only per ADR-033): the sentence below was rewritten in place on 2026-08-02 (5f6b662) with no dated note. As accepted in 2025 it named the module path `github.com/clownware/alpine-go-performance-starter`; the repository and module were renamed on 2026-07-12 (35fb369). The current path is correct; the record of the change belongs here.
+
 We will use **Go 1.24+** with the module path `github.com/clownware/go-performance-starter`.
 
 Rationale:

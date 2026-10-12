@@ -12,7 +12,7 @@
 | `go test -race -covermode=atomic ./...` | Every test, race detector on; the `internal/performance` budget tests run here too | ADR-023, ADR-000 |
 | `agents:check` | `AGENTS.md` equals what `task agents:build` would generate | ADR-022 |
 | `versions:check` | `versions.json` equals the repo's real pins | ADR-030 |
-| `check:adr` | The ADR enforcement suite (`scripts/adrcheck`); block-status findings fail, warn-status report. All eleven checks are block since 2026-09-30 | ADR-033 |
+| `check:adr` | The ADR enforcement suite (`scripts/adrcheck`); block-status findings fail, warn-status report. Eleven checks are block since 2026-09-30; `adr011-index-complete` and `adr033-append-only` are warn since 2026-10-12 | ADR-033 |
 | `check:generated` | sqlc and templ regenerated into a scratch copy equal the committed output (block since 2026-09-30) | ADR-003, ADR-017 |
 | `test:binary-size` | Stripped build (`-ldflags="-s -w"`) under 20MB | ADR-000 |
 | `test:asset-budgets` | Built CSS and shipped JS under 30KB / 50KB gzipped (`task css:build` runs first) | ADR-000 |

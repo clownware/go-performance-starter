@@ -48,6 +48,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        # Full history: adr033-append-only (inside task ci) diffs existing
+        # ADRs against the merge base with origin/master. A shallow clone has
+        # none, and the check would skip.
+        fetch-depth: 0
 
     - name: Set up Go
       uses: actions/setup-go@v7

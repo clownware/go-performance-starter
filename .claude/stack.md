@@ -29,7 +29,7 @@ task db:migrate:up     # apply migrations
 task css:build         # build Tailwind CSS
 task test:performance  # performance budget tests + binary size + asset budgets (local bundle of the CI legs)
 task test:mutation     # go-gremlins mutation run on the scoped packages (ADR-032)
-task check:adr         # ADR enforcement suite, scripts/adrcheck; all 11 checks block since 2026-09-30 (checks/enforcement.config.json, ADR-033)
+task check:adr         # ADR enforcement suite, scripts/adrcheck; 11 checks block since 2026-09-30, 2 warn since 2026-10-12 (checks/enforcement.config.json, ADR-033)
 task db:test:setup     # bootstrap a vanilla Postgres: auth.uid() stub + migrations (local dev, tests, CI)
 task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md

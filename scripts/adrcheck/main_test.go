@@ -117,6 +117,20 @@ func TestCheckNoSQLInHandlers(t *testing.T) {
 			},
 			violations: 0,
 		},
+		{
+			name: "comment naming a query is not a finding",
+			files: map[string]string{
+				"internal/handler/c.go": "package handler\n\n// was: \"SELECT id FROM users WHERE id = $1\"\n/* `DELETE FROM users` moved to sql/queries */\nfunc f() {}\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "literal after a comment is still flagged on its own line",
+			files: map[string]string{
+				"internal/handler/d.go": "package handler\n\n// note\nconst q = \"SELECT id FROM users WHERE id = $1\" // trailing\n",
+			},
+			violations: 1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -258,6 +272,15 @@ func TestCheckEnvOnlyConfig(t *testing.T) {
 			violations: 1,
 		},
 		{
+			name: "comment naming os.Getenv is not a finding",
+			files: map[string]string{
+				"internal/handler/h.go": "package handler\n\n// do not call os.Getenv(\"SECRET\") here; config owns it\nfunc f() {}\n",
+				".gitignore":            ".env\n",
+				".env.example":          "PORT=4000\n",
+			},
+			violations: 0,
+		},
+		{
 			name: "missing env.example and unignored .env flagged",
 			files: map[string]string{
 				".gitignore": "dist/\n",
@@ -350,6 +373,20 @@ func TestCheckTypedViewProps(t *testing.T) {
 				"internal/view/pages/home.templ": "package pages\n\nvar bad map[string]any\n",
 			},
 			violations: 1,
+		},
+		{
+			name: "go comment naming the untyped map is not a finding",
+			files: map[string]string{
+				"internal/view/props.go": "package view\n\n// HomeProps replaces the old map[string]interface{} bag.\ntype HomeProps struct{ Title string }\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "templ comments naming the untyped map are not findings",
+			files: map[string]string{
+				"internal/view/pages/home.templ": "package pages\n\n// typed props, never map[string]any\ntempl Home() {\n\t<!-- was map[string]interface{} -->\n\t<a href=\"https://example.com\">x</a>\n}\n",
+			},
+			violations: 0,
 		},
 		{
 			name: "handler usage out of scope",
@@ -446,6 +483,14 @@ func TestCheckSlogOnly(t *testing.T) {
 				"internal/x/x.go": "package x\n\nimport \"log\"\n\nfunc f() { log.Printf(\"no\") }\n",
 			},
 			violations: 1,
+		},
+		{
+			name: "comment naming log.Printf is not a finding",
+			files: map[string]string{
+				"go.mod":          "module example.com/m\n",
+				"internal/x/x.go": "package x\n\n// log.Printf(\"x\") was retired by ADR-026\nfunc f() {}\n",
+			},
+			violations: 0,
 		},
 		{
 			name: "slog.Info not a false positive",
@@ -640,6 +685,26 @@ func TestCheckNoHardcodedSecrets(t *testing.T) {
 			}
 			if tt.name == "one violation per line, line number reported" && len(got) == 1 && !strings.Contains(got[0], "scripts/x/main.go:3:") {
 				t.Errorf("violation should name file:line, got %q", got[0])
+			}
+		})
+	}
+}
+
+func TestStripGoComments(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"line comment blanked, newline kept", "a // b\nc\n", "a     \nc\n"},
+		{"block comment keeps its newlines", "a /* b\nc */ d\n", "a     \n     d\n"},
+		{"comment marker inside a string survives", "x := \"// not a comment\"\n", "x := \"// not a comment\"\n"},
+		{"comment marker inside a raw string survives", "x := `/* kept */`\n", "x := `/* kept */`\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := string(stripGoComments([]byte(tt.in))); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
 			}
 		})
 	}

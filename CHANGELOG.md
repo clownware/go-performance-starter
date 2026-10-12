@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `adr033-append-only` (#161, warn): existing ADRs are diffed against the
+  merge base with `origin/master`; removed or rewritten text is a finding.
+  The PreToolUse guard only sees Edit/Write, so shell writes went unchecked.
+  CI checks out full history for it. ADR-001 gains the correction note for
+  the in-place rewrite in 5f6b662
+- `adr011-index-complete` (#160, warn) and a one-sentence Decision column
+  in `docs/adr/README.md`, so the index can be matched against a task
+
+### Fixed
+- The regex checks in `scripts/adrcheck` and the ADR-029 token scan no
+  longer match comments (#159); a comment naming a forbidden pattern was a
+  block-status finding
+
 ### Changed
 - Constitution legal moves (#158): the scope table now says a new ADR with
   status `Proposed` may always be added under `docs/adr/`, rule 1 names the
