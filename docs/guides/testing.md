@@ -136,7 +136,7 @@ task test              # the postgres package now runs instead of skipping
 
 Run `task ci` before claiming any change complete (Constitution rule 9). If it exits non-zero, fix the failure; do not lower a threshold, exclude a file, or push with `--no-verify`.
 
-Agents get a second net. `.claude/settings.json` registers a `Stop` hook, [`.claude/hooks/stop-gate.sh`](../../.claude/hooks/stop-gate.sh), that runs `go test ./...` and then `go run ./scripts/adrcheck` whenever an agent tries to end its turn. A test failure or a BLOCKER exits 2, which blocks completion and feeds the tail of the output back into the loop; `WARNING` lines pass through as information. It honours `stop_hook_active` so it cannot ping-pong, and `STOP_GATE_OFF=1` disables it for a session. Note the Stop-gate runs plain `go test`, not the race-enabled run: `task ci` is still the gate.
+Agents get a second net. `.claude/settings.json` registers a `Stop` hook, [`.claude/hooks/stop-gate.sh`](../../.claude/hooks/stop-gate.sh), that runs `go test ./...` and then `go run ./scripts/adrcheck` whenever an agent tries to end its turn. A test failure or a BLOCKER exits 2, which blocks completion and feeds the tail of the output back into the loop; `WARNING` lines pass through as information. It blocks the same session at most twice (`STOP_GATE_MAX_BLOCKS`), then lets the turn end and shows the operator a warning that the gate is still failing, so it cannot loop and cannot fail silently; `STOP_GATE_OFF=1` disables it for a session. `scripts/stopgate` tests the script. Note the Stop-gate runs plain `go test`, not the race-enabled run: `task ci` is still the gate.
 
 ## Mutation testing
 

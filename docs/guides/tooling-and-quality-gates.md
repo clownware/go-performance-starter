@@ -12,7 +12,7 @@
 | `go test -race -covermode=atomic ./...` | Every test, race detector on; the `internal/performance` budget tests run here too | ADR-023, ADR-000 |
 | `agents:check` | `AGENTS.md` equals what `task agents:build` would generate | ADR-022 |
 | `versions:check` | `versions.json` equals the repo's real pins | ADR-030 |
-| `check:adr` | The ADR enforcement suite (`scripts/adrcheck`); block-status findings fail, warn-status report. Eleven checks are block since 2026-09-30; `adr011-index-complete` and `adr033-append-only` are warn since 2026-10-12 | ADR-033 |
+| `check:adr` | The ADR enforcement suite (`scripts/adrcheck`); block-status findings fail, warn-status report. Eleven checks are block since 2026-09-30; `adr011-index-complete`, `adr033-append-only` and `adr019-governed-layer` are warn since 2026-10-12 (the last is a review flag and stays warn) | ADR-033 |
 | `check:generated` | sqlc and templ regenerated into a scratch copy equal the committed output (block since 2026-09-30) | ADR-003, ADR-017 |
 | `test:binary-size` | Stripped build (`-ldflags="-s -w"`) under 20MB | ADR-000 |
 | `test:asset-budgets` | Built CSS and shipped JS under 30KB / 50KB gzipped (`task css:build` runs first) | ADR-000 |
@@ -39,7 +39,7 @@ CI ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) runs exactly t
 
 Configured in [`.claude/settings.json`](../../.claude/settings.json), these are the only *blocking* layer of [ADR-033](../adr/ADR-033-ADR-Enforcement-Architecture.md) and they act on agents, not on `git`:
 
-- **Stop-gate** (`.claude/hooks/stop-gate.sh`): when an agent tries to end its turn, `go test ./...` and `scripts/adrcheck` run; a failing test or a block-status finding sends it back. Kill-switch `STOP_GATE_OFF=1`.
+- **Stop-gate** (`.claude/hooks/stop-gate.sh`): when an agent tries to end its turn, `go test ./...` and `scripts/adrcheck` run; a failing test or a block-status finding sends it back, up to two times per session; after that the turn may end and the operator is shown a warning that the gate is failing. Kill-switch `STOP_GATE_OFF=1`.
 - **PreToolUse guard** (`scripts/adrguard`): denies `Edit`/`Write` to existing ADRs, `AGENTS.md`, `internal/database/*.go` and `*_templ.go`, naming the legal move in each case. Kill-switch `ADR_GUARD_OFF=1`, meant for operator-reviewed ADR amendments.
 
 There are no client-side git hooks in the repo; the constitution's "never `--no-verify`" applies to any you add.

@@ -148,13 +148,7 @@ func gitOutput(root string, args ...string) (string, error) {
 // reachable base (a shallow clone, a fresh fork, not a repository) there is
 // nothing to compare against, so the check says so and passes.
 func checkADRAppendOnly(root string) []string {
-	var base string
-	for _, ref := range adrBaseRefs {
-		if out, err := gitOutput(root, "merge-base", "HEAD", ref); err == nil {
-			base = strings.TrimSpace(out)
-			break
-		}
-	}
+	base := mergeBase(root)
 	if base == "" {
 		fmt.Fprintf(os.Stderr, "adr033-append-only: skipped — no merge base with %s (shallow clone or no remote)\n", strings.Join(adrBaseRefs, " or "))
 		return nil
@@ -165,4 +159,65 @@ func checkADRAppendOnly(root string) []string {
 		return nil
 	}
 	return removedLinesFromExistingADRs(diff)
+}
+
+// mergeBase returns where this branch left the default branch, or "" when
+// there is nothing to compare against.
+func mergeBase(root string) string {
+	for _, ref := range adrBaseRefs {
+		if out, err := gitOutput(root, "merge-base", "HEAD", ref); err == nil {
+			return strings.TrimSpace(out)
+		}
+	}
+	return ""
+}
+
+// governedPaths are the files that state or enforce the rules (ADR-019,
+// "Governed layer"): the constitution and its workflow and engineering
+// layers, the roles, the hooks and their wiring, the check configuration,
+// and the two ADR scripts. `.claude/stack.md` is facts, not rules, and is
+// left out.
+var governedPaths = []string{
+	"CLAUDE.md",
+	".claude/engineering.md",
+	".claude/workflow.md",
+	".claude/roles",
+	".claude/hooks",
+	".claude/settings.json",
+	"checks",
+	"scripts/adrcheck",
+	"scripts/adrguard",
+}
+
+// checkGovernedLayer reports every governed file that differs from the
+// default branch. It cannot tell a change made for its own reason from one
+// made so that something else passes — nothing can — so it never blocks: it
+// puts the edit in front of the reviewer, who checks that the PR names the
+// ADR note authorising it. Without the documents, every agent in the
+// 2026-10 test that renamed the `ci` task also rewrote the check guarding
+// it (#162, #165).
+func checkGovernedLayer(root string) []string {
+	base := mergeBase(root)
+	if base == "" {
+		fmt.Fprintf(os.Stderr, "adr019-governed-layer: skipped — no merge base with %s (shallow clone or no remote)\n", strings.Join(adrBaseRefs, " or "))
+		return nil
+	}
+	changed, err := gitOutput(root, append([]string{"diff", "--name-only", "--no-renames", base, "--"}, governedPaths...)...)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "adr019-governed-layer: skipped — git diff against %s failed: %v\n", base, err)
+		return nil
+	}
+	untracked, _ := gitOutput(root, append([]string{"ls-files", "--others", "--exclude-standard", "--"}, governedPaths...)...)
+	seen := map[string]bool{}
+	var violations []string
+	for _, f := range strings.Split(changed+"\n"+untracked, "\n") {
+		f = strings.TrimSpace(f)
+		if f == "" || seen[f] {
+			continue
+		}
+		seen[f] = true
+		violations = append(violations, fmt.Sprintf("%s: governed file changed on this branch", f))
+	}
+	sort.Strings(violations)
+	return violations
 }

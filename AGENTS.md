@@ -91,7 +91,7 @@ How work moves through the repo. These rules apply with the same force as `CLAUD
 | Category | Paths | Rule |
 |---|---|---|
 | Modify freely | `cmd/`, `internal/`, `web/`, `sql/`, `migrations/`, `scripts/` (except the two below), `Taskfile.yml`, `sqlc.yaml`, `.golangci.yml`, `.air.toml`, `package.json`, `.github/workflows/`, `.windsurfrules` | Full read/write |
-| Governed layer | `CLAUDE.md`, `.claude/`, `checks/`, `scripts/adrcheck/`, `scripts/adrguard/` | Editable, but never to make a change comply: a rule, check, or status changes only for its own reason, and the PR names the ADR or ADR note that authorises it |
+| Governed layer | `CLAUDE.md`, `.claude/`, `checks/`, `scripts/adrcheck/`, `scripts/adrguard/` | Editable, but never to make a change comply: a rule, check, or status changes only for its own reason, and the PR names the ADR or ADR note that authorises it. `adr019-governed-layer` lists these edits as a warning on every branch that makes one — expected, not a failure |
 | Read-only | `docs/` | Don't modify unless explicitly asked to update documentation. Exceptions: adding a new ADR file under `docs/adr/` with status `Proposed` (and its row in `docs/adr/README.md`); appending a graduation-log entry to an ADR's Enforcement section when promoting/demoting a check (ADR-033 §4) |
 | Append-only | `docs/adr/ADR-*.md` (existing) | Supersede with a new `Proposed` ADR (an agent may do this), or have the operator append a dated note; never rewrite (ADR-033). The PreToolUse guard denies agent Edit/Write on these files, appends included |
 | Generated — never hand-edit | `internal/database/*` (sqlc), `internal/view/*_templ.go` (templ), `AGENTS.md` (agents:build) | Edit the source, then regenerate |
@@ -173,7 +173,7 @@ task db:migrate:up     # apply migrations
 task css:build         # build Tailwind CSS
 task test:performance  # performance budget tests + binary size + asset budgets (local bundle of the CI legs)
 task test:mutation     # go-gremlins mutation run on the scoped packages (ADR-032)
-task check:adr         # ADR enforcement suite, scripts/adrcheck; 11 checks block since 2026-09-30, 2 warn since 2026-10-12 (checks/enforcement.config.json, ADR-033)
+task check:adr         # ADR enforcement suite, scripts/adrcheck; 11 checks block since 2026-09-30; 3 warn since 2026-10-12, one of them (`adr019-governed-layer`) a review flag that never graduates (checks/enforcement.config.json, ADR-033)
 task db:test:setup     # bootstrap a vanilla Postgres: auth.uid() stub + migrations (local dev, tests, CI)
 task scan:vuln         # govulncheck
 task agents:build      # regenerate AGENTS.md from CLAUDE.md + .claude/*.md
