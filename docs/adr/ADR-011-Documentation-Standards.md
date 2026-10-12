@@ -31,3 +31,4 @@ Clear and up-to-date documentation is critical for onboarding and handoff. The t
 - **Not machine-checkable:** Comment quality ("non-obvious logic is commented") and implementation-guide freshness.
 - **Graduation log:**
   - 2026-09-30 — promoted **warn → block** (ADR-033 §4): clean since 2026-07-12 (80 days, zero false positives; the rule asks for 7). `checks/enforcement.config.json` carries `graduated: 2026-09-30`. Demotion back to warn is allowed with the same trail.
+- **Amendment 2026-10-12 (#160):** TC-2 — every `docs/adr/ADR-*.md` has a row in `docs/adr/README.md` and every row links a file that exists → `adr011-index-complete` in `scripts/adrcheck` (status: **warn**, added 2026-10-12). The index gains a one-sentence Decision column so a reader can match a task against the log without opening every record; the sentence is a pointer, the ADR stays the record.
