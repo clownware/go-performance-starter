@@ -147,7 +147,7 @@ scripts/              Repo tooling: adrcheck, adrguard, agentsmd, checkgenerated
 checks/               enforcement.config.json (ADR-033 warn/block registry)
 docs/                 ADRs, guides, design system, personalization guide
 .claude/              Layered AI constitution (engineering, workflow, stack, roles, skills, agents, hooks)
-.github/workflows/    ci, docker, release, deploy, db-migrate, demo-reset
+.github/workflows/    ci (quality gate + Docker image job), release, deploy, db-migrate, demo-reset, vuln-scan, docs-notify
 Dockerfile, fly.toml  Multi-stage image; the ADR-025 worked-example deploy config
 versions.json         Public manifest of what the template ships (ADR-030)
 ```
