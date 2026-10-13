@@ -32,7 +32,7 @@ You edited `CLAUDE.md` or a file under `.claude/` without regenerating. Run `tas
 
 ## An agent's edit was denied by the ADR guard, or its turn was blocked by the Stop-gate
 
-Both are ADR-033 hooks working as designed. The guard denies `Edit`/`Write` to existing ADRs, `AGENTS.md`, `internal/database/*.go` and `*_templ.go`, and names the legal move in its message. The Stop-gate runs `go test ./...` and `scripts/adrcheck` when an agent tries to finish; fix the failure rather than bypass it. Kill-switches for operator-reviewed exceptions: `ADR_GUARD_OFF=1` and `STOP_GATE_OFF=1`, set in the environment Claude Code runs in.
+Both are ADR-033 hooks working as designed. The guard asks before an `Edit`/`Write` to an existing ADR (approve it if the edit is an append; an unattended session is refused) and denies `Edit`/`Write` to `AGENTS.md`, `internal/database/*.go` and `*_templ.go`. Each message names the legal move. The Stop-gate runs `go test ./...` and `scripts/adrcheck` when an agent tries to finish; fix the failure rather than bypass it. Kill-switches for operator-reviewed exceptions: `ADR_GUARD_OFF=1` (generated files only; the ADR prompt has none) and `STOP_GATE_OFF=1`, set in the environment Claude Code runs in.
 
 ## `task ci` passes locally but the CI docker job fails the 30MB budget
 

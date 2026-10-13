@@ -1,17 +1,25 @@
-// Command adrguard is the PreToolUse hook for Edit/Write (ADR-033).
+// Command adrguard is the PreToolUse hook for Edit/Write/MultiEdit (ADR-033).
 //
-// It reads the hook payload from stdin and denies writes to paths the ADRs
-// protect: existing ADRs (append-only historical record), AGENTS.md
-// (generated, ADR-022), and sqlc/templ-generated code (ADR-019). Everything
-// else passes through untouched.
+// It reads the hook payload from stdin and gives a verdict on writes to the
+// paths the ADRs protect:
 //
-// Kill-switch: ADR_GUARD_OFF=1 disables the guard for one operator-authorized
-// amendment.
+//   - An existing ADR: ask. The record is append-only, and whether an edit is
+//     an append is a judgement, so the edit goes in front of the operator. A
+//     session with nobody to approve is refused. A new ADR gets no verdict.
+//   - AGENTS.md (generated, ADR-022) and sqlc/templ-generated code (ADR-019):
+//     deny. A generated file has no legal hand-edit.
+//
+// Everything else passes through untouched.
+//
+// Kill-switch: ADR_GUARD_OFF=1 silences the denials for one operator-authorized
+// session. It does not silence the ask: approving the prompt is the way
+// through, so no switch is needed (#169).
 package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,57 +32,68 @@ type hookInput struct {
 	} `json:"tool_input"`
 }
 
-// decide returns a denial reason for protected paths, or "" to allow.
+const (
+	decisionAsk  = "ask"
+	decisionDeny = "deny"
+)
+
+// decide returns the guard's verdict on one write — "ask", "deny" or "" to
+// leave the normal permission flow alone — and the reason shown with it.
 // root is the repo root; absPath is the file the tool wants to write.
-func decide(root, absPath string) string {
+func decide(root, absPath string) (decision, reason string) {
 	rel, err := filepath.Rel(root, absPath)
 	if err != nil || strings.HasPrefix(rel, "..") {
-		return "" // outside the repo — not this guard's business
+		return "", "" // outside the repo — not this guard's business
 	}
 	rel = filepath.ToSlash(rel)
 
 	switch {
 	case rel == "AGENTS.md":
-		return "AGENTS.md is generated (ADR-022). Legal move: edit the source layer (CLAUDE.md or .claude/*.md) and run `task agents:build`. Kill-switch: ADR_GUARD_OFF=1."
+		return decisionDeny, "AGENTS.md is generated (ADR-022). Legal move: edit the source layer (CLAUDE.md or .claude/*.md) and run `task agents:build`. Kill-switch: ADR_GUARD_OFF=1."
 	case strings.HasPrefix(rel, "internal/database/") && strings.HasSuffix(rel, ".go"):
-		return "internal/database/ is sqlc-generated — never hand-edit (ADR-019). Legal move: change sql/queries/ or sql/schema and run `task db:generate`. Kill-switch: ADR_GUARD_OFF=1."
+		return decisionDeny, "internal/database/ is sqlc-generated — never hand-edit (ADR-019). Legal move: change sql/queries/ or sql/schema and run `task db:generate`. Kill-switch: ADR_GUARD_OFF=1."
 	case strings.HasPrefix(rel, "internal/view/") && strings.HasSuffix(rel, "_templ.go"):
-		return "*_templ.go files are templ-generated — never hand-edit (ADR-019). Legal move: edit the .templ source and run `task templ:generate`. Kill-switch: ADR_GUARD_OFF=1."
+		return decisionDeny, "*_templ.go files are templ-generated — never hand-edit (ADR-019). Legal move: edit the .templ source and run `task templ:generate`. Kill-switch: ADR_GUARD_OFF=1."
 	case strings.HasPrefix(rel, "docs/adr/ADR-") && strings.HasSuffix(rel, ".md"):
 		if _, err := os.Stat(absPath); err == nil {
-			return fmt.Sprintf("%s is an existing ADR — the record is append-only (ADR-033). Legal moves: append to its Enforcement section (graduation log) via an operator-reviewed change, or supersede it with a new ADR. Kill-switch: ADR_GUARD_OFF=1.", rel)
+			return decisionAsk, fmt.Sprintf("%s is an existing ADR, and the record is append-only (ADR-033). Legal moves: append a dated note or a graduation-log entry, change the Status line, or supersede it with a new ADR. Never rewrite its text to make a change comply. This edit needs the operator's approval.", rel)
 		}
-		return "" // creating a new ADR is legal
+		return "", "" // creating a new ADR is legal
 	}
-	return ""
+	return "", ""
 }
 
-func main() {
-	if os.Getenv("ADR_GUARD_OFF") == "1" {
-		return
+// hookOutput turns one PreToolUse payload into the hook's stdout: a
+// permission decision, or "" to say nothing. off is the kill-switch.
+func hookOutput(in io.Reader, off bool) string {
+	var input hookInput
+	if err := json.NewDecoder(in).Decode(&input); err != nil || input.ToolInput.FilePath == "" {
+		return "" // unparseable or non-file tool call — allow
 	}
-	var in hookInput
-	if err := json.NewDecoder(os.Stdin).Decode(&in); err != nil || in.ToolInput.FilePath == "" {
-		return // unparseable or non-file tool call — allow
-	}
-	root := in.CWD
+	root := input.CWD
 	if root == "" {
 		root, _ = os.Getwd()
 	}
-	absPath := in.ToolInput.FilePath
+	absPath := input.ToolInput.FilePath
 	if !filepath.IsAbs(absPath) {
 		absPath = filepath.Join(root, absPath)
 	}
-	reason := decide(root, absPath)
-	if reason == "" {
-		return
+	decision, reason := decide(root, absPath)
+	if decision == "" || (off && decision == decisionDeny) {
+		return ""
 	}
 	out, _ := json.Marshal(map[string]any{
 		"hookSpecificOutput": map[string]string{
 			"hookEventName":            "PreToolUse",
-			"permissionDecision":       "deny",
+			"permissionDecision":       decision,
 			"permissionDecisionReason": reason,
 		},
 	})
-	fmt.Println(string(out))
+	return string(out)
+}
+
+func main() {
+	if out := hookOutput(os.Stdin, os.Getenv("ADR_GUARD_OFF") == "1"); out != "" {
+		fmt.Println(out)
+	}
 }

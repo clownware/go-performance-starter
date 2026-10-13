@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 const stubGo = `#!/bin/sh
@@ -93,6 +94,44 @@ func TestStopGate(t *testing.T) {
 			warned := strings.Contains(last.stdout, `"systemMessage"`) && strings.Contains(last.stdout, "Stop-gate")
 			if warned != tt.warn {
 				t.Errorf("operator warning = %v, want %v (stdout %q)", warned, tt.warn, last.stdout)
+			}
+		})
+	}
+}
+
+func TestStopGateSweepsStaleCounters(t *testing.T) {
+	tmp := t.TempDir()
+	stale := filepath.Join(tmp, "stop-gate-dead-session.count")
+	fresh := filepath.Join(tmp, "stop-gate-live-session.count")
+	other := filepath.Join(tmp, "unrelated.count")
+	for _, f := range []string{stale, fresh, other} {
+		if err := os.WriteFile(f, []byte("1\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	old := time.Now().Add(-72 * time.Hour)
+	for _, f := range []string{stale, other} {
+		if err := os.Chtimes(f, old, old); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := stop(t, tmp, ""); got.exit != 0 {
+		t.Fatalf("clean stop exited %d", got.exit)
+	}
+	tests := []struct {
+		name   string
+		path   string
+		exists bool
+	}{
+		{"a counter left by a session that died days ago is removed", stale, false},
+		{"another session's recent counter is kept", fresh, true},
+		{"a file that is not a counter is never touched", other, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := os.Stat(tt.path)
+			if (err == nil) != tt.exists {
+				t.Errorf("exists = %v, want %v", err == nil, tt.exists)
 			}
 		})
 	}
