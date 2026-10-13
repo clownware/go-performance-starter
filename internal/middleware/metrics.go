@@ -99,7 +99,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.wroteHeader = true
 	rw.statusCode = code
 	if !rw.start.IsZero() {
-		ms := float64(time.Since(rw.start).Microseconds()) / 1000
+		ms := float64(now().Sub(rw.start).Microseconds()) / 1000
 		rw.Header().Set("Server-Timing", fmt.Sprintf("app;dur=%.1f", ms))
 	}
 	rw.ResponseWriter.WriteHeader(code)
@@ -114,10 +114,14 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 	return n, err
 }
 
+// now is the middleware's clock. Tests replace it to drive a request of an
+// exact duration, so the budget boundaries can be pinned without sleeping.
+var now = time.Now
+
 // Metrics middleware tracks HTTP metrics using Prometheus
 func Metrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+		start := now()
 		activeConnections.Inc()
 		defer activeConnections.Dec()
 
@@ -140,7 +144,7 @@ func Metrics(next http.Handler) http.Handler {
 		next.ServeHTTP(ww, r)
 
 		// Calculate duration
-		duration := time.Since(start)
+		duration := now().Sub(start)
 		durationSeconds := duration.Seconds()
 		status := strconv.Itoa(ww.statusCode)
 

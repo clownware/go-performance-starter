@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"regexp"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -194,33 +193,46 @@ func TestMetrics_RequestSizeOnlyWithBody(t *testing.T) {
 	}
 }
 
-// TestMetrics_SlowRequestLogged pins the slow-request warning — the log line
-// on-call greps for when p95 pages fire. One deliberate 120ms sleep; the
-// budget is 100ms (ADR-000).
+// TestMetrics_SlowRequestLogged pins the slow-request warning to its
+// boundary: a request is slow only when it takes longer than the p95 budget,
+// not when it takes exactly the budget. The clock is injected (#138) so the
+// boundary rows are exact; with wall-clock sleeps a `>` to `>=` mutant
+// survived (ADR-032).
 func TestMetrics_SlowRequestLogged(t *testing.T) {
-	var mu sync.Mutex
-	var buf bytes.Buffer
-	prev := slog.Default()
-	slog.SetDefault(slog.New(slog.NewTextHandler(writerFunc(func(p []byte) (int, error) {
-		mu.Lock()
-		defer mu.Unlock()
-		return buf.Write(p)
-	}), nil)))
-	t.Cleanup(func() { slog.SetDefault(prev) })
-	logged := func() string { mu.Lock(); defer mu.Unlock(); return buf.String() }
-
-	fast := httptest.NewRequest(http.MethodGet, "/slow-log-fast", nil)
-	Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})).ServeHTTP(httptest.NewRecorder(), fast)
-	if strings.Contains(logged(), "slow request detected") {
-		t.Error("fast request must not log a slow-request warning")
+	budget := performance.MaxP95ResponseTime
+	tests := []struct {
+		name    string
+		took    time.Duration
+		wantLog bool
+	}{
+		{"instant request is not slow", 0, false},
+		{"one nanosecond under the budget is not slow", budget - time.Nanosecond, false},
+		{"exactly the budget is not slow", budget, false},
+		{"one nanosecond over the budget is slow", budget + time.Nanosecond, true},
+		{"well over the budget is slow", budget + 20*time.Millisecond, true},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			prev := slog.Default()
+			slog.SetDefault(slog.New(slog.NewTextHandler(&buf, nil)))
+			t.Cleanup(func() { slog.SetDefault(prev) })
 
-	slow := httptest.NewRequest(http.MethodGet, "/slow-log-slow", nil)
-	Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(performance.MaxP95ResponseTime + 20*time.Millisecond)
-	})).ServeHTTP(httptest.NewRecorder(), slow)
-	if !strings.Contains(logged(), "slow request detected") {
-		t.Error("request over the p95 budget must log a slow-request warning")
+			// A clock the handler moves: the request takes exactly tt.took.
+			clock := time.Date(2026, 10, 13, 12, 0, 0, 0, time.UTC)
+			prevNow := now
+			now = func() time.Time { return clock }
+			t.Cleanup(func() { now = prevNow })
+
+			req := httptest.NewRequest(http.MethodGet, "/slow-log", nil)
+			Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				clock = clock.Add(tt.took)
+			})).ServeHTTP(httptest.NewRecorder(), req)
+
+			if got := strings.Contains(buf.String(), "slow request detected"); got != tt.wantLog {
+				t.Errorf("took %v against a %v budget: slow-request warning logged = %v, want %v", tt.took, budget, got, tt.wantLog)
+			}
+		})
 	}
 }
 
@@ -270,5 +282,42 @@ func TestMetrics_RecordsLatencyForObserver(t *testing.T) {
 	})).ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/observed", nil))
 	if after := performance.Default.Snapshot().Samples; after != before+1 {
 		t.Errorf("observer samples = %d, want %d (one per request)", after, before+1)
+	}
+}
+
+// TestMetrics_ServerTimingValue pins the number in Server-Timing, not only
+// its shape: milliseconds to one decimal, measured to the moment the headers
+// are committed. Uses the injected clock (#138); with the wall clock a
+// mutant that multiplied instead of dividing survived (ADR-032).
+func TestMetrics_ServerTimingValue(t *testing.T) {
+	tests := []struct {
+		name         string
+		beforeHeader time.Duration
+		afterHeader  time.Duration
+		want         string
+	}{
+		{"instant", 0, 0, "app;dur=0.0"},
+		{"whole milliseconds", 12 * time.Millisecond, 0, "app;dur=12.0"},
+		{"fraction of a millisecond", 12500 * time.Microsecond, 0, "app;dur=12.5"},
+		{"time spent after the headers is not counted", 3 * time.Millisecond, 40 * time.Millisecond, "app;dur=3.0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clock := time.Date(2026, 10, 13, 12, 0, 0, 0, time.UTC)
+			prevNow := now
+			now = func() time.Time { return clock }
+			t.Cleanup(func() { now = prevNow })
+
+			w := httptest.NewRecorder()
+			Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				clock = clock.Add(tt.beforeHeader)
+				w.WriteHeader(http.StatusOK)
+				clock = clock.Add(tt.afterHeader)
+			})).ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/timing-value", nil))
+
+			if got := w.Header().Get("Server-Timing"); got != tt.want {
+				t.Errorf("Server-Timing = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
