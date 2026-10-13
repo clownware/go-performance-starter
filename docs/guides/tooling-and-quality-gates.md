@@ -40,7 +40,7 @@ CI ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) runs exactly t
 Configured in [`.claude/settings.json`](../../.claude/settings.json), these are the only *blocking* layer of [ADR-033](../adr/ADR-033-ADR-Enforcement-Architecture.md) and they act on agents, not on `git`:
 
 - **Stop-gate** (`.claude/hooks/stop-gate.sh`): when an agent tries to end its turn, `go test ./...` and `scripts/adrcheck` run; a failing test or a block-status finding sends it back, up to two times per session; after that the turn may end and the operator is shown a warning that the gate is failing. Kill-switch `STOP_GATE_OFF=1`.
-- **PreToolUse guard** (`scripts/adrguard`): denies `Edit`/`Write` to existing ADRs, `AGENTS.md`, `internal/database/*.go` and `*_templ.go`, naming the legal move in each case. Kill-switch `ADR_GUARD_OFF=1`, meant for operator-reviewed ADR amendments.
+- **PreToolUse guard** (`scripts/adrguard`): asks the operator before an `Edit`/`Write` to an existing ADR, and denies `Edit`/`Write` to `AGENTS.md`, `internal/database/*.go` and `*_templ.go`, naming the legal move in each case. Kill-switch `ADR_GUARD_OFF=1` silences the denials only; an ADR amendment goes through by approving the prompt.
 
 There are no client-side git hooks in the repo; the constitution's "never `--no-verify`" applies to any you add.
 

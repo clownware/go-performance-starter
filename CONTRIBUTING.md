@@ -35,7 +35,7 @@ Trivial changes (typo, single line, rename) skip this. Non-trivial production co
 ## ADRs
 
 - Start from [`docs/adr/TEMPLATE.md`](docs/adr/TEMPLATE.md); the number is one above the last row in the index. The `## Enforcement` block is mandatory ([ADR-033](docs/adr/ADR-033-ADR-Enforcement-Architecture.md)).
-- Existing ADRs are **append-only**: add a dated amendment note or a graduation-log entry, or supersede with a new ADR. Both sides of a supersession or amendment carry a note. A guard hook denies in-place edits by agents; `ADR_GUARD_OFF=1` is the operator-reviewed kill-switch.
+- Existing ADRs are **append-only**: add a dated amendment note or a graduation-log entry, or supersede with a new ADR. Both sides of a supersession or amendment carry a note. A guard hook asks the operator before an agent edits an existing ADR, so an unattended session is refused; `adr033-append-only` reports text that was removed or rewritten.
 - Checks start at warn and are promoted to block in `checks/enforcement.config.json` after 7+ clean days or one real catch, logged in the ADR and the CHANGELOG.
 
 Details in [documentation.md](docs/guides/documentation.md).

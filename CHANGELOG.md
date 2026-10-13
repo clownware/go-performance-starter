@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   block-status finding
 
 ### Changed
+- The ADR write guard asks instead of denying (#169): an edit to an existing
+  ADR goes in front of the operator and an unattended session is refused.
+  Generated files are still denied. `ADR_GUARD_OFF=1` now silences only the
+  denials. The Stop-gate sweeps stale counter files, and its operator warning
+  was verified in a live session
 - Constitution legal moves (#158): the scope table now says a new ADR with
   status `Proposed` may always be added under `docs/adr/`, rule 1 names the
   moves an agent actually has when an ADR conflicts (supersede, or ask the

@@ -24,6 +24,10 @@ session=$(printf '%s' "$payload" | sed -n 's/.*"session_id"[[:space:]]*:[[:space
 [ -n "$session" ] || session=unknown
 state="${TMPDIR:-/tmp}/stop-gate-$session.count"
 
+# A session that died between a block and its next stop leaves its counter
+# behind. Sweep the ones older than a day; only this hook's own files.
+find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'stop-gate-*.count' -mtime +1 -delete 2>/dev/null
+
 failure=""
 if ! test_out=$(go test ./... 2>&1); then
   failure="Stop-gate BLOCKER (ADR-021): go test ./... failed."
