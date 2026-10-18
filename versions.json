@@ -1,6 +1,6 @@
 {
   "template": "v0.9.0",
-  "go": "1.26.9",
+  "go": "1.27.2",
   "go-minimum": "1.26.0",
   "chi": "5.5.0",
   "templ": "0.3.1070",
@@ -13,5 +13,5 @@
   "sqlc": "1.31.1",
   "golang-migrate": "4.19.1",
   "node": "22",
-  "golangci-lint": "2.13.1"
+  "golangci-lint": "2.15.0"
 }
