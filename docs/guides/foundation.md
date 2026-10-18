@@ -4,7 +4,7 @@ The choices that are painful to change later, and where each one is decided. Not
 
 ## Language, module, router
 
-- **Go 1.26** (`go.mod`; the Dockerfile builds on `golang:1.26-alpine`, CI reads `go-version-file`). The pin is mirrored in [`versions.json`](../../versions.json) and checked by `task versions:check` ([ADR-030](../adr/ADR-030-Versions-Manifest-Contract.md)).
+- **Go 1.27 toolchain, 1.26 minimum** (`go.mod`; the Dockerfile builds on `golang:1.27-alpine`, CI reads `go-version-file`). The pin is mirrored in [`versions.json`](../../versions.json) and checked by `task versions:check` ([ADR-030](../adr/ADR-030-Versions-Manifest-Contract.md)).
 - Module path `github.com/clownware/go-performance-starter`, one module, no `go work`. `.golangci.yml` uses it as the goimports local prefix, so renaming the module means editing that file too.
 - **Chi v5** for routing, chosen for stdlib alignment ([ADR-001](../adr/ADR-001-Foundation.md)). The middleware stack and route groups are described in [routing-and-middleware.md](routing-and-middleware.md).
 

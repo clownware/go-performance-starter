@@ -9,7 +9,7 @@ vars:
   # Pinned so lint results are reproducible and CI never resolves @latest over
   # the network. Tracked in versions.json (ADR-030) — bump here, then run
   # `task versions:sync`.
-  GOLANGCI_LINT_VERSION: 2.13.1
+  GOLANGCI_LINT_VERSION: 2.15.0
 
 tasks:
   # Development tasks
