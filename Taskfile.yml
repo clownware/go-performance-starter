@@ -270,7 +270,7 @@ tasks:
   scan:vuln:
     desc: Check for vulnerable dependencies
     cmds:
-      - govulncheck ./...
+      - go tool govulncheck ./...
 
   # Clean tasks
   clean:

@@ -54,7 +54,7 @@ Forking this for your own product? The governance apparatus is modular ([ADR-019
 - CLI tools the tasks shell out to (pinned versions in [`versions.json`](versions.json)):
 
 ```bash
-go install github.com/a-h/templ/cmd/templ@v0.3.1020                                   # task templ:generate, air
+go install github.com/a-h/templ/cmd/templ@v0.3.1070                                   # task templ:generate, air
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1                                   # task db:generate
 go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.19.1   # task db:migrate:*
 go install github.com/air-verse/air@latest                                             # task dev
