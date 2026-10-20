@@ -105,11 +105,27 @@ What does not exist: `ETag`/`If-None-Match`, the `immutable` directive, `CDN-Cac
 
 Total page weight, critical-path weight, LCP/FID/CLS/TTFB and the Lighthouse scores have no measurement. The grid's "Total page" row stays unmeasured by design. Issue [#136](https://github.com/clownware/go-performance-starter/issues/136) proposes a Lighthouse CI run against the deployed demo, feeding the total-page number into the grid; ADR-000 keeps it Monitored until a baseline exists, and it needs a small ADR first.
 
+## Benchmarks
+
+`task test:bench` runs the hot-path benchmarks. They use `b.Loop` (Go 1.24), which keeps setup out of the timing and stops the compiler from optimising the loop body away. `task ci` does not run them: timings vary by machine, so they inform rather than gate.
+
+| Benchmark | What it isolates | M4 Pro, go1.27.2 |
+|---|---|---|
+| `BenchmarkServer/healthz` | the full global middleware chain around a trivial handler | ~5.5 µs, 65 allocs |
+| `BenchmarkServer/home` | chain + landing page | ~280 µs |
+| `BenchmarkServer/home-gzip` | the same, gzip-compressed | ~520 µs |
+| `BenchmarkHomePage_Render/render` | the templ render alone, to `io.Discard` | ~23 µs, 456 allocs |
+| `BenchmarkRateLimiter/allowed/64k-ips` | limiter lookup + token take across a large bucket map | ~240 ns |
+| `BenchmarkLimiterStore_GetParallel` | bucket lookup under mutex contention | ~190 ns |
+| `BenchmarkCSRF/returning-visitor` | double-submit check on a safe request | ~260 ns |
+
+The gap between the render (23 µs) and the full home request (280 µs) is mostly `runtime.ReadMemStats`, a stop-the-world call that `performance.Default.Snapshot()` makes on every landing-page view to fill the observed-memory row. Issue [#180](https://github.com/clownware/go-performance-starter/issues/180) tracks moving it to `runtime/metrics`, which needs no stop-the-world.
+
 ## Checking locally
 
 ```sh
-task test:performance   # go test ./internal/performance/... + test:binary-size + test:asset-budgets
+task test:performance   # go test ./internal/performance/... + test:bench + test:binary-size + test:asset-budgets
 task build && ls -la dist/app
 ```
 
-`task build` on macOS produced a 14,684,754-byte binary; a `GOOS=linux GOARCH=amd64` build with the Dockerfile's flags came to 15,536,290 bytes — about 5 MB under the gate. `task test:memory-profile` runs the package benchmarks under `-memprofile` and is manual only; nothing in `task ci` profiles memory. The docker image gate has no task — run `task docker:build` and `docker image inspect go-performance-starter --format='{{.Size}}'` to check it before pushing.
+`task build` on macOS produced a 14,684,754-byte binary; a `GOOS=linux GOARCH=amd64` build with the Dockerfile's flags came to 15,536,290 bytes — about 5 MB under the gate. `task test:memory-profile` runs the `internal/server` benchmarks under `-memprofile` and is manual only; nothing in `task ci` profiles memory. The docker image gate has no task — run `task docker:build` and `docker image inspect go-performance-starter --format='{{.Size}}'` to check it before pushing.

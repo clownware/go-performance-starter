@@ -109,7 +109,7 @@ func HealthDetailHandler(w http.ResponseWriter, r *http.Request) {
 		httpStatus = http.StatusServiceUnavailable
 	}
 
-	resp := map[string]interface{}{
+	resp := map[string]any{
 		"status":  status,
 		"version": version,
 		"uptime":  time.Since(startTime).String(),

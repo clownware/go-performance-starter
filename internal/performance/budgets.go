@@ -32,8 +32,8 @@ const (
 // BudgetViolation represents a performance budget violation
 type BudgetViolation struct {
 	Budget   string
-	Expected interface{}
-	Actual   interface{}
+	Expected any
+	Actual   any
 	Message  string
 }
 
@@ -184,11 +184,11 @@ func formatBytes(bytes int64) string {
 }
 
 // GetMemoryStats returns current memory statistics
-func GetMemoryStats() map[string]interface{} {
+func GetMemoryStats() map[string]any {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	return map[string]interface{}{
+	return map[string]any{
 		"alloc_mb":        float64(m.Alloc) / 1024 / 1024,
 		"total_alloc_mb":  float64(m.TotalAlloc) / 1024 / 1024,
 		"sys_mb":          float64(m.Sys) / 1024 / 1024,

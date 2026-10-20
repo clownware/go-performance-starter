@@ -55,7 +55,7 @@ func TestUserNameFromContext(t *testing.T) {
 			name: "full_name metadata wins",
 			user: &types.UserResponse{User: types.User{
 				Email:        "ada@example.com",
-				UserMetadata: map[string]interface{}{"full_name": "Ada Lovelace", "name": "Ada"},
+				UserMetadata: map[string]any{"full_name": "Ada Lovelace", "name": "Ada"},
 			}},
 			want: "Ada Lovelace",
 		},
@@ -63,7 +63,7 @@ func TestUserNameFromContext(t *testing.T) {
 			name: "name metadata second",
 			user: &types.UserResponse{User: types.User{
 				Email:        "grace@example.com",
-				UserMetadata: map[string]interface{}{"name": "Grace Hopper"},
+				UserMetadata: map[string]any{"name": "Grace Hopper"},
 			}},
 			want: "Grace Hopper",
 		},
@@ -120,13 +120,13 @@ func TestProfileView(t *testing.T) {
 			// The persisted row is the source of truth (#70): a saved name
 			// must survive reloads instead of reverting to token metadata.
 			name:     "users row name wins over token metadata",
-			user:     &types.UserResponse{User: types.User{Email: "ada@example.com", UserMetadata: map[string]interface{}{"full_name": "Token Name"}}},
+			user:     &types.UserResponse{User: types.User{Email: "ada@example.com", UserMetadata: map[string]any{"full_name": "Token Name"}}},
 			dbUser:   &database.User{ID: uuid.New(), Name: pgtype.Text{String: "Persisted Name", Valid: true}},
 			wantName: "Persisted Name",
 		},
 		{
 			name:     "empty users row name falls back to token metadata",
-			user:     &types.UserResponse{User: types.User{Email: "ada@example.com", UserMetadata: map[string]interface{}{"full_name": "Token Name"}}},
+			user:     &types.UserResponse{User: types.User{Email: "ada@example.com", UserMetadata: map[string]any{"full_name": "Token Name"}}},
 			dbUser:   &database.User{ID: uuid.New()},
 			wantName: "Token Name",
 		},

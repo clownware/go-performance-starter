@@ -3,6 +3,7 @@ package middleware
 import (
 	"net"
 	"net/http"
+	"slices"
 	"strings"
 )
 
@@ -105,8 +106,8 @@ func peerIsTrusted(peer string, trusted []*net.IPNet) bool {
 func forwardedClientIP(r *http.Request, trusted []*net.IPNet) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		entries := strings.Split(xff, ",")
-		for i := len(entries) - 1; i >= 0; i-- {
-			entry := strings.TrimSpace(entries[i])
+		for _, raw := range slices.Backward(entries) {
+			entry := strings.TrimSpace(raw)
 			if net.ParseIP(entry) == nil {
 				continue
 			}

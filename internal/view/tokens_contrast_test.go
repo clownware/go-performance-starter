@@ -2,6 +2,7 @@ package view
 
 import (
 	"fmt"
+	"maps"
 	"math"
 	"os"
 	"regexp"
@@ -101,13 +102,9 @@ func loadTokenPalettes(t *testing.T, path string) (light, dark map[string]string
 	// Dark inherits every light value, then applies its overrides (which may
 	// reference base-palette names defined only in @theme).
 	dark = map[string]string{}
-	for k, v := range light {
-		dark[k] = v
-	}
+	maps.Copy(dark, light)
 	overrides := parseColorVars(darkBlock)
-	for k, v := range overrides {
-		dark[k] = v
-	}
+	maps.Copy(dark, overrides)
 	resolveVarChains(t, dark)
 	return light, dark
 }
@@ -140,7 +137,7 @@ var varRefRe = regexp.MustCompile(`var\(--color-([a-z-]+)\)`)
 
 func resolveVarChains(t *testing.T, palette map[string]string) {
 	t.Helper()
-	for i := 0; i < 5; i++ { // bounded; chains are shallow
+	for range 5 { // bounded; chains are shallow
 		changed := false
 		for k, v := range palette {
 			if m := varRefRe.FindStringSubmatch(v); m != nil {

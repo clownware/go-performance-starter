@@ -150,9 +150,6 @@ func take(lim *rate.Limiter) (wait time.Duration, ok bool) {
 // RFC 9110 specifies, rounding up so a client never retries early, and
 // never saying 0.
 func retryAfterSeconds(wait time.Duration) string {
-	secs := int64(math.Ceil(wait.Seconds()))
-	if secs < 1 {
-		secs = 1
-	}
+	secs := max(int64(math.Ceil(wait.Seconds())), 1)
 	return strconv.FormatInt(secs, 10)
 }

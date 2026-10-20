@@ -147,7 +147,7 @@ func captureLogs(t *testing.T) func(msg string) map[string]any {
 
 	return func(msg string) map[string]any {
 		t.Helper()
-		for _, line := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
+		for line := range strings.SplitSeq(strings.TrimSpace(buf.String()), "\n") {
 			if line == "" {
 				continue
 			}
@@ -681,7 +681,7 @@ func TestServer_RateLimiterKeysOnResolvedClientIP(t *testing.T) {
 			srv := newServer(t, cfg, nil)
 
 			limited := 0
-			for i := 0; i < requests; i++ {
+			for i := range requests {
 				rec := doRequest(srv, http.MethodGet, "/healthz", func(r *http.Request) {
 					r.Header.Set("X-Forwarded-For", tt.forwarded(i))
 				})

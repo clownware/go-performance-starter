@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -116,55 +117,63 @@ func TestLimiterStore_Evict(t *testing.T) {
 }
 
 // TestLimiterStore_RunEvictsOnTick proves the loop actually calls evict on
-// each tick, not just that it sleeps.
+// each tick, not just that it sleeps. It runs in a synctest bubble (Go 1.25):
+// time is fake and advances only when every goroutine in the bubble is
+// blocked, so the production interval is used and the test asserts the
+// exact tick — kept one nanosecond before it, gone at it — with no polling.
 func TestLimiterStore_RunEvictsOnTick(t *testing.T) {
-	s := newLimiterStore(1, 1)
-	s.get("10.0.0.1")
-	s.entries["10.0.0.1"].lastSeen = time.Now().Add(-staleAfter - time.Minute)
+	synctest.Test(t, func(t *testing.T) {
+		s := newLimiterStore(1, 1)
+		s.get("10.0.0.1")
+		s.entries["10.0.0.1"].lastSeen = time.Now().Add(-staleAfter - time.Minute)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() {
-		s.run(ctx, time.Millisecond)
-		close(done)
-	}()
-	t.Cleanup(func() {
-		cancel()
-		<-done
-	})
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+		go s.run(ctx, evictInterval)
 
-	deadline := time.Now().Add(5 * time.Second)
-	for time.Now().Before(deadline) {
-		s.mu.Lock()
-		_, present := s.entries["10.0.0.1"]
-		s.mu.Unlock()
-		if !present {
-			return
+		present := func() bool {
+			synctest.Wait() // let run react to the clock before reading
+			s.mu.Lock()
+			defer s.mu.Unlock()
+			_, ok := s.entries["10.0.0.1"]
+			return ok
 		}
-		time.Sleep(5 * time.Millisecond)
-	}
-	t.Fatal("run() never evicted the stale entry")
+
+		time.Sleep(evictInterval - time.Nanosecond)
+		if !present() {
+			t.Fatal("run() evicted before the first tick")
+		}
+		time.Sleep(time.Nanosecond)
+		if present() {
+			t.Fatal("run() did not evict the stale entry on the first tick")
+		}
+	})
 }
 
 // TestLimiterStore_RunStopsOnContextCancel is the #117 fix: the eviction
 // loop must return once its context is done instead of living until process
-// exit.
+// exit. synctest.Wait returns once run has either exited or blocked again,
+// so the check needs no timeout; synctest.Test itself fails the test if the
+// goroutine is still alive when the bubble ends.
 func TestLimiterStore_RunStopsOnContextCancel(t *testing.T) {
-	s := newLimiterStore(1, 1)
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() {
-		s.run(ctx, time.Hour)
-		close(done)
-	}()
+	synctest.Test(t, func(t *testing.T) {
+		s := newLimiterStore(1, 1)
+		ctx, cancel := context.WithCancel(t.Context())
+		done := make(chan struct{})
+		go func() {
+			s.run(ctx, time.Hour)
+			close(done)
+		}()
 
-	cancel()
+		cancel()
+		synctest.Wait()
 
-	select {
-	case <-done:
-	case <-time.After(5 * time.Second):
-		t.Fatal("run() did not return after context cancellation")
-	}
+		select {
+		case <-done:
+		default:
+			t.Fatal("run() did not return after context cancellation")
+		}
+	})
 }
 
 // TestLimiterStore_GetRefreshesLastSeen guards the eviction input: a hit
