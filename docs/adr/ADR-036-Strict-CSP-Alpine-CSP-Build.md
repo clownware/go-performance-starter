@@ -4,11 +4,9 @@
 
 ## Status
 
-Proposed
+Accepted (supersedes ADR-028)
 
-<!-- On acceptance this becomes "Accepted (supersedes ADR-028)". Dated notes are
-     then appended to ADR-028's Status ("Superseded by ADR-036") and ADR-014's
-     Status ("§6 amended by ADR-036") through the ADR-033 amendment path. -->
+Proposed and accepted by the operator 2026-10-20, implemented in the same PR (#190). ADR-028's Status carries the dated supersession note, and ADR-014's Status lists the §6 amendment.
 
 ## Context
 
@@ -48,7 +46,7 @@ htmx 2 also has eval paths: `hx-trigger` event filters (`click[ctrlKey]`), and `
 - The starter ships `script-src 'self'` with no `unsafe-*` keyword. That is a stronger security showcase, and it closes the defence-in-depth gap ADR-028 accepted.
 - Injected markup can no longer evaluate arbitrary JavaScript through Alpine. It can still run the parser's restricted expressions against the scope it lands in, such as calling a registered method or flipping a flag. The blast radius shrinks a lot but is not zero. templ's contextual escaping (ADR-017) remains the primary XSS defence.
 - Writing an expression the parser rejects is a runtime failure: an `Alpine Expression Error` in the console, and that behaviour does nothing. Go tests and lint cannot see it. The `adr036-csp-safe-alpine` heuristic and the browser walk on every Alpine change are what catch it.
-- +3.9 KB gzipped of JS, measured. It fits the budget, but the headroom for a future library drops from about 11 KB to about 7.8 KB.
+- More JS: +3.9 KB gzipped for the CSP build, plus about 1.5 KB for the registrations in `app.js`. Measured after implementation: 44,930 B of 51,200 B, so the headroom for a future library drops from about 11.7 KB to about 6.3 KB.
 - The parser is young code. 3.17.0 and 3.17.3 fixed parser bugs (Unicode escapes, reserved words as keys). Alpine bumps now have to re-run the browser walk under the strict CSP, not just the standard build.
 - Interpreted expressions may cost more per evaluation than compiled `Function`s. This has not been measured. The demo's expressions are tiny, and the implementation PR records a before/after if the difference is observable.
 - Five components become two-part (markup plus registration), and readers of `/patterns` see `Alpine.data()` earlier than before.
@@ -75,13 +73,13 @@ htmx 2 also has eval paths: `hx-trigger` event filters (`click[ctrlKey]`), and `
   - TC-1: The CSP header's `script-src` is exactly `'self'`: no `'unsafe-eval'`, no `'unsafe-inline'`.
   - TC-2: No rendered page ships an inline `<script>` block (every script tag has `src`).
   - TC-3: The vendored `web/static/js/alpine.min.js` is the CSP build. It contains the parser's `CSP Parser Error` marker, which the standard build lacks.
-  - TC-4: No Alpine attribute value in `internal/view/**/*.templ` uses a construct the CSP parser rejects (`=>`, `function`, template literals, or `window.`/`document.`/`localStorage`/`setTimeout`/`new `), and no Go helper in `internal/view` returns an Alpine object literal with methods.
+  - TC-4: No quoted Alpine attribute value (`x-*`, `@…`, `:…`) in `internal/view/**/*.templ` uses a construct the CSP parser rejects: `=>`, `function`, a template literal, `new` with a constructor, or `window`/`document`/`localStorage`/`sessionStorage`/`setTimeout`/`setInterval`/`console`.
   - TC-5: The base layout sets `htmx.config.allowEval` to `false`, and no `.templ` file uses an `hx-trigger` filter or a `js:`/`javascript:` attribute value.
 - **Checks:**
   - TC-1 → `internal/middleware/security_test.go`, which replaces ADR-028's `'unsafe-eval'` assertion, via `task ci` (status: **block**; it replaces an existing blocking test)
   - TC-2 → `internal/server/server_test.go` via `task ci` (status: **block**, carried over from ADR-028)
-  - TC-3 → `scripts/checkversions` marker assertion via `task versions:check` (status: **warn**)
-  - TC-4 → `scripts/adrcheck` check `adr036-csp-safe-alpine` (status: **warn**)
-  - TC-5 → `internal/server/server_test.go` (meta tag) and `adr036-csp-safe-alpine` (attributes) (status: **warn**)
-- **Not machine-checkable:** TC-4 is a heuristic. The parser is the real authority, and CI has no browser to run it in. A rejected expression the heuristic misses shows up only as a console `Alpine Expression Error`, so every Alpine change, and every Alpine bump, needs a browser walk under the strict CSP. Whether a component is clearer inline or registered, beyond what the parser forces, is a review judgement.
+  - TC-3 → `scripts/adrcheck` check `adr036-csp-build-vendored` (status: **warn**, added 2026-10-20)
+  - TC-4 → `scripts/adrcheck` check `adr036-csp-safe-alpine` (status: **warn**, added 2026-10-20)
+  - TC-5 → `TestServer_StrictCSPLayout` in `internal/server/server_test.go` for the meta tag (status: **block**, a `task ci` test), and `adr036-csp-safe-alpine` for the `hx-trigger`/`hx-vals`/`hx-headers` attributes (status: **warn**, added 2026-10-20)
+- **Not machine-checkable:** TC-4 is a heuristic. It reads quoted attributes only, so a value a Go helper builds (`x-data={ authTabData(…) }`) is out of its reach. The parser is the real authority, and CI has no browser to run it in. A rejected expression the heuristic misses shows up only as a console `Alpine Expression Error`, so every Alpine change, and every Alpine bump, needs a browser walk under the strict CSP. Whether a component is clearer inline or registered, beyond what the parser forces, is a review judgement.
 - **Graduation log:** _(empty)_

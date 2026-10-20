@@ -4,7 +4,9 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-036
+
+> **Superseded 2026-10-20 by [ADR-036](ADR-036-Strict-CSP-Alpine-CSP-Build.md)** (#186, #190; append-only per ADR-033): this ADR rejected `@alpinejs/csp` because the CSP build "forbids inline expressions entirely". Since Alpine 3.15.0 it ships an expression parser that evaluates most inline syntax without eval, so the starter now vendors the CSP build and `script-src` is `'self'` alone. Decision 2 (no inline scripts) carries over into ADR-036 unchanged. TC-1 moves to ADR-036 TC-2; TC-2 is replaced by ADR-036 TC-1, and `security_test.go` now asserts the strict policy.
 
 ## Context
 

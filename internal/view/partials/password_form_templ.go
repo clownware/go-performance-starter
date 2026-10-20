@@ -44,7 +44,7 @@ func PasswordForm(props PasswordFormProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if props.Success {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"{ show: true }\" x-show=\"show\" x-init=\"setTimeout(() => show = false, 3000)\" class=\"bg-success/10 text-success px-4 py-2 rounded\" role=\"status\">Password updated.</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div x-data=\"autoDismiss\" x-show=\"show\" class=\"bg-success/10 text-success px-4 py-2 rounded\" role=\"status\">Password updated.</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -61,7 +61,7 @@ func PasswordForm(props PasswordFormProps) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/password_form.templ`, Line: 37, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/password_form.templ`, Line: 36, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -84,7 +84,7 @@ func PasswordForm(props PasswordFormProps) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/password_form.templ`, Line: 51, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/partials/password_form.templ`, Line: 50, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {

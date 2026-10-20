@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted (amended by ADR-025 §1, ADR-027 §4, ADR-028 §6, ADR-034 §4)
+Accepted (amended by ADR-025 §1, ADR-027 §4, ADR-028 §6, ADR-034 §4, ADR-036 §6)
+
+> **Amended 2026-10-20 by [ADR-036](ADR-036-Strict-CSP-Alpine-CSP-Build.md)** (append-only per ADR-033): §6's CSP is now `script-src 'self'`, with no `'unsafe-eval'` and no `'unsafe-inline'`. Alpine ships as the `@alpinejs/csp` build and htmx runs with `allowEval` off. ADR-028's `'unsafe-eval'` carve-out is superseded. The sketch in §6 below predates both; the live policy is in `internal/middleware/security.go`.
 
 ## Context
 

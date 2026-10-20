@@ -203,7 +203,7 @@ ADR-000 classes each budget. **Enforced** (fails `task ci`): binary size (`test:
 
 ### Key ADRs
 
-35 ADRs in `docs/adr/` (ADR-000 … ADR-034). The structurally important ones:
+36 ADRs in `docs/adr/` (ADR-000 … ADR-036). The structurally important ones:
 
 - **ADR-000:** Performance budgets and quality attributes
 - **ADR-001:** Foundation (Go, Chi; §3 logging and §5 deployment superseded by ADR-026/025)
@@ -219,11 +219,12 @@ ADR-000 classes each budget. **Enforced** (fails `task ci`): binary size (`test:
 - **ADR-026:** Logging standardized on `log/slog` (supersedes ADR-001 §3)
 - **ADR-030:** `versions.json` public manifest — CI-checked against repo pins, `template` stamped by release
 - **ADR-031:** Public demo operations (deploy-on-merge, `DEMO_MODE`-gated seed/reset, nightly reset workflow)
-- **ADR-027 / ADR-028:** Trusted-proxy client IP (`TRUSTED_PROXY_CIDRS`, `CLIENT_IP_HEADER`); CSP `unsafe-eval` carve-out for Alpine
+- **ADR-027:** Trusted-proxy client IP (`TRUSTED_PROXY_CIDRS`, `CLIENT_IP_HEADER`)
 - **ADR-029:** Role-based design tokens — CI rejects raw palette utilities and `dark:` variants in `.templ` files
 - **ADR-032:** Mutation testing (`task test:mutation`, go-gremlins, scoped packages)
 - **ADR-033:** ADR enforcement — every ADR has an `## Enforcement` section; `task check:adr` + two hooks (Stop-gate, PreToolUse ADR/generated-file guard); ADRs are append-only
 - **ADR-034:** Live proof surfaces (observed-vs-budget grid, RLS isolation check, rate-limit demo)
+- **ADR-036:** Strict CSP — `script-src 'self'` with the `@alpinejs/csp` build; components the CSP parser rejects are `Alpine.data()` registrations in `app.js` (supersedes ADR-028)
 
 ### Deployment
 

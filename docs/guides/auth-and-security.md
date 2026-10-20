@@ -1,6 +1,6 @@
 # Auth and Security
 
-What protects this app, where each control lives, and how to add a route that inherits all of it. The decisions are in [ADR-014](../adr/ADR-014-Security-Patterns-and-Threat-Model.md) (security patterns and the OWASP table), [ADR-004](../adr/ADR-004-Authorization-Strategy-RLS.md) (Row Level Security), [ADR-024](../adr/ADR-024-Demo-Application-Direction.md) (anonymous guests), [ADR-027](../adr/ADR-027-Trusted-Proxy-Client-IP.md) (client IP behind a proxy), [ADR-028](../adr/ADR-028-CSP-Alpine-Compatibility.md) (CSP), [ADR-031](../adr/ADR-031-Public-Demo-Operations.md) (public-demo abuse surface), [ADR-015](../adr/ADR-015-Configuration-Management-Strategy.md) (config and secrets) and [ADR-034](../adr/ADR-034-Live-Proof-Surfaces.md) (the RLS isolation check and `Retry-After`). The middleware order itself is in [routing-and-middleware.md](routing-and-middleware.md).
+What protects this app, where each control lives, and how to add a route that inherits all of it. The decisions are in [ADR-014](../adr/ADR-014-Security-Patterns-and-Threat-Model.md) (security patterns and the OWASP table), [ADR-004](../adr/ADR-004-Authorization-Strategy-RLS.md) (Row Level Security), [ADR-024](../adr/ADR-024-Demo-Application-Direction.md) (anonymous guests), [ADR-027](../adr/ADR-027-Trusted-Proxy-Client-IP.md) (client IP behind a proxy), [ADR-036](../adr/ADR-036-Strict-CSP-Alpine-CSP-Build.md) (CSP, superseding ADR-028), [ADR-031](../adr/ADR-031-Public-Demo-Operations.md) (public-demo abuse surface), [ADR-015](../adr/ADR-015-Configuration-Management-Strategy.md) (config and secrets) and [ADR-034](../adr/ADR-034-Live-Proof-Surfaces.md) (the RLS isolation check and `Retry-After`). The middleware order itself is in [routing-and-middleware.md](routing-and-middleware.md).
 
 There is no RBAC layer, no server-side session store and no audit log. Identity is a Supabase JWT in a cookie; authorization is Postgres RLS keyed on that JWT's `sub`.
 
@@ -141,7 +141,7 @@ When the peer is trusted, `CLIENT_IP_HEADER` (e.g. `Fly-Client-IP`, `CF-Connecti
 			w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
-					"script-src 'self' 'unsafe-eval'; "+
+					"script-src 'self'; "+
 					"style-src 'self' 'unsafe-inline'; "+
 					"img-src 'self' data:; "+
 					"font-src 'self'; "+
@@ -154,7 +154,7 @@ When the peer is trusted, `CLIENT_IP_HEADER` (e.g. `Fly-Client-IP`, `CF-Connecti
 			}
 ```
 
-HSTS is gated on `ENV=production` rather than `r.TLS` because TLS terminates at the edge. `'unsafe-eval'` is there because Alpine 3 compiles `x-data`/`x-show` expressions with the `Function` constructor; without it every Alpine behaviour fails silently (ADR-028). Inline `<script>` stays forbidden — `internal/server/server_test.go` fails any rendered page whose script tag lacks `src`, and `internal/middleware/security_test.go` pins the exact policy. The primary XSS defence is templ's contextual escaping ([ADR-017](../adr/ADR-017-Templ-Adoption.md)); CSP is the second layer.
+HSTS is gated on `ENV=production` rather than `r.TLS` because TLS terminates at the edge. `script-src` is `'self'` alone: Alpine is the `@alpinejs/csp` build, which parses expressions without eval, and htmx runs with `allowEval` off (ADR-036, superseding ADR-028's `'unsafe-eval'`). Inline `<script>` stays forbidden — `internal/server/server_test.go` fails any rendered page whose script tag lacks `src`, and `internal/middleware/security_test.go` pins the exact policy. The primary XSS defence is templ's contextual escaping ([ADR-017](../adr/ADR-017-Templ-Adoption.md)); CSP is the second layer.
 
 ## Request body cap, /metrics guard, input validation
 

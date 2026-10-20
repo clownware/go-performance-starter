@@ -690,6 +690,122 @@ func TestCheckNoHardcodedSecrets(t *testing.T) {
 	}
 }
 
+func TestCheckCSPSafeAlpine(t *testing.T) {
+	tests := []struct {
+		name       string
+		files      map[string]string
+		violations int
+	}{
+		{
+			name: "parser-safe inline expressions pass",
+			files: map[string]string{
+				"internal/view/pages/p.templ": "package pages\n\ntempl P() {\n\t<div x-data=\"{ open: false, tab: 'a' }\">\n\t\t<button @click=\"open = !open\" :aria-expanded=\"open.toString()\">x</button>\n\t\t<p x-show=\"touched && !email.includes('@')\" x-text=\"$store.demo.count\"></p>\n\t</div>\n}\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "registered component reference passes",
+			files: map[string]string{
+				"internal/view/pages/p.templ": "package pages\n\ntempl P() {\n\t<div x-data=\"confirmDialog\" @htmx:confirm.prevent=\"pause($event)\"></div>\n}\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "arrow function in x-init flagged",
+			files: map[string]string{
+				"internal/view/partials/f.templ": "package partials\n\ntempl F() {\n\t<div x-data=\"{ show: true }\" x-init=\"setTimeout(() => show = false, 3000)\"></div>\n}\n",
+			},
+			violations: 1,
+		},
+		{
+			name: "browser global in x-data flagged",
+			files: map[string]string{
+				"internal/view/layouts/b.templ": "package layouts\n\ntempl B() {\n\t<body x-data=\"{ dark: localStorage.getItem('dark') === 'true' }\"></body>\n}\n",
+			},
+			violations: 1,
+		},
+		{
+			name: "template literal and window access flagged per attribute",
+			files: map[string]string{
+				"internal/view/pages/p.templ": "package pages\n\ntempl P() {\n\t<span x-text=\"`hi ${name}`\"></span>\n\t<button x-on:click=\"window.scrollTo(0, 0)\">top</button>\n}\n",
+			},
+			violations: 2,
+		},
+		{
+			name: "hx-trigger filter and js: value flagged",
+			files: map[string]string{
+				"internal/view/pages/p.templ": "package pages\n\ntempl P() {\n\t<button hx-get=\"/x\" hx-trigger=\"click[ctrlKey]\">a</button>\n\t<button hx-post=\"/y\" hx-vals=\"js:{n: 1}\">b</button>\n}\n",
+			},
+			violations: 2,
+		},
+		{
+			name: "plain hx-trigger and JSON hx-vals pass",
+			files: map[string]string{
+				"internal/view/pages/p.templ": "package pages\n\ntempl P() {\n\t<div hx-get=\"/t\" hx-trigger=\"load, every 5s\" hx-vals='{\"a\": \"b\"}'></div>\n}\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "templ comments are not findings",
+			files: map[string]string{
+				"internal/view/pages/p.templ": "package pages\n\n// was x-init=\"setTimeout(() => show = false)\"\ntempl P() {\n\t<!-- not x-data=\"{ d: localStorage }\" -->\n\t<div x-data=\"{ show: true }\"></div>\n}\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "files outside internal/view are out of scope",
+			files: map[string]string{
+				"internal/handler/source.templ": "package handler\n\ntempl S() {\n\t<div x-init=\"setTimeout(() => x(), 1)\"></div>\n}\n",
+			},
+			violations: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeTree(t, root, tt.files)
+			got := checkCSPSafeAlpine(root)
+			if len(got) != tt.violations {
+				t.Errorf("got %d violations %v, want %d", len(got), got, tt.violations)
+			}
+		})
+	}
+}
+
+func TestCheckCSPBuildVendored(t *testing.T) {
+	tests := []struct {
+		name       string
+		files      map[string]string
+		violations int
+	}{
+		{
+			name:       "CSP build passes",
+			files:      map[string]string{"web/static/js/alpine.min.js": `(()=>{throw new Error("CSP Parser Error: Unexpected token")})();version:"3.17.4"`},
+			violations: 0,
+		},
+		{
+			name:       "standard build flagged",
+			files:      map[string]string{"web/static/js/alpine.min.js": `(()=>{new Function("return 1")})();version:"3.17.4"`},
+			violations: 1,
+		},
+		{
+			name:       "missing file flagged",
+			files:      map[string]string{},
+			violations: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeTree(t, root, tt.files)
+			got := checkCSPBuildVendored(root)
+			if len(got) != tt.violations {
+				t.Errorf("got %d violations %v, want %d", len(got), got, tt.violations)
+			}
+		})
+	}
+}
+
 func TestStripGoComments(t *testing.T) {
 	tests := []struct {
 		name string

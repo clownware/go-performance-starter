@@ -1,6 +1,8 @@
 package server
 
 import (
+	"encoding/json"
+	"html"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -196,7 +198,7 @@ func TestServer_HSTSGating(t *testing.T) {
 // TestServer_NavAndBrand pins the Phase-A UX fixes: the header carries the
 // real project name and links to every demo surface (the /learn hrefs are
 // static layout markup, so they render even when auth is disabled), and no
-// page ships inline <script> blocks — script-src forbids them (ADR-028), so
+// page ships inline <script> blocks — script-src forbids them (ADR-036), so
 // behavior must live in external files.
 func TestServer_NavAndBrand(t *testing.T) {
 	srv := newTestServer(t, "development")
@@ -224,7 +226,44 @@ func TestServer_NavAndBrand(t *testing.T) {
 	// Every <script> must have a src attribute; inline bodies are CSP-blocked.
 	for _, m := range regexp.MustCompile(`<script[^>]*>`).FindAllString(body, -1) {
 		if !strings.Contains(m, "src=") {
-			t.Errorf("inline script tag %q would be blocked by script-src 'self' (ADR-028)", m)
+			t.Errorf("inline script tag %q would be blocked by script-src 'self' (ADR-036)", m)
+		}
+	}
+}
+
+// TestServer_StrictCSPLayout pins the ADR-036 layout under script-src 'self':
+// htmx eval is switched off through the htmx-config meta tag (TC-5), and the
+// base layout's stateful Alpine components are Alpine.data() registrations
+// referenced by name, not inline object literals the CSP parser rejects.
+func TestServer_StrictCSPLayout(t *testing.T) {
+	srv := newTestServer(t, "development")
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET / status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+
+	m := regexp.MustCompile(`<meta name="htmx-config" content="([^"]*)"`).FindStringSubmatch(body)
+	if m == nil {
+		t.Fatal("base layout has no htmx-config meta tag (ADR-036 TC-5)")
+	}
+	var cfg map[string]any
+	if err := json.Unmarshal([]byte(html.UnescapeString(m[1])), &cfg); err != nil {
+		t.Fatalf("htmx-config content %q is not JSON: %v", m[1], err)
+	}
+	if v, ok := cfg["allowEval"].(bool); !ok || v {
+		t.Errorf("htmx-config allowEval = %v, want false (ADR-036 TC-5)", cfg["allowEval"])
+	}
+
+	for _, want := range []string{`x-data="darkMode"`, `x-data="toasts"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("GET / body missing %s (registered component, ADR-036 §5)", want)
+		}
+	}
+	for _, banned := range []string{"localStorage", "setTimeout", "=&gt;"} {
+		if strings.Contains(body, banned) {
+			t.Errorf("GET / body contains %q in markup; the Alpine CSP parser rejects it (ADR-036)", banned)
 		}
 	}
 }

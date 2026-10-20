@@ -53,12 +53,11 @@ func TestSecurityHeaders(t *testing.T) {
 	}
 }
 
-// TestSecurityHeaders_CSPAllowsAlpineEval pins the ADR-028 decision: Alpine 3
-// evaluates x-data/x-show expressions with the Function constructor, so
-// script-src must include 'unsafe-eval' or every Alpine behavior in the app
-// (dark mode, menus, toasts, tabs) fails silently. Inline scripts stay
-// forbidden — script-src must NOT gain 'unsafe-inline'.
-func TestSecurityHeaders_CSPAllowsAlpineEval(t *testing.T) {
+// TestSecurityHeaders_CSPStrictScriptSrc pins ADR-036 (superseding ADR-028):
+// Alpine ships as the @alpinejs/csp build, whose expression parser needs no
+// eval, so script-src is 'self' alone — no 'unsafe-eval', and inline scripts
+// stay forbidden (no 'unsafe-inline').
+func TestSecurityHeaders_CSPStrictScriptSrc(t *testing.T) {
 	h := SecurityHeaders(false)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -75,10 +74,7 @@ func TestSecurityHeaders_CSPAllowsAlpineEval(t *testing.T) {
 	if scriptSrc == "" {
 		t.Fatalf("CSP %q has no script-src directive", csp)
 	}
-	if !strings.Contains(scriptSrc, "'unsafe-eval'") {
-		t.Errorf("script-src = %q, must include 'unsafe-eval' (Alpine expression engine, ADR-028)", scriptSrc)
-	}
-	if strings.Contains(scriptSrc, "'unsafe-inline'") {
-		t.Errorf("script-src = %q, must NOT include 'unsafe-inline' (ADR-028 keeps inline scripts forbidden)", scriptSrc)
+	if scriptSrc != "script-src 'self'" {
+		t.Errorf("script-src = %q, want exactly \"script-src 'self'\" (ADR-036: no 'unsafe-eval', no 'unsafe-inline')", scriptSrc)
 	}
 }

@@ -74,6 +74,11 @@ func TestPatternsPage(t *testing.T) {
 	if !strings.Contains(body, `@htmx:confirm.prevent="pause($event)"`) {
 		t.Error("confirm-delete demo should intercept htmx:confirm with the styled Alpine dialog")
 	}
+	// The dialog's methods live in the confirmDialog registration (app.js):
+	// the Alpine CSP build rejects methods in an inline x-data (ADR-036).
+	if !strings.Contains(body, `x-data="confirmDialog"`) {
+		t.Error("confirm-delete demo should use the registered confirmDialog component (ADR-036)")
+	}
 	// Alpine calls a function-valued x-on result with the event, so storing
 	// issueRequest as the handler's last value fires it immediately with a
 	// truthy skipConfirmation — the dialog never gates anything (#176).

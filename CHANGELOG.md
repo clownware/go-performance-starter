@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Strict CSP (ADR-036, superseding ADR-028; #186, #190): `script-src` is
+  `'self'` alone, with no `'unsafe-eval'`. Alpine ships as the
+  `@alpinejs/csp` build (3.17.4), whose expression parser needs no eval, and
+  htmx runs with `allowEval` off. The components the parser rejects
+  (`darkMode`, `toasts`, `confirmDialog`, `formField`, `autoDismiss`) are
+  `Alpine.data()` registrations in `app.js`; every other expression stays
+  inline. `components.FormValidation` passes its rules as `data-*`
+  attributes instead of a hand-built JS literal. JS is 44,930 B gzipped
+  of 51,200
+- `adr036-csp-safe-alpine` and `adr036-csp-build-vendored` (warn) flag
+  template expressions the CSP parser rejects and a vendored standard build
+
 ### Added
 - `adr019-governed-layer` (#165, warn, never graduates): lists every change
   to the rules, hooks, check configuration and ADR scripts against the merge

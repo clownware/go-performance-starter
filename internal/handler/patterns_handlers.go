@@ -234,9 +234,21 @@ view.Render(w, r, http.StatusOK,
 		Title:          "Dark mode",
 		Summary:        "Alpine state seeded from the system preference, persisted to localStorage, applied as a class on the root element.",
 		AlpineFeatures: []string{"x-data", "$watch", "localStorage"},
-		TemplSource: `<body x-data="{ dark: localStorage.getItem('dark')
-    === 'true' || prefersDark }"
-  x-init="$watch('dark', v => ...)">`,
+		TemplSource: `<body x-data="darkMode">
+<button @click="dark = !dark"
+  :aria-pressed="dark">...</button>
+
+// app.js — globals and $watch callbacks live in
+// a registration (Alpine CSP build, ADR-036)
+Alpine.data('darkMode', () => ({
+  dark: false,
+  init() {
+    const stored = localStorage.getItem('dark');
+    this.dark = stored !== null ? stored === 'true'
+      : matchMedia('(prefers-color-scheme: dark)').matches;
+    this.$watch('dark', (val) => { /* apply + persist */ });
+  },
+}));`,
 		HandlerSource: `// No handler — this pattern is entirely
 // client-side; the server ships one class
 // toggle and no JavaScript framework.`,
@@ -331,18 +343,23 @@ view.Render(w, r, http.StatusOK,
 		Summary:        "The htmx:confirm event pauses the request while a styled Alpine dialog asks — no native window.confirm popup — and hx-disabled-elt holds the button while it runs. hx-confirm stays on as the no-Alpine fallback.",
 		HTMXFeatures:   []string{"htmx:confirm", "hx-confirm", `hx-disabled-elt="this"`},
 		AlpineFeatures: []string{"x-data", "x-teleport", "x-show"},
-		TemplSource: `<div x-data="{ open: false, issue: null,
-    pause(e) { this.issue = e.detail.issueRequest;
-               this.open = true } }"
+		TemplSource: `<div x-data="confirmDialog"
   @htmx:confirm.prevent="pause($event)">
-  <!-- a method, not "issue = ...issueRequest":
-       Alpine calls a function-valued result -->
   <button hx-post="/patterns/api/confirm"
     hx-confirm="Delete this demo item?"
     hx-disabled-elt="this">Delete item</button>
-  <!-- styled dialog; Delete resumes with
-       issue(true), Cancel just closes -->
-</div>`,
+  <!-- styled dialog: Delete → confirm(),
+       Cancel/Escape/backdrop → cancel() -->
+</div>
+
+// app.js — a method, not "issue = ...issueRequest":
+// Alpine calls a function-valued x-on result
+Alpine.data('confirmDialog', () => ({
+  open: false, issue: null,
+  pause(e) { this.issue = e.detail.issueRequest; this.open = true; },
+  cancel() { this.open = false; this.issue = null; },
+  confirm() { const issue = this.issue; this.cancel(); if (issue) issue(true); },
+}));`,
 		HandlerSource: `// The interesting part happens client-side
 // before this runs: htmx:confirm pauses the
 // request until issueRequest(true) resumes it.
