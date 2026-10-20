@@ -59,7 +59,7 @@ ADR-000 classes each budget. **Enforced** (fails `task ci`): binary size (`test:
 
 ## Key ADRs
 
-35 ADRs in `docs/adr/` (ADR-000 … ADR-034). The structurally important ones:
+36 ADRs in `docs/adr/` (ADR-000 … ADR-035; ADR-035 is Proposed). The structurally important ones:
 
 - **ADR-000:** Performance budgets and quality attributes
 - **ADR-001:** Foundation (Go, Chi; §3 logging and §5 deployment superseded by ADR-026/025)
