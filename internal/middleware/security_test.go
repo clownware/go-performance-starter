@@ -67,7 +67,7 @@ func TestSecurityHeaders_CSPAllowsAlpineEval(t *testing.T) {
 
 	csp := rec.Header().Get("Content-Security-Policy")
 	scriptSrc := ""
-	for _, directive := range strings.Split(csp, ";") {
+	for directive := range strings.SplitSeq(csp, ";") {
 		if d := strings.TrimSpace(directive); strings.HasPrefix(d, "script-src ") {
 			scriptSrc = d
 		}

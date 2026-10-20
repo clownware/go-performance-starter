@@ -520,14 +520,8 @@ func PatternScroll(w http.ResponseWriter, r *http.Request) {
 	if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
 		page = p
 	}
-	start := (page - 1) * patternScrollPerPage
-	if start >= len(patternStubData) {
-		start = len(patternStubData)
-	}
-	end := start + patternScrollPerPage
-	if end > len(patternStubData) {
-		end = len(patternStubData)
-	}
+	start := min((page-1)*patternScrollPerPage, len(patternStubData))
+	end := min(start+patternScrollPerPage, len(patternStubData))
 	next := page + 1
 	if end == len(patternStubData) {
 		next = 0 // last page: no sentinel

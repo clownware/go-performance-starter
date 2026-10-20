@@ -3,7 +3,7 @@ package performance
 import (
 	"os"
 	"runtime"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 )
@@ -72,15 +72,9 @@ func (r *LatencyRecorder) Percentiles() LatencyPercentiles {
 	if n == 0 {
 		return LatencyPercentiles{}
 	}
-	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	slices.Sort(sorted)
 	rank := func(p float64) time.Duration {
-		idx := int(float64(n)*p+0.999999) - 1 // ceil(p*n) - 1, nearest-rank
-		if idx < 0 {
-			idx = 0
-		}
-		if idx >= n {
-			idx = n - 1
-		}
+		idx := min(max(int(float64(n)*p+0.999999)-1, 0), n-1) // ceil(p*n) - 1, nearest-rank, clamped
 		return sorted[idx]
 	}
 	return LatencyPercentiles{P50: rank(0.50), P95: rank(0.95), P99: rank(0.99), Samples: n}
