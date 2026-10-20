@@ -119,6 +119,8 @@ Total page weight, critical-path weight, LCP/FID/CLS/TTFB and the Lighthouse sco
 | `BenchmarkLimiterStore_GetParallel` | bucket lookup under mutex contention | ~190 ns |
 | `BenchmarkCSRF/returning-visitor` | double-submit check on a safe request | ~260 ns |
 
+Go 1.27 made small allocations (under 80 bytes) cheaper with size-specialized malloc, and this repo gets that for free. Comparing the same benchmarks with `GOEXPERIMENT=nosizespecializedmalloc` (benchstat, n=6, M4 Pro): `CSRF/returning-visitor` −12%, `HomePage_Render/render` −5.6%, `Server/healthz` −3.5%, all with identical allocation counts. The trade is about 60 KB of binary size. Container-aware `GOMAXPROCS` (Go 1.25) is also on by default: in a CPU-limited container such as a Fly machine, the runtime sizes its scheduler to the cgroup quota rather than the host's cores.
+
 The gap between the render (23 µs) and the full home request (280 µs) is mostly `runtime.ReadMemStats`, a stop-the-world call that `performance.Default.Snapshot()` makes on every landing-page view to fill the observed-memory row. Issue [#180](https://github.com/clownware/go-performance-starter/issues/180) tracks moving it to `runtime/metrics`, which needs no stop-the-world.
 
 ## Checking locally

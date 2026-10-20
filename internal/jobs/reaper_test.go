@@ -170,7 +170,7 @@ func (s *countingReaperStore) ListExistingAuthIDs(ctx context.Context, authIDs [
 // TestReaperStart pins the loop contract: an immediate first pass on start
 // (restarts must not postpone overdue cleanup), one pass per interval after,
 // and a clean stop on context cancellation. It runs in a synctest bubble
-// (Go 1.25): time.Sleep advances a fake clock, and synctest.Wait returns
+// (Go 1.25): synctest.Sleep (Go 1.27) advances a fake clock and returns
 // once the reap goroutine has finished reacting to it, so pass counts are
 // exact and the hour-long interval costs nothing.
 func TestReaperStart(t *testing.T) {
@@ -181,22 +181,22 @@ func TestReaperStart(t *testing.T) {
 
 		want := func(n int32, phase string) {
 			t.Helper()
-			synctest.Wait()
 			if got := store.calls.Load(); got != n {
 				t.Fatalf("%s: reaper ran %d passes, want %d", phase, got, n)
 			}
 		}
 
+		synctest.Wait() // the immediate pass
 		want(1, "on start")
-		time.Sleep(time.Hour - time.Nanosecond)
+		synctest.Sleep(time.Hour - time.Nanosecond)
 		want(1, "just before the first tick")
-		time.Sleep(time.Nanosecond)
+		synctest.Sleep(time.Nanosecond)
 		want(2, "first tick")
-		time.Sleep(time.Hour)
+		synctest.Sleep(time.Hour)
 		want(3, "second tick")
 
 		cancel()
-		time.Sleep(10 * time.Hour)
+		synctest.Sleep(10 * time.Hour)
 		want(3, "after cancel") // synctest.Test also fails if the loop is still alive
 	})
 }
@@ -254,7 +254,7 @@ func TestReaperLogsFailures(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		defer cancel()
 		NewReaper(store, nil, time.Hour, time.Hour).Start(ctx)
-		time.Sleep(2 * time.Hour)
+		synctest.Sleep(2 * time.Hour)
 		wantFailures(t, 4, "immediate + two ticker passes")
 	})
 
