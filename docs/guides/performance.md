@@ -82,14 +82,14 @@ The pgx pool is configured in `internal/config/config.go` from `DB_MAX_CONNS` (d
 
 ## Frontend weight
 
-The base layout ships three vendored scripts and one Tailwind build; nothing is bundled. On this branch (`versions.json`: htmx 2.0.11, Alpine 3.13.3, Tailwind 4.3.3) `task test:asset-budgets` reports:
+The base layout ships three vendored scripts and one Tailwind build; nothing is bundled. On this branch (`versions.json`: htmx 2.0.11, Alpine 3.17.4, Tailwind 4.3.3) `task test:asset-budgets` reports:
 
 | Asset | On disk | Gzipped total | Budget |
 |---|---|---|---|
-| `htmx.min.js` + `alpine.min.js` + `app.js` | 52,182 + 43,441 + 3,453 B | **35,141 B** | 51,200 B |
+| `htmx.min.js` + `alpine.min.js` + `app.js` | 52,182 + 55,891 + 3,453 B | **39,496 B** | 51,200 B |
 | `app.css` (Tailwind `--minify`) | 39,891 B | **8,057 B** | 30,720 B |
 
-Roughly 16 KB of JS headroom is what a new library must fit inside, gzipped. `app.css` is gitignored and built by `task css:build` with the same `npx @tailwindcss/cli ... --minify` recipe the `Dockerfile` uses, so the gate measures what production ships. [ADR-007](../adr/ADR-007-Frontend-Stack-Selection.md) forbids heavy client frameworks outright; its TC-1 check fails on `react`, `vue`, `svelte`, `angular`, `jquery`, `next` or `nuxt` in `package.json`.
+Roughly 11 KB of JS headroom is what a new library must fit inside, gzipped. `app.css` is gitignored and built by `task css:build` with the same `npx @tailwindcss/cli ... --minify` recipe the `Dockerfile` uses, so the gate measures what production ships. [ADR-007](../adr/ADR-007-Frontend-Stack-Selection.md) forbids heavy client frameworks outright; its TC-1 check fails on `react`, `vue`, `svelte`, `angular`, `jquery`, `next` or `nuxt` in `package.json`.
 
 ## Caching
 
