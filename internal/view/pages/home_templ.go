@@ -624,7 +624,7 @@ func perfStats(stats []BudgetStat) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</dl></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</dl><p data-testid=\"perf-footnotes\" class=\"mt-4 text-xs text-muted-foreground max-w-xl mx-auto text-center\">The in-process costs behind the latency rows (the middleware chain, this page's templ render, the rate limiter) are measured by <code class=\"text-xs px-1 rounded bg-primary/10 text-link\">b.Loop</code> benchmarks: run <code class=\"text-xs px-1 rounded bg-primary/10 text-link\">task test:bench</code>.<br>In a CPU-limited container, Go sets <code class=\"text-xs px-1 rounded bg-primary/10 text-link\">GOMAXPROCS</code> from the cgroup quota rather than the host's core count (Go 1.25), so this instance schedules for the CPUs it is actually given.</p></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
