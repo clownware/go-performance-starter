@@ -275,12 +275,12 @@ func TestMetrics_ServerTiming(t *testing.T) {
 // observed column: every request through the middleware lands one sample
 // in the process observer.
 func TestMetrics_RecordsLatencyForObserver(t *testing.T) {
-	before := performance.Default.Snapshot().Samples
+	before := performance.Default.LatencySamples()
 	w := httptest.NewRecorder()
 	Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})).ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/observed", nil))
-	if after := performance.Default.Snapshot().Samples; after != before+1 {
+	if after := performance.Default.LatencySamples(); after != before+1 {
 		t.Errorf("observer samples = %d, want %d (one per request)", after, before+1)
 	}
 }

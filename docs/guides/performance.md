@@ -13,7 +13,7 @@ ADR-000 §1 classes every budget as **Enforced** (`task ci` fails), **Monitored*
 | JavaScript, gzipped | < 50 KB | Enforced | `MaxJavaScriptSize` | `task test:asset-budgets` |
 | CSS, gzipped | < 30 KB | Enforced | `MaxCSSSize` | `task test:asset-budgets` |
 | P50 / P95 / P99 response | < 50 / 100 / 200 ms | Monitored | `MaxP50/P95/P99ResponseTime` | metrics middleware, landing-page grid |
-| Memory (steady) | < 128 MB | Monitored | `MaxMemoryUsage` | `runtime.MemStats`, grid, `/metrics` |
+| Memory (steady) | < 128 MB | Monitored | `MaxMemoryUsage` | `runtime/metrics`, grid, `/metrics` |
 | Memory (peak) | < 256 MB | Monitored | `MaxPeakMemory` | high-water mark since boot, grid |
 | Startup | < 500 ms | Monitored | `MaxStartupTime` | `cmd/api/main.go`, grid |
 | Total page weight | < 500 KB | Aspirational | `MaxTotalPageSize` | nothing — renders as unmeasured |
@@ -45,8 +45,8 @@ When a gate trips, do not raise the constant, the workflow threshold, or skip th
 
 `internal/performance/observed.go` holds an `Observer` (`performance.Default`, static root `web/static`) that the middleware and `main` feed:
 
-- **Latency** — `LatencyRecorder` is a ring of the last `DefaultLatencyWindow = 4096` request durations; `Percentiles()` sorts a copy and returns nearest-rank p50/p95/p99. `Metrics` in `internal/middleware/metrics.go` calls `performance.Default.RecordLatency(duration)` after every request, alongside the Prometheus `http_request_duration_seconds` histogram. Any request over `MaxP95ResponseTime` is logged as `slow request detected`, and `performance_budget_violations_total{budget_type,path}` increments for each of the three thresholds a single request crosses.
-- **Memory** — `ObserveMemory` reads `runtime.MemStats` and advances a since-boot high-water mark of `Sys`. `StartMemoryMetricsCollector(30 * time.Second)` in `main.go` calls it every 30 s so the peak is tracked even when nobody loads the page, and exports `go_memory_usage_bytes{type="alloc"|"sys"|"stack"}`.
+- **Latency** — `LatencyRecorder` is a ring of the last `DefaultLatencyWindow = 4096` request durations; `Percentiles()` sorts a copy and returns nearest-rank p50/p95/p99. `Snapshot` reuses that result for `LatencyCacheTTL = 1s`, so the landing page does not sort 4096 durations on every view (#180). `Metrics` in `internal/middleware/metrics.go` calls `performance.Default.RecordLatency(duration)` after every request, alongside the Prometheus `http_request_duration_seconds` histogram. Any request over `MaxP95ResponseTime` is logged as `slow request detected`, and `performance_budget_violations_total{budget_type,path}` increments for each of the three thresholds a single request crosses.
+- **Memory** — `ObserveMemory` reads `runtime/metrics` and advances a since-boot high-water mark of total mapped memory. `/memory/classes/total:bytes` is the value `runtime.MemStats.Sys` reports, and heap objects plus heap unused is `HeapInuse`; `TestReadMemory` pins that equivalence. Unlike `runtime.ReadMemStats`, the read does not stop the world, so the landing page can take it on every view (#180). The Prometheus gauges below still come from `ReadMemStats`, every 30 s. `StartMemoryMetricsCollector(30 * time.Second)` in `main.go` calls it every 30 s so the peak is tracked even when nobody loads the page, and exports `go_memory_usage_bytes{type="alloc"|"sys"|"stack"}`.
 - **Startup** — `main.go` binds the listener with `net.Listen` before `Serve`, so "startup" is process start to a listening socket exactly as ADR-000 defines it. The value goes to `RecordStartup` and, if over 500 ms, a `startup budget exceeded` warning.
 - **Binary and asset size** — `Snapshot()` stats the running executable and gzips the shipped lists once, then caches them.
 
@@ -112,16 +112,18 @@ Total page weight, critical-path weight, LCP/FID/CLS/TTFB and the Lighthouse sco
 | Benchmark | What it isolates | M4 Pro, go1.27.2 |
 |---|---|---|
 | `BenchmarkServer/healthz` | the full global middleware chain around a trivial handler | ~5.5 µs, 65 allocs |
-| `BenchmarkServer/home` | chain + landing page | ~280 µs |
-| `BenchmarkServer/home-gzip` | the same, gzip-compressed | ~520 µs |
-| `BenchmarkHomePage_Render/render` | the templ render alone, to `io.Discard` | ~23 µs, 456 allocs |
+| `BenchmarkServer/home` | chain + landing page | ~38 µs, 564 allocs |
+| `BenchmarkServer/home-gzip` | the same, gzip-compressed | ~140 µs |
+| `BenchmarkHomePage_Render/render` | the templ render alone, to `io.Discard` | ~19 µs, 446 allocs |
+| `BenchmarkObserveMemory/ReadMemStats` | the stop-the-world memory read the grid used before #180 | ~21 µs |
+| `BenchmarkObserveMemory/runtime-metrics` | the `runtime/metrics` read it uses now | ~0.2 µs, 1 alloc |
 | `BenchmarkRateLimiter/allowed/64k-ips` | limiter lookup + token take across a large bucket map | ~240 ns |
 | `BenchmarkLimiterStore_GetParallel` | bucket lookup under mutex contention | ~190 ns |
 | `BenchmarkCSRF/returning-visitor` | double-submit check on a safe request | ~260 ns |
 
 Go 1.27 made small allocations (under 80 bytes) cheaper with size-specialized malloc, and this repo gets that for free. Comparing the same benchmarks with `GOEXPERIMENT=nosizespecializedmalloc` (benchstat, n=6, M4 Pro): `CSRF/returning-visitor` −12%, `HomePage_Render/render` −5.6%, `Server/healthz` −3.5%, all with identical allocation counts. The trade is about 60 KB of binary size. Container-aware `GOMAXPROCS` (Go 1.25) is also on by default: in a CPU-limited container such as a Fly machine, the runtime sizes its scheduler to the cgroup quota rather than the host's cores.
 
-The gap between the render (23 µs) and the full home request (280 µs) is mostly `runtime.ReadMemStats`, a stop-the-world call that `performance.Default.Snapshot()` makes on every landing-page view to fill the observed-memory row. Issue [#180](https://github.com/clownware/go-performance-starter/issues/180) tracks moving it to `runtime/metrics`, which needs no stop-the-world.
+The full home request used to cost ~280 µs, about twelve times the render. Most of that was `performance.Default.Snapshot()`, which runs on every landing-page view: a stop-the-world `runtime.ReadMemStats` for the memory row, then a sort of the 4096-sample latency window. Issue [#180](https://github.com/clownware/go-performance-starter/issues/180) moved the memory read to `runtime/metrics` and cached the percentiles for a second, which brought the request down to ~38 µs. The stop-the-world pause also stalled every other in-flight request, and that cost does not show in a single-request benchmark.
 
 ## Checking locally
 

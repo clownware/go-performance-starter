@@ -3,6 +3,7 @@ package performance
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -53,6 +54,9 @@ func TestLatencyRecorder_Percentiles(t *testing.T) {
 			r := NewLatencyRecorder(tt.size)
 			for _, d := range tt.samples {
 				r.Record(d)
+			}
+			if got := r.Len(); got != tt.want.Samples {
+				t.Errorf("Len() = %d, want %d", got, tt.want.Samples)
 			}
 			if got := r.Percentiles(); got != tt.want {
 				t.Errorf("Percentiles() = %+v, want %+v", got, tt.want)
@@ -150,5 +154,149 @@ func TestShippedAssetPaths(t *testing.T) {
 		if got[i] != want[i] {
 			t.Errorf("ShippedAssetPaths[%d] = %q, want %q", i, got[i], want[i])
 		}
+	}
+}
+
+// TestObserver_ObserveMemory pins the high-water mark over a sequence of
+// readings: the peak follows Sys up, never falls when Sys does, and heap and
+// sys are passed through as read. The reader is injected so the sequence is
+// exact; TestReadMemory checks the real reader against the runtime.
+func TestObserver_ObserveMemory(t *testing.T) {
+	type reading struct{ heap, sys uint64 }
+	tests := []struct {
+		name     string
+		readings []reading
+		wantHeap uint64
+		wantSys  uint64
+		wantPeak uint64
+	}{
+		{
+			name:     "single reading is its own peak",
+			readings: []reading{{heap: 10, sys: 40}},
+			wantHeap: 10, wantSys: 40, wantPeak: 40,
+		},
+		{
+			name:     "peak follows sys up",
+			readings: []reading{{10, 40}, {12, 50}, {15, 70}},
+			wantHeap: 15, wantSys: 70, wantPeak: 70,
+		},
+		{
+			name:     "peak holds when sys falls",
+			readings: []reading{{10, 40}, {30, 90}, {8, 35}},
+			wantHeap: 8, wantSys: 35, wantPeak: 90,
+		},
+		{
+			name:     "unsupported metrics read as zero and leave the peak alone",
+			readings: []reading{{10, 40}, {0, 0}},
+			wantHeap: 0, wantSys: 0, wantPeak: 40,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			o := NewObserver(t.TempDir())
+			i := 0
+			o.readMemory = func() (uint64, uint64) {
+				r := tt.readings[i]
+				i++
+				return r.heap, r.sys
+			}
+			var heap, sys, peak uint64
+			for range tt.readings {
+				heap, sys, peak = o.ObserveMemory()
+			}
+			if heap != tt.wantHeap || sys != tt.wantSys || peak != tt.wantPeak {
+				t.Errorf("ObserveMemory() = heap %d sys %d peak %d, want %d %d %d",
+					heap, sys, peak, tt.wantHeap, tt.wantSys, tt.wantPeak)
+			}
+		})
+	}
+}
+
+// TestReadMemory pins that the runtime/metrics reading (no stop-the-world)
+// means what the runtime.MemStats fields it replaced meant (#180): heap in
+// use is HeapInuse and total mapped memory is Sys. Both are read back to back
+// after a GC, so they agree to within a small allocation drift.
+func TestReadMemory(t *testing.T) {
+	runtime.GC()
+	heap, sys := readMemory()
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	const tolerance = 1 << 20 // 1 MiB of drift between the two reads
+	tests := []struct {
+		name      string
+		got, want uint64
+	}{
+		{name: "heap in use matches MemStats.HeapInuse", got: heap, want: m.HeapInuse},
+		{name: "total mapped matches MemStats.Sys", got: sys, want: m.Sys},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.got == 0 {
+				t.Fatal("reading is zero: a runtime/metrics name is unsupported by this Go version")
+			}
+			diff := max(tt.got, tt.want) - min(tt.got, tt.want)
+			if diff > tolerance {
+				t.Errorf("runtime/metrics = %d, MemStats = %d, differ by %d (> %d)", tt.got, tt.want, diff, tolerance)
+			}
+		})
+	}
+}
+
+// BenchmarkObserveMemory compares the per-view cost of the memory reading
+// before and after #180: runtime.ReadMemStats stops the world; runtime/metrics
+// does not. Uses b.Loop (Go 1.24).
+func BenchmarkObserveMemory(b *testing.B) {
+	b.Run("ReadMemStats", func(b *testing.B) {
+		var m runtime.MemStats
+		for b.Loop() {
+			runtime.ReadMemStats(&m)
+		}
+	})
+	b.Run("runtime-metrics", func(b *testing.B) {
+		o := NewObserver(b.TempDir())
+		b.ReportAllocs()
+		for b.Loop() {
+			o.ObserveMemory()
+		}
+	})
+}
+
+// TestObserver_LatencyCache pins the percentile cache: sorting the 4096-sample
+// window on every landing-page view dominated its cost once the memory read
+// stopped stopping the world (#180), so Snapshot reuses percentiles for
+// LatencyCacheTTL. A reading inside the TTL is the cached one; at or after
+// it the window is re-ranked.
+func TestObserver_LatencyCache(t *testing.T) {
+	tests := []struct {
+		name        string
+		elapsed     time.Duration // between the first and second Snapshot
+		wantSamples int
+		wantP99     time.Duration
+	}{
+		{name: "same instant reuses the cached percentiles", elapsed: 0, wantSamples: 1, wantP99: 10 * time.Millisecond},
+		{name: "inside the TTL reuses them", elapsed: LatencyCacheTTL - time.Nanosecond, wantSamples: 1, wantP99: 10 * time.Millisecond},
+		{name: "at the TTL re-ranks", elapsed: LatencyCacheTTL, wantSamples: 11, wantP99: 50 * time.Millisecond},
+		{name: "well past the TTL re-ranks", elapsed: time.Minute, wantSamples: 11, wantP99: 50 * time.Millisecond},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			o := NewObserver(t.TempDir())
+			now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
+			o.now = func() time.Time { return now }
+
+			o.RecordLatency(10 * time.Millisecond)
+			if first := o.Snapshot(); first.Samples != 1 {
+				t.Fatalf("first Snapshot Samples = %d, want 1", first.Samples)
+			}
+			for range 10 {
+				o.RecordLatency(50 * time.Millisecond)
+			}
+			now = now.Add(tt.elapsed)
+			got := o.Snapshot()
+			if got.Samples != tt.wantSamples || got.P99 != tt.wantP99 {
+				t.Errorf("second Snapshot = n=%d p99 %v, want n=%d p99 %v", got.Samples, got.P99, tt.wantSamples, tt.wantP99)
+			}
+		})
 	}
 }
