@@ -109,7 +109,8 @@ Run `task --list` to see all available tasks. Key ones:
 | `task ci` | Halt-on-violation quality gate: fmt check, lint, `go mod verify`, race tests, `agents:check`, `versions:check`, `check:adr`, `check:generated`, binary size, gzipped asset budgets, vuln scan |
 | `task build` | Compile optimized binary to `./dist/app` |
 | `task test` | Run test suite (`task test:coverage` for coverage; `task test:mutation` for go-gremlins, ADR-032) |
-| `task test:performance` | Performance budget tests + binary size + asset budgets (local bundle of the CI legs) |
+| `task test:performance` | Performance budget tests + benchmarks + binary size + asset budgets (local bundle of the CI legs) |
+| `task test:bench` | Hot-path benchmarks (`b.Loop`): middleware chain, landing-page render, rate limiter, CSRF |
 | `task test:binary-size` | Validate stripped binary size < 20MB |
 | `task test:asset-budgets` | Validate gzipped JS < 50KB and CSS < 30KB |
 | `task check:adr` | Run the ADR enforcement suite (`scripts/adrcheck`, ADR-033) |
