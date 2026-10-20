@@ -54,7 +54,7 @@ var templateRe = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
 func goModVersions(content string) map[string]string {
 	out := map[string]string{}
 	inBlock := false
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
 		switch {
 		case strings.HasPrefix(line, "go "):

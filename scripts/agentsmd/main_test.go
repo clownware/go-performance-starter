@@ -535,8 +535,8 @@ func runMain(t *testing.T, root string, args ...string) (int, string) {
 	if err == nil {
 		return 0, string(out)
 	}
-	var exitErr *exec.ExitError
-	if !errors.As(err, &exitErr) {
+	exitErr, ok := errors.AsType[*exec.ExitError](err)
+	if !ok {
 		t.Fatalf("running %s %v: %v", os.Args[0], args, err)
 	}
 	return exitErr.ExitCode(), string(out)

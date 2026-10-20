@@ -132,12 +132,12 @@ func TestFirstMatch(t *testing.T) {
 	}{
 		{
 			name:    "returns the capture group of the first match",
-			content: ptr("pin=1.2.3 then pin=9.9.9"),
+			content: new("pin=1.2.3 then pin=9.9.9"),
 			want:    "1.2.3",
 		},
 		{
 			name:    "no match errors naming the file",
-			content: ptr("nothing pinned here"),
+			content: new("nothing pinned here"),
 			wantErr: "no match for",
 		},
 		{
@@ -177,8 +177,6 @@ func TestFirstMatch(t *testing.T) {
 		})
 	}
 }
-
-func ptr(s string) *string { return &s }
 
 func TestAllMatchesAgree(t *testing.T) {
 	re := regexp.MustCompile(`pin=([0-9.]+)`)
@@ -504,8 +502,8 @@ func runMain(t *testing.T, root string) (int, string) {
 	if err == nil {
 		return 0, string(out)
 	}
-	var exitErr *exec.ExitError
-	if !errors.As(err, &exitErr) {
+	exitErr, ok := errors.AsType[*exec.ExitError](err)
+	if !ok {
 		t.Fatalf("running %s: %v", os.Args[0], err)
 	}
 	return exitErr.ExitCode(), string(out)

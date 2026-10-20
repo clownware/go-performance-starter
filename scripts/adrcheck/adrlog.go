@@ -102,7 +102,7 @@ func removedLinesFromExistingADRs(diff string) []string {
 		}
 		removed, removedAt, added = nil, nil, nil
 	}
-	for _, line := range strings.Split(diff, "\n") {
+	for line := range strings.SplitSeq(diff, "\n") {
 		switch {
 		case strings.HasPrefix(line, "diff --git "):
 			flush()
@@ -210,7 +210,7 @@ func checkGovernedLayer(root string) []string {
 	untracked, _ := gitOutput(root, append([]string{"ls-files", "--others", "--exclude-standard", "--"}, governedPaths...)...)
 	seen := map[string]bool{}
 	var violations []string
-	for _, f := range strings.Split(changed+"\n"+untracked, "\n") {
+	for f := range strings.SplitSeq(changed+"\n"+untracked, "\n") {
 		f = strings.TrimSpace(f)
 		if f == "" || seen[f] {
 			continue
