@@ -252,10 +252,13 @@ templ patternDemo(slug string) {
 		case "confirm-delete":
 			<!-- htmx:confirm pauses the request; the styled dialog resumes it
 			     via issueRequest(true). hx-confirm stays on as the no-Alpine
-			     fallback (native confirm) — with the intercept it never fires. -->
+			     fallback (native confirm) — with the intercept it never fires.
+			     pause() stores issueRequest inside a method: Alpine calls a
+			     function-valued x-on expression, which would fire the request
+			     before the dialog opens. -->
 			<div
-				x-data="{ open: false, issue: null }"
-				@htmx:confirm.prevent="issue = $event.detail.issueRequest; open = true"
+				x-data="{ open: false, issue: null, pause(e) { this.issue = e.detail.issueRequest; this.open = true } }"
+				@htmx:confirm.prevent="pause($event)"
 			>
 				<div id="confirm-demo-target">
 					<button

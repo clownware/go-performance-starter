@@ -26,10 +26,11 @@ document.addEventListener('htmx:configRequest', (event) => {
 });
 
 document.addEventListener('htmx:beforeSwap', (event) => {
-  // HTMX skips swapping 4xx responses by default, but this app's handlers
-  // return meaningful fragments on validation and auth failures (400/401/
-  // 409/422): inline form errors, re-rendered question cards. Swap those so
-  // the user sees the feedback; other statuses keep the default behavior.
+  // htmx 2's default responseHandling skips swapping 4xx/5xx responses, but
+  // this app's handlers return meaningful fragments on validation and auth
+  // failures (400/401/409/422): inline form errors, re-rendered question
+  // cards. Swap those so the user sees the feedback; other statuses keep the
+  // default behavior.
   // A 429 is swapped only when the limiter's refusal is HTML (the /patterns
   // demo, ADR-034) — the plain-text default stays out of the page.
   const status = event.detail.xhr.status;

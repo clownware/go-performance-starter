@@ -71,8 +71,14 @@ func TestPatternsPage(t *testing.T) {
 	}
 	// Confirm-delete must intercept htmx:confirm with the styled dialog —
 	// the native window.confirm popup renders at the top of the browser.
-	if !strings.Contains(body, "@htmx:confirm.prevent") {
+	if !strings.Contains(body, `@htmx:confirm.prevent="pause($event)"`) {
 		t.Error("confirm-delete demo should intercept htmx:confirm with the styled Alpine dialog")
+	}
+	// Alpine calls a function-valued x-on result with the event, so storing
+	// issueRequest as the handler's last value fires it immediately with a
+	// truthy skipConfirmation — the dialog never gates anything (#176).
+	if strings.Contains(body, "issue = $event.detail.issueRequest") {
+		t.Error("confirm-delete demo must not leave issueRequest as the x-on expression's value; Alpine would call it")
 	}
 	// Inline validation must wait for blur before flagging the field.
 	if !strings.Contains(body, `@blur="touched = true"`) {
