@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -34,8 +33,7 @@ func BenchmarkRateLimiter(b *testing.B) {
 	}
 	for _, c := range cases {
 		b.Run(c.name, func(b *testing.B) {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := b.Context()
 			h := RateLimiter(ctx, c.rps, c.burst)(benchOK)
 
 			reqs := make([]*http.Request, c.ips)

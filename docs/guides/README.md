@@ -22,7 +22,7 @@ Topic guides for working in this codebase. Each one explains the paved path, lin
 
 | Layer | Choice | Decided in |
 |---|---|---|
-| Language / router | Go 1.26, Chi v5 | ADR-001 |
+| Language / router | Go 1.27, Chi v5 | ADR-001 |
 | Templates | templ (typed props; `html/template` forbidden) | ADR-017 |
 | Frontend | HTMX + Alpine.js, Tailwind CSS v4, role-based tokens | ADR-007, ADR-012, ADR-029 |
 | Database | PostgreSQL via pgx/v5; sqlc; golang-migrate | ADR-002, ADR-003 |

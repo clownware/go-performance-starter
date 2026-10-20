@@ -132,18 +132,19 @@ func TestLimiterStore_RunEvictsOnTick(t *testing.T) {
 		go s.run(ctx, evictInterval)
 
 		present := func() bool {
-			synctest.Wait() // let run react to the clock before reading
 			s.mu.Lock()
 			defer s.mu.Unlock()
 			_, ok := s.entries["10.0.0.1"]
 			return ok
 		}
 
-		time.Sleep(evictInterval - time.Nanosecond)
+		// synctest.Sleep (Go 1.27) = time.Sleep + synctest.Wait: advance the
+		// clock, then let run finish reacting before the read.
+		synctest.Sleep(evictInterval - time.Nanosecond)
 		if !present() {
 			t.Fatal("run() evicted before the first tick")
 		}
-		time.Sleep(time.Nanosecond)
+		synctest.Sleep(time.Nanosecond)
 		if present() {
 			t.Fatal("run() did not evict the stale entry on the first tick")
 		}
