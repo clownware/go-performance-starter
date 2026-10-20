@@ -53,23 +53,21 @@ func TestUserNameFromContext(t *testing.T) {
 		{name: "no user in context", user: nil, want: "User"},
 		{
 			name: "full_name metadata wins",
-			user: &types.UserResponse{User: types.User{
+			user: &types.UserResponse{
 				Email:        "ada@example.com",
-				UserMetadata: map[string]any{"full_name": "Ada Lovelace", "name": "Ada"},
-			}},
+				UserMetadata: map[string]any{"full_name": "Ada Lovelace", "name": "Ada"}},
 			want: "Ada Lovelace",
 		},
 		{
 			name: "name metadata second",
-			user: &types.UserResponse{User: types.User{
+			user: &types.UserResponse{
 				Email:        "grace@example.com",
-				UserMetadata: map[string]any{"name": "Grace Hopper"},
-			}},
+				UserMetadata: map[string]any{"name": "Grace Hopper"}},
 			want: "Grace Hopper",
 		},
 		{
 			name: "email fallback",
-			user: &types.UserResponse{User: types.User{Email: "fallback@example.com"}},
+			user: &types.UserResponse{Email: "fallback@example.com"},
 			want: "fallback@example.com",
 		},
 		{name: "empty user falls back to User", user: &types.UserResponse{}, want: "User"},
@@ -100,7 +98,7 @@ func TestProfileView(t *testing.T) {
 		{name: "anonymous context"},
 		{
 			name: "authenticated user",
-			user: &types.UserResponse{User: types.User{Email: "ada@example.com"}},
+			user: &types.UserResponse{Email: "ada@example.com"},
 			// #97: account email shown read-only, password section and
 			// sign-out form present.
 			wantBody: []string{"ada@example.com", `id="password-form"`, `hx-post="/profile/password"`, `action="/auth/logout"`},
@@ -120,13 +118,13 @@ func TestProfileView(t *testing.T) {
 			// The persisted row is the source of truth (#70): a saved name
 			// must survive reloads instead of reverting to token metadata.
 			name:     "users row name wins over token metadata",
-			user:     &types.UserResponse{User: types.User{Email: "ada@example.com", UserMetadata: map[string]any{"full_name": "Token Name"}}},
+			user:     &types.UserResponse{Email: "ada@example.com", UserMetadata: map[string]any{"full_name": "Token Name"}},
 			dbUser:   &database.User{ID: uuid.New(), Name: pgtype.Text{String: "Persisted Name", Valid: true}},
 			wantName: "Persisted Name",
 		},
 		{
 			name:     "empty users row name falls back to token metadata",
-			user:     &types.UserResponse{User: types.User{Email: "ada@example.com", UserMetadata: map[string]any{"full_name": "Token Name"}}},
+			user:     &types.UserResponse{Email: "ada@example.com", UserMetadata: map[string]any{"full_name": "Token Name"}},
 			dbUser:   &database.User{ID: uuid.New()},
 			wantName: "Token Name",
 		},

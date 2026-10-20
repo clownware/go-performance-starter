@@ -397,6 +397,13 @@ func TestServer_HomeExplainer(t *testing.T) {
 			t.Errorf("budget grid missing %q (ADR-000 classification / ADR-034 proof)", want)
 		}
 	}
+	// #178: the grid points at the benchmarks behind the latency numbers and
+	// names the runtime's container-aware scheduling.
+	for _, want := range []string{"task test:bench", "b.Loop", "GOMAXPROCS"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("budget section missing %q (#178 benchmarks / container-aware GOMAXPROCS)", want)
+		}
+	}
 }
 
 // TestServer_CloseIsIdempotentAndKeepsServing pins the #117 lifecycle

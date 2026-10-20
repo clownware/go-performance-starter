@@ -4,7 +4,7 @@ Technology facts. This file updates when dependencies change or commands move; r
 
 ## Versions
 
-- **Language:** Go 1.26 (`go.mod`)
+- **Language:** Go 1.27 (`go.mod`)
 - **Router:** Chi v5 (stdlib-aligned, lightweight)
 - **Templating:** templ (type-safe, compiles to Go) — replaces `html/template` (ADR-017)
 - **Frontend:** HTMX + Alpine.js (minimal JS), Tailwind CSS v4 (`@tailwindcss/cli`)
@@ -59,7 +59,7 @@ ADR-000 classes each budget. **Enforced** (fails `task ci`): binary size (`test:
 
 ## Key ADRs
 
-36 ADRs in `docs/adr/` (ADR-000 … ADR-036). The structurally important ones:
+37 ADRs in `docs/adr/` (ADR-000 … ADR-036). The structurally important ones:
 
 - **ADR-000:** Performance budgets and quality attributes
 - **ADR-001:** Foundation (Go, Chi; §3 logging and §5 deployment superseded by ADR-026/025)
