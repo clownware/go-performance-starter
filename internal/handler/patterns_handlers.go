@@ -58,7 +58,7 @@ func PatternsRoutes(ctx context.Context, r chi.Router) {
 // patternStubData is the shared dataset the search, typeahead, and scroll
 // demos filter and page over — the pieces of this starter's own stack.
 var patternStubData = []string{
-	"Go 1.26", "Chi router", "templ", "HTMX", "Alpine.js", "Tailwind CSS",
+	"Go 1.27", "Chi router", "templ", "HTMX", "Alpine.js", "Tailwind CSS",
 	"PostgreSQL", "sqlc", "pgx", "Supabase Auth", "Row Level Security",
 	"golang-migrate", "Taskfile", "golangci-lint", "Prometheus", "Fly.io",
 	"Docker", "GitHub Actions", "air (live reload)", "gofmt",
@@ -331,9 +331,12 @@ view.Render(w, r, http.StatusOK,
 		Summary:        "The htmx:confirm event pauses the request while a styled Alpine dialog asks — no native window.confirm popup — and hx-disabled-elt holds the button while it runs. hx-confirm stays on as the no-Alpine fallback.",
 		HTMXFeatures:   []string{"htmx:confirm", "hx-confirm", `hx-disabled-elt="this"`},
 		AlpineFeatures: []string{"x-data", "x-teleport", "x-show"},
-		TemplSource: `<div x-data="{ open: false, issue: null }"
-  @htmx:confirm.prevent="issue =
-    $event.detail.issueRequest; open = true">
+		TemplSource: `<div x-data="{ open: false, issue: null,
+    pause(e) { this.issue = e.detail.issueRequest;
+               this.open = true } }"
+  @htmx:confirm.prevent="pause($event)">
+  <!-- a method, not "issue = ...issueRequest":
+       Alpine calls a function-valued result -->
   <button hx-post="/patterns/api/confirm"
     hx-confirm="Delete this demo item?"
     hx-disabled-elt="this">Delete item</button>
