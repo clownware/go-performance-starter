@@ -4,9 +4,7 @@
 
 ## Status
 
-Proposed
-
-<!-- If accepted, this ADR amends ADR-014 §3 (CSRF Protection); a dated note is then appended to ADR-014's Status. -->
+Accepted (amends ADR-014 §3; Phase 1 only), 2026-10-20
 
 ## Context
 
@@ -39,7 +37,7 @@ Neither control dominates the other. The token covers old browsers that send no 
 
 ## Decision
 
-**Proposed: adopt `http.CrossOriginProtection` as defence-in-depth now, and treat removal of the token as a separate, later decision.**
+**Adopt `http.CrossOriginProtection` as defence-in-depth now, and treat removal of the token as a separate, later decision.**
 
 1. **Phase 1 (this ADR, if accepted).** Wire `http.NewCrossOriginProtection()` into the global chain in `internal/server/server.go`, immediately **before** `mw.CSRF(isProd)`. Both checks then run, and an unsafe request must pass both. No trusted origins, no bypass patterns. A `SetDenyHandler` logs the rejection through `slog` (method, path, `Sec-Fetch-Site`, `Origin`, never cookies) and answers 403, so rejections can be observed on the demo. `internal/middleware/csrf.go` is unchanged.
 2. **Phase 2 (not decided here).** After Phase 1 has run on the public demo (ADR-031) long enough to show that the token rejects nothing `CrossOriginProtection` lets through, a superseding ADR may propose removing the double-submit token. That would remove its cookie, the `hx-headers`/`CSRFField` plumbing and the `Set-Cookie` on first contact. The open questions for that ADR are the fail-open case for headerless browsers and whether ADR-016's edge caching needs pages to be free of cookies.
@@ -81,4 +79,5 @@ The maintainer may instead choose **replace now** or **reject** (see Alternative
   - TC-1, TC-2 → table-driven wiring test in `internal/server` (status: **warn** until graduated; it is a Go test, so it fails `task ci` once written).
   - TC-3 → an `adrcheck` grep check `adr035-no-cop-bypass`, to be added with Phase 1 (status: **warn**).
 - **Not machine-checkable:** that no handler changes state on a safe method (both layers depend on it), and the Phase 2 judgement of whether the demo's observed traffic justifies removing the token.
-- **Graduation log:** _(empty)_
+- **Graduation log:**
+  - 2026-10-20: accepted; Phase 1 landed. TC-1/TC-2 → `TestServer_CrossOriginBeforeCSRF` in `internal/server/wiring_test.go` (a Go test, so it fails `task ci`). TC-3 → `adr035-no-cop-bypass` added at **warn**.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (amended by ADR-025 §1, ADR-027 §4, ADR-028 §6, ADR-034 §4)
+Accepted (amended by ADR-025 §1, ADR-027 §4, ADR-028 §6, ADR-034 §4, ADR-035 §3)
 
 ## Context
 
