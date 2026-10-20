@@ -199,8 +199,14 @@ tasks:
     desc: Run performance budget tests
     cmds:
       - go test -v ./internal/performance/...
+      - task: test:bench
       - task: test:binary-size
       - task: test:asset-budgets
+
+  test:bench:
+    desc: Run the hot-path benchmarks (b.Loop; middleware chain, landing-page render, rate limiter, CSRF)
+    cmds:
+      - go test -run='^$' -bench=. -benchmem ./internal/middleware/ ./internal/view/pages/ ./internal/server/
 
   test:binary-size:
     desc: Check binary size against budget
@@ -234,9 +240,9 @@ tasks:
       - gremlins unleash --timeout-coefficient 20 ./internal/jobs
 
   test:memory-profile:
-    desc: Run memory profiling tests
+    desc: Profile allocations of the full-router benchmarks (manual)
     cmds:
-      - go test -memprofile=mem.prof -run=^$ -bench=. ./internal/performance/...
+      - go test -memprofile=mem.prof -run=^$ -bench=. ./internal/server/
       - go tool pprof -text mem.prof
 
   # Docker tasks
