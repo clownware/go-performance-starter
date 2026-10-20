@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/google/uuid"
@@ -151,7 +152,7 @@ func TestReaperRunOnce(t *testing.T) {
 	}
 }
 
-// countingReaperStore is race-safe so TestReaperStart can poll it while the
+// countingReaperStore is race-safe so TestReaperStart can read it while the
 // reap goroutine runs under -race.
 type countingReaperStore struct {
 	calls atomic.Int32
@@ -167,31 +168,37 @@ func (s *countingReaperStore) ListExistingAuthIDs(ctx context.Context, authIDs [
 }
 
 // TestReaperStart pins the loop contract: an immediate first pass on start
-// (restarts must not postpone overdue cleanup), ticker-driven passes after,
-// and a clean stop on context cancellation.
+// (restarts must not postpone overdue cleanup), one pass per interval after,
+// and a clean stop on context cancellation. It runs in a synctest bubble
+// (Go 1.25): time.Sleep advances a fake clock, and synctest.Wait returns
+// once the reap goroutine has finished reacting to it, so pass counts are
+// exact and the hour-long interval costs nothing.
 func TestReaperStart(t *testing.T) {
-	store := &countingReaperStore{}
-	r := NewReaper(store, nil, time.Hour, 2*time.Millisecond)
-	ctx, cancel := context.WithCancel(context.Background())
+	synctest.Test(t, func(t *testing.T) {
+		store := &countingReaperStore{}
+		ctx, cancel := context.WithCancel(t.Context())
+		NewReaper(store, nil, time.Hour, time.Hour).Start(ctx)
 
-	r.Start(ctx)
-
-	deadline := time.Now().Add(5 * time.Second)
-	for store.calls.Load() < 3 {
-		if time.Now().After(deadline) {
-			t.Fatalf("reaper ran %d passes, want >= 3 (immediate + ticks)", store.calls.Load())
+		want := func(n int32, phase string) {
+			t.Helper()
+			synctest.Wait()
+			if got := store.calls.Load(); got != n {
+				t.Fatalf("%s: reaper ran %d passes, want %d", phase, got, n)
+			}
 		}
-		time.Sleep(time.Millisecond)
-	}
 
-	cancel()
-	// Let any in-flight pass drain, then assert the loop has stopped.
-	time.Sleep(20 * time.Millisecond)
-	settled := store.calls.Load()
-	time.Sleep(50 * time.Millisecond)
-	if got := store.calls.Load(); got != settled {
-		t.Errorf("reaper kept running after cancel: %d passes after settling at %d", got, settled)
-	}
+		want(1, "on start")
+		time.Sleep(time.Hour - time.Nanosecond)
+		want(1, "just before the first tick")
+		time.Sleep(time.Nanosecond)
+		want(2, "first tick")
+		time.Sleep(time.Hour)
+		want(3, "second tick")
+
+		cancel()
+		time.Sleep(10 * time.Hour)
+		want(3, "after cancel") // synctest.Test also fails if the loop is still alive
+	})
 }
 
 // lockedBuffer lets the reap goroutine and the test share a log sink under -race.
@@ -215,40 +222,41 @@ func (b *lockedBuffer) String() string {
 // TestReaperLogsFailures pins the failure-observability contract: pass
 // failures (immediate and ticker-driven) and best-effort auth deletion
 // failures are logged, never swallowed — on a background job the log line
-// is the only signal an operator gets.
+// is the only signal an operator gets. The loop phases run in a synctest
+// bubble, so the logged-failure counts are exact rather than polled for.
 func TestReaperLogsFailures(t *testing.T) {
 	sink := &lockedBuffer{}
 	prev := slog.Default()
 	slog.SetDefault(slog.New(slog.NewTextHandler(sink, nil)))
 	t.Cleanup(func() { slog.SetDefault(prev) })
 
-	waitForFailures := func(want int, phase string) {
+	wantFailures := func(t *testing.T, want int, phase string) {
 		t.Helper()
-		deadline := time.Now().Add(5 * time.Second)
-		for strings.Count(sink.String(), "reaper pass failed") < want {
-			if time.Now().After(deadline) {
-				t.Fatalf("%s: want >= %d logged pass failures, log:\n%s", phase, want, sink.String())
-			}
-			time.Sleep(time.Millisecond)
+		synctest.Wait()
+		if got := strings.Count(sink.String(), "reaper pass failed"); got != want {
+			t.Fatalf("%s: %d logged pass failures, want %d, log:\n%s", phase, got, want, sink.String())
 		}
 	}
 
 	store := &fakeReaperStore{err: errors.New("db down")}
 
-	// Hour-long interval: the only pass that can log inside the deadline is
-	// the immediate one, so this isolates the on-start failure log.
-	ctxImmediate, cancelImmediate := context.WithCancel(context.Background())
-	defer cancelImmediate()
-	NewReaper(store, nil, time.Hour, time.Hour).Start(ctxImmediate)
-	waitForFailures(1, "immediate pass")
-	cancelImmediate()
+	synctest.Test(t, func(t *testing.T) {
+		// Only the immediate pass can run before the hour-long interval
+		// elapses, which isolates the on-start failure log.
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+		NewReaper(store, nil, time.Hour, time.Hour).Start(ctx)
+		wantFailures(t, 1, "immediate pass")
+	})
 
-	// Fast ticker: failures must keep logging on every tick, not just once.
-	ctxTicks, cancelTicks := context.WithCancel(context.Background())
-	defer cancelTicks()
-	NewReaper(store, nil, time.Hour, 2*time.Millisecond).Start(ctxTicks)
-	waitForFailures(3, "ticker passes")
-	cancelTicks()
+	synctest.Test(t, func(t *testing.T) {
+		// Failures must keep logging on every tick, not just once.
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+		NewReaper(store, nil, time.Hour, time.Hour).Start(ctx)
+		time.Sleep(2 * time.Hour)
+		wantFailures(t, 4, "immediate + two ticker passes")
+	})
 
 	// Failing auth deleter: best-effort must warn, not error out the pass.
 	okStore := &fakeReaperStore{rows: []database.DeleteExpiredAnonymousUsersRow{reapedRow("auth-1")}}
