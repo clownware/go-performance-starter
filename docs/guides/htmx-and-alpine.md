@@ -27,7 +27,7 @@ Deliberately not included, with the reasons recorded in [#73](https://github.com
 
 ## Alpine
 
-Alpine core only, loaded after HTMX from `web/static/js/alpine.min.js`. Use it for state that never needs the server: the dark-mode toggle (`localStorage` + class on `<html>`), modals (`x-teleport`), tab visibility, a shared `Alpine.store`. The CSP allows `'unsafe-eval'` for Alpine's expression compiler and nothing else — no inline `<script>`, ever ([ADR-028](../adr/ADR-028-CSP-Alpine-Compatibility.md)). If a component needs data from the server, that is an HTMX fragment, not an Alpine `fetch`.
+Alpine core only, as the `@alpinejs/csp` build, loaded after HTMX from `web/static/js/alpine.min.js`. Use it for state that never needs the server: the dark-mode toggle (`localStorage` + class on `<html>`), modals (`x-teleport`), tab visibility, a shared `Alpine.store`. The CSP is `script-src 'self'` with no `unsafe-*` keyword and no inline `<script>`, ever ([ADR-036](../adr/ADR-036-Strict-CSP-Alpine-CSP-Build.md)). Simple expressions stay inline; one that needs methods, arrow callbacks or browser globals becomes an `Alpine.data()` registration in `app.js` (`darkMode`, `toasts`, `confirmDialog`, `formField`, `autoDismiss` are the examples). See [view-layer.md](view-layer.md#csp) for the rules. If a component needs data from the server, that is an HTMX fragment, not an Alpine `fetch`.
 
 ## Adding a pattern to the showcase
 

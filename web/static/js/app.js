@@ -1,12 +1,117 @@
 // Main application JavaScript
 
-// Register Alpine.js components and stores when available
+// Register Alpine.js components and stores when available.
+//
+// Alpine ships as the @alpinejs/csp build (ADR-036): its expression parser
+// needs no eval, so script-src stays 'self'. Simple state stays inline in
+// the templates; a component moves here when it needs what the parser
+// rejects — methods, getters, arrow callbacks, multi-statement blocks,
+// property assignment or browser globals.
 document.addEventListener('alpine:init', () => {
   // Example Alpine.js component
   Alpine.data('dropdown', () => ({
     open: false,
     toggle() {
       this.open = !this.open;
+    }
+  }));
+
+  // Dark mode on <body>: an explicit user choice wins; the system preference
+  // is only the default. The class lands on <html> so role tokens flip
+  // (ADR-029).
+  Alpine.data('darkMode', () => ({
+    dark: false,
+    init() {
+      const stored = localStorage.getItem('dark');
+      this.dark = stored !== null
+        ? stored === 'true'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.apply(this.dark);
+      this.$watch('dark', (val) => {
+        this.apply(val);
+        localStorage.setItem('dark', val ? 'true' : 'false');
+      });
+    },
+    apply(val) {
+      document.documentElement.classList.toggle('dark', val);
+    }
+  }));
+
+  // Toast stack in the base layout, fed by the window 'toast' event
+  // (@toast.window in the markup; the htmx bridge is below).
+  Alpine.data('toasts', () => ({
+    toasts: [],
+    add(type, msg) {
+      if (this.toasts.length >= 3) this.toasts.shift();
+      this.toasts.push({ type, msg, id: Date.now() + Math.random() });
+      setTimeout(() => this.toasts.shift(), 4000);
+    }
+  }));
+
+  // /patterns confirm-delete: htmx:confirm pauses the request and hands over
+  // issueRequest; Delete resumes it, Cancel/Escape/backdrop drop it. pause()
+  // stores the function inside a method because Alpine calls a
+  // function-valued x-on result (#176).
+  Alpine.data('confirmDialog', () => ({
+    open: false,
+    issue: null,
+    pause(e) {
+      this.issue = e.detail.issueRequest;
+      this.open = true;
+    },
+    cancel() {
+      this.open = false;
+      this.issue = null;
+    },
+    confirm() {
+      const issue = this.issue;
+      this.cancel();
+      if (issue) issue(true);
+    }
+  }));
+
+  // components.FormValidation: client-side rules mirroring the server's,
+  // read from data-* attributes (ADR-036 §4) so prop values arrive through
+  // templ's attribute escaping.
+  Alpine.data('formField', () => ({
+    value: '',
+    touched: false,
+    required: false,
+    pattern: null,
+    minLength: 0,
+    maxLength: 0,
+    serverError: '',
+    requiredMessage: '',
+    patternMessage: '',
+    init() {
+      const d = this.$el.dataset;
+      this.value = d.value || '';
+      this.required = d.required === 'true';
+      this.pattern = d.pattern ? new RegExp(d.pattern) : null;
+      this.minLength = Number(d.minLength) || 0;
+      this.maxLength = Number(d.maxLength) || 0;
+      this.serverError = d.serverError || '';
+      this.requiredMessage = d.requiredMessage || '';
+      this.patternMessage = d.patternMessage || '';
+    },
+    get displayMessage() {
+      if (this.serverError) return this.serverError;
+      if (this.required && !this.value) return this.requiredMessage;
+      if (this.pattern && !this.pattern.test(this.value)) return this.patternMessage;
+      if (this.minLength > 0 && this.value.length < this.minLength) return 'Must be at least ' + this.minLength + ' characters';
+      if (this.maxLength > 0 && this.value.length > this.maxLength) return 'Must be at most ' + this.maxLength + ' characters';
+      return '';
+    },
+    get isValid() {
+      return this.displayMessage === '';
+    }
+  }));
+
+  // Success flash on the profile and password forms: visible for 3s.
+  Alpine.data('autoDismiss', () => ({
+    show: true,
+    init() {
+      setTimeout(() => { this.show = false; }, 3000);
     }
   }));
 
@@ -23,6 +128,17 @@ document.addEventListener('alpine:init', () => {
 // HTMX event listeners
 document.addEventListener('htmx:configRequest', (event) => {
   // Add any global request handling here
+});
+
+// Server-driven toasts: a response's HX-Trigger header carries the message
+// and HX-Toast-Type its kind; the base layout's toasts component listens for
+// the window 'toast' event.
+document.addEventListener('htmx:afterRequest', (event) => {
+  const xhr = event.detail.xhr;
+  const msg = xhr.getResponseHeader('HX-Trigger');
+  if (!msg) return;
+  const type = xhr.getResponseHeader('HX-Toast-Type') || 'success';
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type, msg } }));
 });
 
 document.addEventListener('htmx:beforeSwap', (event) => {

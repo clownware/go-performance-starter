@@ -58,6 +58,8 @@ var checks = map[string]struct {
 	"adr019-governed-layer":       {checkGovernedLayer, "not a failure: confirm each change was made for its own reason, never so that another change passes, and name the ADR or ADR note that authorises it in the PR (ADR-019)"},
 	"adr033-append-only":          {checkADRAppendOnly, "restore the original text; an existing ADR changes only by an appended dated note, a Status change, or a superseding ADR (ADR-033). If the rewrite is an operator-approved correction, say so in the PR"},
 	"adr035-no-cop-bypass":        {checkNoCOPBypass, "remove the bypass; CrossOriginProtection runs with no trusted origins or bypass patterns, and an exception needs a superseding ADR (ADR-035)"},
+	"adr036-csp-safe-alpine":      {checkCSPSafeAlpine, "move the expression into an Alpine.data() registration in web/static/js/app.js; the CSP build rejects arrow functions, template literals, methods and browser globals, and htmx eval is off (ADR-036)"},
+	"adr036-csp-build-vendored":   {checkCSPBuildVendored, "vendor @alpinejs/csp's dist/cdn.min.js as web/static/js/alpine.min.js; the standard build needs 'unsafe-eval' (ADR-036)"},
 	"adr015-no-hardcoded-secrets": {checkNoHardcodedSecrets, "move the value to an environment variable read in internal/config (ADR-015); rotate it if it was real (ADR-014)"},
 }
 
@@ -641,4 +643,76 @@ func main() {
 	if failed {
 		os.Exit(1)
 	}
+}
+
+// templAttrRe matches a quoted attribute in templ markup that Alpine or htmx
+// evaluates: x-* directives, @event and :bind shorthands, and the htmx
+// attributes that can carry eval (hx-trigger filters, js: values). Dynamic
+// values (x-data={ helper() }) are unquoted and out of reach; ADR-036 names
+// them as review territory.
+var templAttrRe = regexp.MustCompile(`(?:^|\s)(x-[a-z][\w:.-]*|@[a-z][\w:.-]*|:[a-z][\w.-]*|hx-trigger|hx-vals|hx-headers)=(?:"([^"]*)"|'([^']*)')`)
+
+// cspRejectedRe lists the constructs the Alpine CSP build's parser rejects
+// that a template can plausibly reach for (ADR-036 Context).
+var cspRejectedRe = regexp.MustCompile("=>|\\bfunction\\b|`|\\$\\{|\\bnew\\s+[A-Z]|\\b(?:window|document|localStorage|sessionStorage|setTimeout|setInterval|console)\\b")
+
+func checkCSPSafeAlpine(root string) []string {
+	var violations []string
+	base := filepath.Join(root, "internal", "view")
+	_ = filepath.WalkDir(base, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(d.Name(), ".templ") {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		code := stripTemplComments(content)
+		rel, _ := filepath.Rel(root, path)
+		for _, m := range templAttrRe.FindAllSubmatchIndex(code, -1) {
+			name := string(code[m[2]:m[3]])
+			var value string
+			if m[4] >= 0 {
+				value = string(code[m[4]:m[5]])
+			} else {
+				value = string(code[m[6]:m[7]])
+			}
+			var why string
+			switch name {
+			case "hx-trigger":
+				if strings.Contains(value, "[") {
+					why = "hx-trigger filter needs eval"
+				}
+			case "hx-vals", "hx-headers":
+				if v := strings.TrimSpace(value); strings.HasPrefix(v, "js:") || strings.HasPrefix(v, "javascript:") {
+					why = name + " js: value needs eval"
+				}
+			default:
+				if hit := cspRejectedRe.FindString(value); hit != "" {
+					why = fmt.Sprintf("%q is rejected by the Alpine CSP parser", hit)
+				}
+			}
+			if why != "" {
+				violations = append(violations, fmt.Sprintf("%s:%d: %s: %s", rel, lineOf(content, m[2]), name, why))
+			}
+		}
+		return nil
+	})
+	return violations
+}
+
+// cspBuildMarker appears in the CSP build's parser and nowhere in the
+// standard build, which evaluates with the Function constructor instead.
+const cspBuildMarker = "CSP Parser Error"
+
+func checkCSPBuildVendored(root string) []string {
+	rel := filepath.Join("web", "static", "js", "alpine.min.js")
+	content, err := os.ReadFile(filepath.Join(root, rel))
+	if err != nil {
+		return []string{rel + ": not readable"}
+	}
+	if !bytes.Contains(content, []byte(cspBuildMarker)) {
+		return []string{rel + ": is not the @alpinejs/csp build (no \"" + cspBuildMarker + "\" marker)"}
+	}
+	return nil
 }

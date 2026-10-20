@@ -18,60 +18,9 @@ func csrfHxHeaders(token string) string {
 	return string(b)
 }
 
-// darkModeData returns the Alpine.js x-data expression for dark mode state:
-// an explicit user choice wins; the system preference is only the default.
-// (The old `stored === 'true' || matchMedia` meant choosing light could
-// never override a dark system preference.)
-func darkModeData() string {
-	return "{ dark: localStorage.getItem('dark') !== null ? localStorage.getItem('dark') === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches }"
-}
-
-// darkModeInit returns the Alpine.js x-init expression for dark mode behavior.
-func darkModeInit() string {
-	return `
-		if (dark) {
-			document.documentElement.classList.add('dark');
-		} else {
-			document.documentElement.classList.remove('dark');
-		}
-		$watch('dark', val => {
-			if (val) {
-				document.documentElement.classList.add('dark');
-			} else {
-				document.documentElement.classList.remove('dark');
-			}
-			localStorage.setItem('dark', val ? 'true' : 'false');
-		});
-	`
-}
-
 // userMenuData returns the Alpine.js x-data expression for the user menu dropdown.
 func userMenuData() string {
 	return "{ open: false }"
-}
-
-// toastData returns the Alpine.js x-data expression for the toast notification system.
-func toastData() string {
-	return `{
-		toasts: [],
-		add(type, msg) {
-			if (this.toasts.length >= 3) this.toasts.shift();
-			this.toasts.push({ type, msg, id: Date.now() + Math.random() });
-			setTimeout(() => this.toasts.shift(), 4000);
-		}
-	}`
-}
-
-// toastInit returns the Alpine.js x-init expression for the toast notification system.
-func toastInit() string {
-	return `
-		window.addEventListener('toast', e => $data.add(e.detail.type, e.detail.msg));
-		document.body.addEventListener('htmx:afterRequest', function(evt) {
-			var msg = evt.detail.xhr.getResponseHeader('HX-Trigger');
-			var type = evt.detail.xhr.getResponseHeader('HX-Toast-Type') || 'success';
-			if (msg) window.dispatchEvent(new CustomEvent('toast', { detail: { type, msg } }));
-		});
-	`
 }
 
 // footerCopyright returns the copyright string with the year.
@@ -113,19 +62,23 @@ templ Base(props view.BaseProps) {
 			<!-- Favicon: the mark glyph (bolt on teal); SVG first, PNG fallback -->
 			<link rel="icon" type="image/svg+xml" href={ view.AssetURL("/static/img/mark.svg") }/>
 			<link rel="icon" type="image/png" href={ view.AssetURL("/static/img/favicon.png") }/>
-			<!-- HTMX -->
+			<!-- HTMX. allowEval off: under script-src 'self' (ADR-036) eval would
+			     fail anyway; switching it off makes hx-trigger filters and js:
+			     values fail loudly instead of at the first click. -->
+			<meta name="htmx-config" content={ `{"allowEval":false}` }/>
 			<script src={ view.AssetURL("/static/js/htmx.min.js") } defer></script>
 			<!-- App scripts BEFORE Alpine: with defer, Alpine starts the moment
 			     it executes and fires alpine:init immediately — app.js must have
 			     its listener (Alpine.data/store registrations) in place first.
-			     Inline scripts stay CSP-forbidden (ADR-028). -->
+			     Inline scripts stay CSP-forbidden (ADR-036). -->
 			<script src={ view.AssetURL("/static/js/app.js") } defer></script>
-			<!-- Alpine.js -->
+			<!-- Alpine.js: the @alpinejs/csp build — its expression parser needs
+			     no eval, so script-src is 'self' alone (ADR-036). Components the
+			     parser rejects are Alpine.data() registrations in app.js. -->
 			<script src={ view.AssetURL("/static/js/alpine.min.js") } defer></script>
 		</head>
 		<body
-			x-data={ darkModeData() }
-			x-init={ darkModeInit() }
+			x-data="darkMode"
 			hx-headers={ csrfHxHeaders(webutil.CSRFTokenFromContext(ctx)) }
 			class="min-h-screen flex flex-col bg-background text-foreground"
 		>
@@ -280,8 +233,8 @@ templ footer(props view.BaseProps) {
 
 templ toastNotifications() {
 	<div
-		x-data={ toastData() }
-		x-init={ toastInit() }
+		x-data="toasts"
+		@toast.window="add($event.detail.type, $event.detail.msg)"
 		class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 items-end"
 		aria-live="polite"
 		aria-atomic="true"

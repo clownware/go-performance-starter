@@ -253,11 +253,11 @@ templ patternDemo(slug string) {
 			<!-- htmx:confirm pauses the request; the styled dialog resumes it
 			     via issueRequest(true). hx-confirm stays on as the no-Alpine
 			     fallback (native confirm) — with the intercept it never fires.
-			     pause() stores issueRequest inside a method: Alpine calls a
-			     function-valued x-on expression, which would fire the request
-			     before the dialog opens. -->
+			     confirmDialog (app.js, ADR-036) stores issueRequest inside a
+			     method: Alpine calls a function-valued x-on expression, which
+			     would fire the request before the dialog opens. -->
 			<div
-				x-data="{ open: false, issue: null, pause(e) { this.issue = e.detail.issueRequest; this.open = true } }"
+				x-data="confirmDialog"
 				@htmx:confirm.prevent="pause($event)"
 			>
 				<div id="confirm-demo-target">
@@ -273,8 +273,8 @@ templ patternDemo(slug string) {
 					</button>
 				</div>
 				<template x-teleport="body">
-					<div x-show="open" x-cloak @keydown.escape.window="open = false" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-						<div @click="open = false" class="absolute inset-0 bg-night/60" aria-hidden="true"></div>
+					<div x-show="open" x-cloak @keydown.escape.window="cancel()" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+						<div @click="cancel()" class="absolute inset-0 bg-night/60" aria-hidden="true"></div>
 						<div
 							role="alertdialog"
 							aria-modal="true"
@@ -288,8 +288,8 @@ templ patternDemo(slug string) {
 								The request is paused on the htmx:confirm event — Delete resumes it, Cancel drops it.
 							</p>
 							<div class="flex justify-end gap-2">
-								<button @click="open = false" class="btn btn-secondary">Cancel</button>
-								<button @click="open = false; issue(true)" class="btn btn-danger">Delete</button>
+								<button @click="cancel()" class="btn btn-secondary">Cancel</button>
+								<button @click="confirm()" class="btn btn-danger">Delete</button>
 							</div>
 						</div>
 					</div>
