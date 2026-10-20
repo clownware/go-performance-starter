@@ -709,3 +709,50 @@ func TestStripGoComments(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckNoCOPBypass(t *testing.T) {
+	tests := []struct {
+		name       string
+		files      map[string]string
+		violations int
+	}{
+		{
+			name: "plain CrossOriginProtection passes",
+			files: map[string]string{
+				"internal/middleware/x.go": "package middleware\n\nimport \"net/http\"\n\nvar c = http.NewCrossOriginProtection()\n",
+			},
+			violations: 0,
+		},
+		{
+			name: "AddInsecureBypassPattern under internal flagged",
+			files: map[string]string{
+				"internal/middleware/x.go": "package middleware\n\nfunc f() { cop.AddInsecureBypassPattern(\"/hook\") }\n",
+			},
+			violations: 1,
+		},
+		{
+			name: "AddTrustedOrigin under cmd flagged",
+			files: map[string]string{
+				"cmd/server/main.go": "package main\n\nfunc f() { _ = cop.AddTrustedOrigin(\"https://x.example\") }\n",
+			},
+			violations: 1,
+		},
+		{
+			name: "comment naming the bypass is not a finding",
+			files: map[string]string{
+				"internal/middleware/x.go": "package middleware\n\n// no AddTrustedOrigin or AddInsecureBypassPattern (ADR-035)\nfunc f() {}\n",
+			},
+			violations: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeTree(t, root, tt.files)
+			got := checkNoCOPBypass(root)
+			if len(got) != tt.violations {
+				t.Errorf("got %d violations %v, want %d", len(got), got, tt.violations)
+			}
+		})
+	}
+}

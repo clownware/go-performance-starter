@@ -946,3 +946,39 @@ func TestServer_AuthClient(t *testing.T) {
 		})
 	}
 }
+
+// TestServer_CrossOriginBeforeCSRF pins ADR-035 Phase 1: CrossOriginProtection
+// runs in the global chain in front of the double-submit token, and the token
+// layer is still there. TC-1: a cross-site unsafe request is refused even
+// with a valid cookie/header pair. TC-2: a same-origin unsafe request without
+// a token is still refused. The control row proves the 403 in TC-1 comes from
+// the cross-origin layer, not the token.
+func TestServer_CrossOriginBeforeCSRF(t *testing.T) {
+	validToken := strings.Repeat("ab", 32)
+	tests := []struct {
+		name      string
+		fetchSite string
+		token     bool
+		want403   bool
+	}{
+		{"TC-1 cross-site with a valid CSRF token is refused", "cross-site", true, true},
+		{"TC-1 same-site with a valid CSRF token is refused", "same-site", true, true},
+		{"TC-2 same-origin without a CSRF token is refused", "same-origin", false, true},
+		{"control: same-origin with a valid CSRF token passes both layers", "same-origin", true, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := newTestServer(t, "development")
+			rec := doRequest(srv, http.MethodPost, "/patterns/api/favorite/1", func(r *http.Request) {
+				r.Header.Set("Sec-Fetch-Site", tt.fetchSite)
+				if tt.token {
+					r.AddCookie(&http.Cookie{Name: "csrf_token", Value: validToken})
+					r.Header.Set("X-CSRF-Token", validToken)
+				}
+			})
+			if got403 := rec.Code == http.StatusForbidden; got403 != tt.want403 {
+				t.Errorf("status = %d, want 403: %v", rec.Code, tt.want403)
+			}
+		})
+	}
+}

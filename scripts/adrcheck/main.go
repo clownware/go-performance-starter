@@ -57,6 +57,7 @@ var checks = map[string]struct {
 	"adr011-index-complete":       {checkADRIndexComplete, "add the ADR's row to docs/adr/README.md (number, title, one-sentence decision, status, date), or fix the row's link (ADR-011)"},
 	"adr019-governed-layer":       {checkGovernedLayer, "not a failure: confirm each change was made for its own reason, never so that another change passes, and name the ADR or ADR note that authorises it in the PR (ADR-019)"},
 	"adr033-append-only":          {checkADRAppendOnly, "restore the original text; an existing ADR changes only by an appended dated note, a Status change, or a superseding ADR (ADR-033). If the rewrite is an operator-approved correction, say so in the PR"},
+	"adr035-no-cop-bypass":        {checkNoCOPBypass, "remove the bypass; CrossOriginProtection runs with no trusted origins or bypass patterns, and an exception needs a superseding ADR (ADR-035)"},
 	"adr015-no-hardcoded-secrets": {checkNoHardcodedSecrets, "move the value to an environment variable read in internal/config (ADR-015); rotate it if it was real (ADR-014)"},
 }
 
@@ -418,6 +419,22 @@ func checkSlogOnly(root string) []string {
 		walkGoFiles(root, dir, false, func(rel string, content []byte) {
 			if loc := logPrintRe.FindIndex(stripGoComments(content)); loc != nil {
 				violations = append(violations, fmt.Sprintf("%s:%d: log.Print* call site — use log/slog", rel, lineOf(content, loc[0])))
+			}
+		})
+	}
+	return violations
+}
+
+// copBypassRe matches the two http.CrossOriginProtection escape hatches
+// ADR-035 Phase 1 rules out.
+var copBypassRe = regexp.MustCompile(`\.(AddInsecureBypassPattern|AddTrustedOrigin)\(`)
+
+func checkNoCOPBypass(root string) []string {
+	var violations []string
+	for _, dir := range []string{"cmd", "internal"} {
+		walkGoFiles(root, dir, false, func(rel string, content []byte) {
+			if loc := copBypassRe.FindIndex(stripGoComments(content)); loc != nil {
+				violations = append(violations, fmt.Sprintf("%s:%d: CrossOriginProtection bypass configured", rel, lineOf(content, loc[0])))
 			}
 		})
 	}

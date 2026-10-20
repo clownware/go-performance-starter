@@ -184,6 +184,7 @@ func (s *Server) setupMiddleware(ctx context.Context) {
 	s.router.Use(mw.RequestLogger)                                         // Log requests with context
 	s.router.Use(mw.Recoverer)                                             // Panic recovery
 	s.router.Use(mw.Timeout(30 * time.Second))                             // Request timeout
+	s.router.Use(mw.CrossOrigin())                                         // Sec-Fetch-Site/Origin check in front of the token (ADR-035)
 	s.router.Use(mw.CSRF(isProd))                                          // CSRF double-submit cookie (ADR-014 §3)
 
 	// Inject UserRepository into context for all routes (skip if DB not available)
